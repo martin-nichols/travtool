@@ -1,7 +1,6 @@
 tools/
 app/node_modules/
 app/vendor/
-app/public/build/
 extension/node_modules/
 extension/.output/
 extension/.wxt/
