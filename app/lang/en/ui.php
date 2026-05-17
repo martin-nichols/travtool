@@ -116,7 +116,7 @@ return [
             'include_npcs' => 'Include Natars',
             'stable_only' => 'Only stable since yesterday',
             'apply' => 'Search',
-            'reset' => 'Reset',
+            'reset' => 'Clear filters',
         ],
         'sort' => [
             'score' => 'Probable inactivity score',
@@ -139,6 +139,7 @@ return [
             'no_match_description' => 'Broaden the filters or wait for one more daily import to unlock stronger inactivity heuristics.',
             'no_alliance' => 'No alliance',
             'no_data' => '-',
+            'swipe_hint' => 'On mobile, swipe the table horizontally to reveal every column.',
             'columns' => [
                 'village' => 'Village',
                 'player' => 'Player',

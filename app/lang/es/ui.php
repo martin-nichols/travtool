@@ -116,7 +116,7 @@ return [
             'include_npcs' => 'Incluir Natars',
             'stable_only' => 'Solo estables desde ayer',
             'apply' => 'Buscar',
-            'reset' => 'Reiniciar',
+            'reset' => 'Limpiar filtros',
         ],
         'sort' => [
             'score' => 'Puntuacion de inactividad probable',
@@ -139,6 +139,7 @@ return [
             'no_match_description' => 'Amplia los filtros o espera una importacion diaria mas para activar heuristicas de inactividad mas fuertes.',
             'no_alliance' => 'Sin alianza',
             'no_data' => '-',
+            'swipe_hint' => 'En movil, desliza la tabla horizontalmente para ver todas las columnas.',
             'columns' => [
                 'village' => 'Aldea',
                 'player' => 'Jugador',

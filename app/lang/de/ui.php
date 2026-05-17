@@ -116,7 +116,7 @@ return [
             'include_npcs' => 'Nataren einbeziehen',
             'stable_only' => 'Nur seit gestern stabil',
             'apply' => 'Suchen',
-            'reset' => 'Zuruecksetzen',
+            'reset' => 'Filter leeren',
         ],
         'sort' => [
             'score' => 'Wahrscheinlicher Inaktivitaets-Score',
@@ -139,6 +139,7 @@ return [
             'no_match_description' => 'Erweitere die Filter oder warte auf einen weiteren taeglichen Import, um staerkere Inaktivitaets-Heuristiken zu aktivieren.',
             'no_alliance' => 'Keine Allianz',
             'no_data' => '-',
+            'swipe_hint' => 'Auf Mobilgeraeten kannst du die Tabelle horizontal wischen, um alle Spalten zu sehen.',
             'columns' => [
                 'village' => 'Dorf',
                 'player' => 'Spieler',

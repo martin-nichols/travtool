@@ -116,7 +116,7 @@ return [
             'include_npcs' => 'Inclure les Natars',
             'stable_only' => 'Seulement stables depuis hier',
             'apply' => 'Rechercher',
-            'reset' => 'Reinitialiser',
+            'reset' => 'Effacer les filtres',
         ],
         'sort' => [
             'score' => "Score d'inactivite probable",
@@ -139,6 +139,7 @@ return [
             'no_match_description' => 'Elargis les filtres ou attends un import quotidien de plus pour activer des heuristiques plus fortes.',
             'no_alliance' => 'Sans alliance',
             'no_data' => '-',
+            'swipe_hint' => 'Sur mobile, fais glisser le tableau horizontalement pour voir toutes les colonnes.',
             'columns' => [
                 'village' => 'Village',
                 'player' => 'Joueur',
