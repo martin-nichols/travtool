@@ -20,7 +20,7 @@ return [
             'name' => 'Rise of Fire Europe x2',
             'base_url' => 'https://rof.x2.europe.travian.com/',
             'map_sql_url' => 'https://rof.x2.europe.travian.com/map.sql',
-            'server_timezone' => 'Europe/Berlin',
+            'server_timezone' => 'UTC',
             'import_time' => '00:10',
             'speed' => 2,
             'is_active' => true,
