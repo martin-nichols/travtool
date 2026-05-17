@@ -123,22 +123,31 @@ const selectedWorld = computed(() => props.worlds.find((world) => world.key === 
 const canUseDistanceSort = computed(() => nullableNumber(form.x) !== null && nullableNumber(form.y) !== null);
 
 const cleanedFilters = (): Record<string, string | number | boolean> => {
+    const x = nullableNumber(form.x);
+    const y = nullableNumber(form.y);
+    const radius = nullableNumber(form.radius);
+    const hasCenter = x !== null && y !== null;
+    const effectiveSort = hasCenter && form.sort === 'score' ? 'distance_asc' : form.sort;
     const payload: Record<string, string | number | boolean> = {
         world: form.world,
         one_village: form.one_village,
         include_npcs: form.include_npcs,
         no_alliance: form.no_alliance,
         stable_only: form.stable_only,
-        sort: form.sort,
+        sort: effectiveSort,
     };
 
     if (form.q) payload.q = form.q;
     if (nullableNumber(form.tribe_id) !== null) payload.tribe_id = nullableNumber(form.tribe_id) as number;
     if (nullableNumber(form.min_population) !== null) payload.min_population = nullableNumber(form.min_population) as number;
     if (nullableNumber(form.max_population) !== null) payload.max_population = nullableNumber(form.max_population) as number;
-    if (nullableNumber(form.x) !== null) payload.x = nullableNumber(form.x) as number;
-    if (nullableNumber(form.y) !== null) payload.y = nullableNumber(form.y) as number;
-    if (nullableNumber(form.radius) !== null) payload.radius = nullableNumber(form.radius) as number;
+    if (x !== null) payload.x = x;
+    if (y !== null) payload.y = y;
+    if (radius !== null) {
+        payload.radius = radius;
+    } else if (hasCenter) {
+        payload.radius = 25;
+    }
 
     return payload;
 };
@@ -146,8 +155,8 @@ const cleanedFilters = (): Record<string, string | number | boolean> => {
 const submit = () => {
     router.get('/inactive-finder', cleanedFilters(), {
         preserveScroll: true,
-        preserveState: true,
-        replace: true,
+        preserveState: false,
+        replace: false,
     });
 };
 
