@@ -1,6 +1,6 @@
 {
-  "_LanguageSwitcher-DQhyzwDt.js": {
-    "file": "assets/LanguageSwitcher-DQhyzwDt.js",
+  "_LanguageSwitcher-BtvFtZI6.js": {
+    "file": "assets/LanguageSwitcher-BtvFtZI6.js",
     "name": "LanguageSwitcher",
     "imports": [
       "resources/js/app.ts"
@@ -59,7 +59,7 @@
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Djm_LVXm.css",
+    "file": "assets/app-Iorhh0Ik.css",
     "name": "app",
     "names": [
       "app.css"
@@ -68,7 +68,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-XZWM57ys.js",
+    "file": "assets/app--JYmamOF.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -80,37 +80,37 @@
     ]
   },
   "resources/js/pages/Auth/Login.vue": {
-    "file": "assets/Login-CINoTSZJ.js",
+    "file": "assets/Login-pWbNBDyx.js",
     "name": "Login",
     "src": "resources/js/pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DQhyzwDt.js"
+      "_LanguageSwitcher-BtvFtZI6.js"
     ]
   },
   "resources/js/pages/Home.vue": {
-    "file": "assets/Home-CJuHlX59.js",
+    "file": "assets/Home-ebUUspRY.js",
     "name": "Home",
     "src": "resources/js/pages/Home.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DQhyzwDt.js"
+      "_LanguageSwitcher-BtvFtZI6.js"
     ]
   },
   "resources/js/pages/InactiveFinder.vue": {
-    "file": "assets/InactiveFinder-CyK-wOJk.js",
+    "file": "assets/InactiveFinder-NpgYzlhR.js",
     "name": "InactiveFinder",
     "src": "resources/js/pages/InactiveFinder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DQhyzwDt.js"
+      "_LanguageSwitcher-BtvFtZI6.js"
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-BxZjiGjI.js",
+    "file": "assets/Welcome-xGf0XeWK.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,

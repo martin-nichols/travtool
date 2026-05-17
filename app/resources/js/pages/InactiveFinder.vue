@@ -220,6 +220,16 @@ const formatDelta = (populationDelta: number | null, villageDelta: number | null
 const coordsLabel = (x: number, y: number): string => `${x}|${y}`;
 
 const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tribe.value === tribeId)?.label ?? String(tribeId);
+
+const villageMapLink = (x: number, y: number): string | null => {
+    const baseUrl = props.summary.selectedWorldBaseUrl;
+
+    if (!baseUrl) {
+        return null;
+    }
+
+    return `${baseUrl.replace(/\/+$/, '')}/karte.php?x=${x}&y=${y}`;
+};
 </script>
 
 <template>
@@ -322,8 +332,10 @@ const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tri
                                     class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
                                 />
                             </label>
+                        </div>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-3">
+                        <div class="grid gap-4 lg:grid-cols-12">
+                            <label class="grid min-w-0 gap-2 lg:col-span-4">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.tribe_label') }}
                                 </span>
@@ -335,54 +347,58 @@ const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tri
                                 </select>
                             </label>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-3">
+                            <label class="grid min-w-0 gap-2 lg:col-span-4">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.min_population_label') }}
                                 </span>
                                 <input v-model="form.min_population" type="number" min="0" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                             </label>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-3">
+                            <label class="grid min-w-0 gap-2 lg:col-span-4">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.max_population_label') }}
                                 </span>
                                 <input v-model="form.max_population" type="number" min="0" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                             </label>
+                        </div>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-2">
-                                <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
-                                    {{ t('inactive_finder.filters.center_x_label') }}
-                                </span>
-                                <input
-                                    v-model="form.x"
-                                    type="text"
-                                    inputmode="numeric"
-                                    placeholder="-15"
-                                    class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
-                                />
-                            </label>
+                        <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
+                            <div class="grid gap-4 lg:col-span-5 lg:grid-cols-3">
+                                <label class="grid min-w-0 gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
+                                        {{ t('inactive_finder.filters.center_x_label') }}
+                                    </span>
+                                    <input
+                                        v-model="form.x"
+                                        type="text"
+                                        inputmode="numeric"
+                                        placeholder="-15"
+                                        class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
+                                    />
+                                </label>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-2">
-                                <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
-                                    {{ t('inactive_finder.filters.center_y_label') }}
-                                </span>
-                                <input
-                                    v-model="form.y"
-                                    type="text"
-                                    inputmode="numeric"
-                                    placeholder="-15"
-                                    class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
-                                />
-                            </label>
+                                <label class="grid min-w-0 gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
+                                        {{ t('inactive_finder.filters.center_y_label') }}
+                                    </span>
+                                    <input
+                                        v-model="form.y"
+                                        type="text"
+                                        inputmode="numeric"
+                                        placeholder="-15"
+                                        class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
+                                    />
+                                </label>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-2">
-                                <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
-                                    {{ t('inactive_finder.filters.radius_label') }}
-                                </span>
-                                <input v-model="form.radius" type="number" min="0" max="400" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
-                            </label>
+                                <label class="grid min-w-0 gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
+                                        {{ t('inactive_finder.filters.radius_label') }}
+                                    </span>
+                                    <input v-model="form.radius" type="number" min="0" max="400" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                </label>
+                            </div>
 
-                            <div class="grid gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 lg:col-span-5">
+                            <div class="grid gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 lg:col-span-7">
                                 <label class="flex items-start gap-3 text-sm text-[#f6ede0]">
                                     <input v-model="form.one_village" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-transparent" />
                                     <span>{{ t('inactive_finder.filters.one_village') }}</span>
@@ -496,7 +512,31 @@ const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tri
                                 <tbody class="divide-y divide-[#1f1a14]/10 bg-white text-sm text-[#2a231d]">
                                     <tr v-for="row in results.data" :key="`${row.village_name}-${row.coords.x}-${row.coords.y}`">
                                         <td class="px-4 py-4 align-top">
-                                            <div class="font-semibold text-[#1c1814]">{{ row.village_name }}</div>
+                                            <a
+                                                v-if="villageMapLink(row.coords.x, row.coords.y)"
+                                                :href="villageMapLink(row.coords.x, row.coords.y) ?? undefined"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                class="inline-flex items-center gap-2 font-semibold text-[#1c1814] transition hover:text-[#8b4a27]"
+                                            >
+                                                <span>{{ row.village_name }}</span>
+                                                <svg
+                                                    class="h-4 w-4 shrink-0"
+                                                    viewBox="0 0 20 20"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path
+                                                        d="M7 5H15V13M15 5L5 15"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.7"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+                                            </a>
+                                            <div v-else class="font-semibold text-[#1c1814]">{{ row.village_name }}</div>
                                             <div v-if="row.region_name" class="mt-1 text-xs text-[#7b6b5d]">{{ row.region_name }}</div>
                                         </td>
                                         <td class="px-4 py-4 align-top">
