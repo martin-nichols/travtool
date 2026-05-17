@@ -53,8 +53,12 @@ class TravianMapImportService
             $configuredWorld = $this->configuredWorld($worldKey);
             $localNow = $now->setTimezone($configuredWorld['server_timezone']);
             $snapshotDate = $localNow->toDateString();
+            $scheduledAt = CarbonImmutable::parse(
+                sprintf('%s %s', $snapshotDate, $configuredWorld['import_time']),
+                $configuredWorld['server_timezone'],
+            );
 
-            if ($localNow->format('H:i') !== $configuredWorld['import_time']) {
+            if ($localNow->lt($scheduledAt)) {
                 continue;
             }
 
