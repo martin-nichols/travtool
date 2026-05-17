@@ -24,9 +24,9 @@ return new class extends Migration
             $table->unsignedBigInteger('population_total')->default(0);
             $table->timestamps();
 
-            $table->unique(['snapshot_id', 'alliance_id']);
-            $table->index(['world_id', 'snapshot_date', 'alliance_id']);
-            $table->index(['world_id', 'snapshot_date', 'external_alliance_id']);
+            $table->unique(['snapshot_id', 'alliance_id'], 'all_snapshots_snapshot_alliance_unique');
+            $table->index(['world_id', 'snapshot_date', 'alliance_id'], 'all_snapshots_world_date_alliance_idx');
+            $table->index(['world_id', 'snapshot_date', 'external_alliance_id'], 'all_snapshots_world_date_ext_alliance_idx');
         });
 
         Schema::create('player_snapshots', function (Blueprint $table) {
@@ -45,10 +45,10 @@ return new class extends Migration
             $table->integer('village_count_delta_1d')->nullable();
             $table->timestamps();
 
-            $table->unique(['snapshot_id', 'player_id']);
-            $table->index(['world_id', 'snapshot_date', 'player_id']);
-            $table->index(['world_id', 'snapshot_date', 'alliance_id']);
-            $table->index(['world_id', 'snapshot_date', 'external_alliance_id']);
+            $table->unique(['snapshot_id', 'player_id'], 'player_snapshots_snapshot_player_unique');
+            $table->index(['world_id', 'snapshot_date', 'player_id'], 'player_snapshots_world_date_player_idx');
+            $table->index(['world_id', 'snapshot_date', 'alliance_id'], 'player_snapshots_world_date_alliance_idx');
+            $table->index(['world_id', 'snapshot_date', 'external_alliance_id'], 'player_snapshots_world_date_ext_alliance_idx');
         });
 
         Schema::create('village_snapshots', function (Blueprint $table) {
@@ -75,12 +75,12 @@ return new class extends Migration
             $table->unsignedInteger('victory_points')->nullable();
             $table->timestamps();
 
-            $table->unique(['snapshot_id', 'village_id']);
-            $table->unique(['snapshot_id', 'map_tile_id']);
-            $table->index(['world_id', 'snapshot_date', 'player_id']);
-            $table->index(['world_id', 'snapshot_date', 'alliance_id']);
-            $table->index(['world_id', 'x', 'y', 'snapshot_date']);
-            $table->index(['world_id', 'snapshot_date', 'external_player_id']);
+            $table->unique(['snapshot_id', 'village_id'], 'village_snapshots_snapshot_village_unique');
+            $table->unique(['snapshot_id', 'map_tile_id'], 'village_snapshots_snapshot_tile_unique');
+            $table->index(['world_id', 'snapshot_date', 'player_id'], 'village_snapshots_world_date_player_idx');
+            $table->index(['world_id', 'snapshot_date', 'alliance_id'], 'village_snapshots_world_date_alliance_idx');
+            $table->index(['world_id', 'x', 'y', 'snapshot_date'], 'village_snapshots_world_xy_date_idx');
+            $table->index(['world_id', 'snapshot_date', 'external_player_id'], 'village_snapshots_world_date_ext_player_idx');
         });
     }
 
