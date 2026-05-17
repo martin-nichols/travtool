@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -35,12 +36,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $locales = collect(config('travtool.locales', []))
+            ->map(fn (string $label, string $code) => [
+                'code' => $code,
+                'label' => $label,
+            ])
+            ->values()
+            ->all();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
             ],
+            'locale' => [
+                'current' => app()->getLocale(),
+                'available' => $locales,
+            ],
+            'translations' => Lang::get('ui'),
         ];
     }
 }

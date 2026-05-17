@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
+import { useI18n } from '@/lib/i18n';
 
 const form = reactive({
     email: '',
@@ -9,6 +11,7 @@ const form = reactive({
 });
 
 const submitted = ref(false);
+const { t } = useI18n();
 
 const submit = () => {
     submitted.value = true;
@@ -16,20 +19,23 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Connexion" />
+    <Head :title="t('login.meta.title')" />
 
     <div class="min-h-screen bg-[#f4efe6] text-[#1b1815]">
         <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8 lg:px-10">
             <header class="flex items-center justify-between">
                 <Link href="/" class="text-sm font-medium text-[#5d5248] transition hover:text-[#8b4a27]">
-                    ← Retour à l'accueil
+                    ← {{ t('common.back_home') }}
                 </Link>
-                <Link
-                    href="/inactive-finder"
-                    class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm text-[#3d342d] transition hover:border-[#8b4a27]/35 hover:bg-white/70"
-                >
-                    Voir le prototype
-                </Link>
+                <div class="hidden items-center gap-4 md:flex">
+                    <LanguageSwitcher />
+                    <Link
+                        href="/inactive-finder"
+                        class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm text-[#3d342d] transition hover:border-[#8b4a27]/35 hover:bg-white/70"
+                    >
+                        {{ t('login.nav.prototype') }}
+                    </Link>
+                </div>
             </header>
 
             <main class="flex flex-1 items-center py-10">
@@ -40,31 +46,30 @@ const submit = () => {
 
                         <div class="relative">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[#ffb36b]">
-                                Espace privé
+                                {{ t('login.panel.eyebrow') }}
                             </p>
                             <h1 class="mt-5 max-w-md text-4xl font-semibold tracking-[-0.04em]">
-                                Interface de connexion Travtool
+                                {{ t('login.panel.title') }}
                             </h1>
                             <p class="mt-5 max-w-md text-base leading-7 text-[#d8cec1]">
-                                Ce premier écran prépare l’accès aux mondes suivis, aux imports `map.sql` et aux outils internes.
-                                Le backend d’authentification sera branché ensuite.
+                                {{ t('login.panel.description') }}
                             </p>
 
                             <div class="mt-10 grid gap-4">
                                 <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
                                     <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#ffb36b]">
-                                        À terme
+                                        {{ t('login.panel.future_title') }}
                                     </p>
                                     <p class="mt-3 text-sm leading-7 text-[#e8dfd2]">
-                                        Comptes privés, équipes, mondes suivis et journal des imports quotidiens.
+                                        {{ t('login.panel.future_text') }}
                                     </p>
                                 </div>
                                 <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
                                     <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#ffb36b]">
-                                        Aujourd’hui
+                                        {{ t('login.panel.today_title') }}
                                     </p>
                                     <p class="mt-3 text-sm leading-7 text-[#e8dfd2]">
-                                        Prototype visuel pour préparer la structure produit avant de brancher l’auth réelle.
+                                        {{ t('login.panel.today_text') }}
                                     </p>
                                 </div>
                             </div>
@@ -73,31 +78,35 @@ const submit = () => {
 
                     <section class="px-8 py-10 lg:px-10 lg:py-12">
                         <div class="max-w-md">
+                            <div class="mb-6 md:hidden">
+                                <LanguageSwitcher />
+                            </div>
+
                             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#8b4a27]">
-                                Connexion
+                                {{ t('login.form.eyebrow') }}
                             </p>
                             <h2 class="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#1c1814]">
-                                Accéder à l’espace de pilotage
+                                {{ t('login.form.title') }}
                             </h2>
 
                             <form class="mt-8 space-y-5" @submit.prevent="submit">
                                 <label class="block">
-                                    <span class="mb-2 block text-sm font-medium text-[#544b43]">Adresse e-mail</span>
+                                    <span class="mb-2 block text-sm font-medium text-[#544b43]">{{ t('login.form.email') }}</span>
                                     <input
                                         v-model="form.email"
                                         type="email"
                                         class="w-full rounded-2xl border border-[#1f1a14]/10 bg-[#faf6ee] px-4 py-3 text-[#1b1815] outline-none transition focus:border-[#8b4a27]/40 focus:bg-white"
-                                        placeholder="martin@travtool.app"
+                                        :placeholder="t('login.form.email_placeholder')"
                                     />
                                 </label>
 
                                 <label class="block">
-                                    <span class="mb-2 block text-sm font-medium text-[#544b43]">Mot de passe</span>
+                                    <span class="mb-2 block text-sm font-medium text-[#544b43]">{{ t('login.form.password') }}</span>
                                     <input
                                         v-model="form.password"
                                         type="password"
                                         class="w-full rounded-2xl border border-[#1f1a14]/10 bg-[#faf6ee] px-4 py-3 text-[#1b1815] outline-none transition focus:border-[#8b4a27]/40 focus:bg-white"
-                                        placeholder="••••••••"
+                                        :placeholder="t('login.form.password_placeholder')"
                                     />
                                 </label>
 
@@ -107,14 +116,14 @@ const submit = () => {
                                         type="checkbox"
                                         class="h-4 w-4 rounded border-[#1f1a14]/20 text-[#8b4a27] focus:ring-[#8b4a27]"
                                     />
-                                    Se souvenir de cette session
+                                    {{ t('login.form.remember') }}
                                 </label>
 
                                 <button
                                     type="submit"
                                     class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
                                 >
-                                    Continuer
+                                    {{ t('login.form.submit') }}
                                 </button>
                             </form>
 
@@ -122,8 +131,7 @@ const submit = () => {
                                 v-if="submitted"
                                 class="mt-6 rounded-3xl border border-[#8b4a27]/15 bg-[#fff5e8] p-4 text-sm leading-7 text-[#6a5643]"
                             >
-                                Interface prête. L’auth backend n’est pas encore branchée : cette étape servira ensuite à
-                                connecter l’accès privé Laravel.
+                                {{ t('login.form.notice') }}
                             </div>
                         </div>
                     </section>

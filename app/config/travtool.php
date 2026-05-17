@@ -1,0 +1,10 @@
+<?php
+
+return [
+    'locales' => [
+        'en' => 'English',
+        'fr' => 'Français',
+        'de' => 'Deutsch',
+        'es' => 'Español',
+    ],
+];
