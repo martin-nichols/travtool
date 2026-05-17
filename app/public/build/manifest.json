@@ -1,6 +1,6 @@
 {
-  "_LanguageSwitcher-BmYxlIwv.js": {
-    "file": "assets/LanguageSwitcher-BmYxlIwv.js",
+  "_LanguageSwitcher-DqMAb7nU.js": {
+    "file": "assets/LanguageSwitcher-DqMAb7nU.js",
     "name": "LanguageSwitcher",
     "imports": [
       "resources/js/app.ts"
@@ -68,7 +68,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-Bd8uMe4g.js",
+    "file": "assets/app-wENLfD7g.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -80,37 +80,37 @@
     ]
   },
   "resources/js/pages/Auth/Login.vue": {
-    "file": "assets/Login-DNlf_Kt9.js",
+    "file": "assets/Login-oqk_25Hz.js",
     "name": "Login",
     "src": "resources/js/pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-BmYxlIwv.js"
+      "_LanguageSwitcher-DqMAb7nU.js"
     ]
   },
   "resources/js/pages/Home.vue": {
-    "file": "assets/Home-DLzS4uC8.js",
+    "file": "assets/Home-DQCZvPim.js",
     "name": "Home",
     "src": "resources/js/pages/Home.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-BmYxlIwv.js"
+      "_LanguageSwitcher-DqMAb7nU.js"
     ]
   },
   "resources/js/pages/InactiveFinder.vue": {
-    "file": "assets/InactiveFinder-7jddb3De.js",
+    "file": "assets/InactiveFinder-y9p7R4EE.js",
     "name": "InactiveFinder",
     "src": "resources/js/pages/InactiveFinder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-BmYxlIwv.js"
+      "_LanguageSwitcher-DqMAb7nU.js"
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-U3K7w2xt.js",
+    "file": "assets/Welcome-Bj0iyhlA.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,

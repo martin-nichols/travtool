@@ -6,8 +6,8 @@ use App\Models\World;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -79,7 +79,7 @@ class InactiveFinderController extends Controller
      */
     private function validatedFilters(Request $request): array
     {
-        $validated = $request->validate([
+        $validated = Validator::make($this->normalizedFilterInput($request), [
             'world' => ['nullable', 'string', 'max:100'],
             'q' => ['nullable', 'string', 'max:120'],
             'tribe_id' => ['nullable', 'integer', 'in:1,2,3,5,6,7,8,9'],
@@ -93,7 +93,7 @@ class InactiveFinderController extends Controller
             'stable_only' => ['nullable', 'boolean'],
             'include_npcs' => ['nullable', 'boolean'],
             'sort' => ['nullable', 'string', 'in:score,population_asc,population_desc,distance_asc'],
-        ]);
+        ])->validate();
 
         return [
             'world' => (string) ($validated['world'] ?? ''),
@@ -109,6 +109,79 @@ class InactiveFinderController extends Controller
             'stable_only' => filter_var($validated['stable_only'] ?? false, FILTER_VALIDATE_BOOL),
             'include_npcs' => filter_var($validated['include_npcs'] ?? false, FILTER_VALIDATE_BOOL),
             'sort' => (string) ($validated['sort'] ?? 'score'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function normalizedFilterInput(Request $request): array
+    {
+        $input = $request->query();
+
+        foreach (['world', 'q', 'tribe_id', 'min_population', 'max_population', 'x', 'y', 'radius', 'sort'] as $key) {
+            if (array_key_exists($key, $input) && is_string($input[$key])) {
+                $input[$key] = trim($input[$key]);
+            }
+        }
+
+        foreach (['tribe_id', 'min_population', 'max_population', 'x', 'y', 'radius'] as $key) {
+            if (($input[$key] ?? null) === '') {
+                $input[$key] = null;
+            }
+        }
+
+        foreach (['no_alliance', 'one_village', 'stable_only', 'include_npcs'] as $key) {
+            if (array_key_exists($key, $input)) {
+                $input[$key] = $this->normalizeBooleanInput($input[$key]);
+            }
+        }
+
+        if (($input['y'] ?? null) === null && is_string($input['x'] ?? null)) {
+            $coordinates = $this->parseCombinedCoordinates($input['x']);
+
+            if ($coordinates !== null) {
+                $input['x'] = $coordinates['x'];
+                $input['y'] = $coordinates['y'];
+            }
+        }
+
+        return $input;
+    }
+
+    private function normalizeBooleanInput(mixed $value): mixed
+    {
+        if ($value === null || is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        return match (strtolower(trim($value))) {
+            '1', 'true', 'on', 'yes' => true,
+            '0', 'false', 'off', 'no', '' => false,
+            default => $value,
+        };
+    }
+
+    /**
+     * @return array{x:int,y:int}|null
+     */
+    private function parseCombinedCoordinates(string $value): ?array
+    {
+        if (! preg_match('/^\s*(-?\d+)\s*\|\s*(-?\d+)\s*$/', $value, $matches)) {
+            return null;
+        }
+
+        return [
+            'x' => (int) $matches[1],
+            'y' => (int) $matches[2],
         ];
     }
 

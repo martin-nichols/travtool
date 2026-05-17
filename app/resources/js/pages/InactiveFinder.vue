@@ -119,12 +119,36 @@ const nullableNumber = (value: unknown): number | null => {
     return Number.isFinite(normalized) ? normalized : null;
 };
 
+const normalizedCenter = (): { x: number | null; y: number | null } => {
+    const xValue = typeof form.x === 'string' ? form.x.trim() : form.x;
+    const yValue = typeof form.y === 'string' ? form.y.trim() : form.y;
+
+    if ((yValue === '' || yValue === null) && typeof xValue === 'string') {
+        const match = xValue.match(/^\s*(-?\d+)\s*\|\s*(-?\d+)\s*$/);
+
+        if (match) {
+            return {
+                x: Number(match[1]),
+                y: Number(match[2]),
+            };
+        }
+    }
+
+    return {
+        x: nullableNumber(xValue),
+        y: nullableNumber(yValue),
+    };
+};
+
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
-const canUseDistanceSort = computed(() => nullableNumber(form.x) !== null && nullableNumber(form.y) !== null);
+const canUseDistanceSort = computed(() => {
+    const { x, y } = normalizedCenter();
+
+    return x !== null && y !== null;
+});
 
 const cleanedFilters = (): Record<string, string | number | boolean> => {
-    const x = nullableNumber(form.x);
-    const y = nullableNumber(form.y);
+    const { x, y } = normalizedCenter();
     const radius = nullableNumber(form.radius);
     const hasCenter = x !== null && y !== null;
     const effectiveSort = hasCenter && form.sort === 'score' ? 'distance_asc' : form.sort;
