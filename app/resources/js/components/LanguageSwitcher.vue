@@ -1,37 +1,59 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { useI18n } from '@/lib/i18n';
 
-const page = usePage();
-const { locale, locales, t } = useI18n();
+type LocaleOption = {
+    code: string;
+    label: string;
+};
 
+const page = usePage();
+const { t } = useI18n();
+
+const locale = computed(() => page.props.locale.current);
+const locales = computed(() => page.props.locale.available as LocaleOption[]);
 const redirect = computed(() => {
-    const url = page.url || '/';
-    return url.startsWith('/') ? url : '/';
+    if (typeof window === 'undefined') {
+        return '/';
+    }
+
+    return `${window.location.pathname}${window.location.search}`;
 });
+
+const switchLocale = (event: Event) => {
+    const target = event.target as HTMLSelectElement | null;
+    const nextLocale = target?.value;
+
+    if (!nextLocale || nextLocale === locale.value) {
+        return;
+    }
+
+    router.get(
+        `/locale/${nextLocale}`,
+        { redirect: redirect.value },
+        {
+            preserveScroll: true,
+            preserveState: false,
+            replace: true,
+        },
+    );
+};
 </script>
 
 <template>
-    <div class="flex flex-wrap items-center gap-2">
-        <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a7b6a]">
+    <label class="inline-flex items-center gap-3 rounded-full border border-[#1f1a14]/10 bg-white px-3 py-2 text-sm text-[#3b3129] shadow-[0_10px_30px_rgba(56,43,27,0.08)]">
+        <span class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">
             {{ t('common.language') }}
         </span>
-
-        <div class="flex flex-wrap items-center gap-2">
-            <Link
-                v-for="item in locales"
-                :key="item.code"
-                :href="`/locale/${item.code}?redirect=${encodeURIComponent(redirect)}`"
-                class="rounded-full px-3 py-1.5 text-sm transition"
-                :class="
-                    item.code === locale
-                        ? 'bg-[#1f1a14] text-[#f7efe1]'
-                        : 'border border-[#1f1a14]/10 bg-white/70 text-[#433931] hover:border-[#8b4a27]/35 hover:bg-white'
-                "
-            >
+        <select
+            :value="locale"
+            class="min-w-[7rem] bg-transparent text-sm font-medium text-[#1f1a14] outline-none"
+            @change="switchLocale"
+        >
+            <option v-for="item in locales" :key="item.code" :value="item.code">
                 {{ item.label }}
-            </Link>
-        </div>
-    </div>
+            </option>
+        </select>
+    </label>
 </template>

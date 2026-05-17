@@ -232,15 +232,9 @@ const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tri
                     <Link href="/" class="text-sm font-medium text-[#6a5d52] transition hover:text-[#8b4a27]">
                         {{ t('common.back_home') }}
                     </Link>
-                    <p class="mt-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#8b4a27]">
-                        {{ t('inactive_finder.hero.eyebrow') }}
-                    </p>
                     <h1 class="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#1c1814]">
-                        {{ t('inactive_finder.hero.title') }}
+                        {{ t('inactive_finder.meta.title') }}
                     </h1>
-                    <p class="mt-4 max-w-3xl text-base leading-8 text-[#5b5047]">
-                        {{ t('inactive_finder.hero.description') }}
-                    </p>
                 </div>
 
                 <div class="flex flex-col items-start gap-4 md:items-end">
