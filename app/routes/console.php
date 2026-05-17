@@ -3,6 +3,7 @@
 use App\Services\Travian\TravianMapImportService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use Symfony\Component\Console\Command\Command;
 
 Artisan::command('inspire', function () {
@@ -54,3 +55,48 @@ Artisan::command('travian:import-map {worldKey? : Configured world key, for exam
 
     return Command::SUCCESS;
 })->purpose('Download and import a Travian map.sql snapshot into Travtool');
+
+Artisan::command('travian:import-due-maps', function (TravianMapImportService $service): int {
+    $dueImports = $service->dueWorldImports();
+
+    if ($dueImports === []) {
+        $this->line('No world import is due right now.');
+
+        return Command::SUCCESS;
+    }
+
+    foreach ($dueImports as $dueImport) {
+        $this->line(sprintf(
+            'Scheduled import for [%s] at %s (%s).',
+            $dueImport['world_key'],
+            $dueImport['local_time'],
+            $dueImport['snapshot_date'],
+        ));
+
+        try {
+            $result = $service->importWorld(
+                $dueImport['world_key'],
+                snapshotDate: $dueImport['snapshot_date'],
+            );
+        } catch (\Throwable $exception) {
+            $this->error(sprintf('Scheduled import failed for [%s]: %s', $dueImport['world_key'], $exception->getMessage()));
+
+            return Command::FAILURE;
+        }
+
+        $this->info(sprintf(
+            'Scheduled import completed for [%s] (%d lines, run #%d, snapshot #%d).',
+            $result['world_key'],
+            $result['line_count'],
+            $result['import_run_id'],
+            $result['snapshot_id'],
+        ));
+    }
+
+    return Command::SUCCESS;
+})->purpose('Import map.sql for all active worlds that are due now');
+
+Schedule::command('travian:import-due-maps')
+    ->everyMinute()
+    ->withoutOverlapping(30)
+    ->name('travian-import-due-maps');

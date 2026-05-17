@@ -42,6 +42,37 @@ class TravianMapImportService
     }
 
     /**
+     * @return array<int, array{world_key:string,snapshot_date:string,local_time:string}>
+     */
+    public function dueWorldImports(?CarbonImmutable $now = null): array
+    {
+        $now ??= CarbonImmutable::now('UTC');
+        $dueImports = [];
+
+        foreach ($this->activeConfiguredWorldKeys() as $worldKey) {
+            $configuredWorld = $this->configuredWorld($worldKey);
+            $localNow = $now->setTimezone($configuredWorld['server_timezone']);
+            $snapshotDate = $localNow->toDateString();
+
+            if ($localNow->format('H:i') !== $configuredWorld['import_time']) {
+                continue;
+            }
+
+            if ($this->hasSuccessfulSnapshotForDate($worldKey, $snapshotDate)) {
+                continue;
+            }
+
+            $dueImports[] = [
+                'world_key' => $worldKey,
+                'snapshot_date' => $snapshotDate,
+                'local_time' => $localNow->format('H:i'),
+            ];
+        }
+
+        return $dueImports;
+    }
+
+    /**
      * @return array{world_key:string,snapshot_date:string,import_run_id:int,snapshot_id:int,line_count:int,stored_path:string,used_source:string}
      */
     public function importWorld(
@@ -137,7 +168,7 @@ class TravianMapImportService
     }
 
     /**
-     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,speed:int|null,is_active:bool} $configuredWorld
+     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool} $configuredWorld
      */
     private function syncWorld(string $worldKey, array $configuredWorld): World
     {
@@ -164,8 +195,23 @@ class TravianMapImportService
             ->first();
     }
 
+    public function hasSuccessfulSnapshotForDate(string $worldKey, string $snapshotDate): bool
+    {
+        $world = World::query()->where('key', $worldKey)->first();
+
+        if ($world === null) {
+            return false;
+        }
+
+        return MapSnapshot::query()
+            ->where('world_id', $world->id)
+            ->whereDate('snapshot_date', $snapshotDate)
+            ->where('status', MapSnapshot::STATUS_SUCCESS)
+            ->exists();
+    }
+
     /**
-     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,speed:int|null,is_active:bool} $configuredWorld
+     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool} $configuredWorld
      */
     private function prepareSnapshot(
         World $world,
@@ -226,7 +272,7 @@ class TravianMapImportService
     }
 
     /**
-     * @return array{name:string,base_url:string,map_sql_url:string,server_timezone:string,speed:int|null,is_active:bool}
+     * @return array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool}
      */
     private function configuredWorld(string $worldKey): array
     {
@@ -247,6 +293,7 @@ class TravianMapImportService
             'base_url' => rtrim((string) $world['base_url'], '/').'/',
             'map_sql_url' => (string) ($world['map_sql_url'] ?? rtrim((string) $world['base_url'], '/').'/map.sql'),
             'server_timezone' => (string) ($world['server_timezone'] ?? 'UTC'),
+            'import_time' => (string) ($world['import_time'] ?? '00:10'),
             'speed' => isset($world['speed']) ? (int) $world['speed'] : null,
             'is_active' => (bool) ($world['is_active'] ?? true),
         ];
