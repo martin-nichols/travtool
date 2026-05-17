@@ -356,6 +356,16 @@ class InactiveFinderController extends Controller
 
     private function applySorting(Builder $query, string $sort, bool $hasDistanceSearch): void
     {
+        if ($sort === 'score' && $hasDistanceSearch) {
+            $query
+                ->orderBy('distance')
+                ->orderByDesc('score')
+                ->orderBy('v.population')
+                ->orderBy('v.id');
+
+            return;
+        }
+
         match ($sort) {
             'population_asc' => $query->orderBy('v.population')->orderByDesc('score')->orderBy('v.id'),
             'population_desc' => $query->orderByDesc('v.population')->orderByDesc('score')->orderBy('v.id'),
