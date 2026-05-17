@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\InactiveFinderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
 Route::inertia('/', 'Home')->name('home');
-Route::inertia('/inactive-finder', 'InactiveFinder')->name('inactive-finder');
+Route::get('/inactive-finder', InactiveFinderController::class)->name('inactive-finder');
 Route::inertia('/login', 'Auth/Login')->name('login');
 
 Route::get('/locale/{locale}', function (Request $request, string $locale) {
