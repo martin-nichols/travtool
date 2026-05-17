@@ -3,8 +3,26 @@
 return [
     'locales' => [
         'en' => 'English',
-        'fr' => 'Français',
+        'fr' => 'Francais',
         'de' => 'Deutsch',
-        'es' => 'Español',
+        'es' => 'Espanol',
+    ],
+
+    'imports' => [
+        'disk' => env('TRAVTOOL_IMPORT_DISK', 'local'),
+        'directory' => env('TRAVTOOL_IMPORT_DIRECTORY', 'map-imports'),
+        'staging_chunk_size' => (int) env('TRAVTOOL_IMPORT_STAGING_CHUNK_SIZE', 500),
+        'snapshot_chunk_size' => (int) env('TRAVTOOL_IMPORT_SNAPSHOT_CHUNK_SIZE', 500),
+    ],
+
+    'worlds' => [
+        'rof' => [
+            'name' => 'Rise of Fire Europe x2',
+            'base_url' => 'https://rof.x2.europe.travian.com/',
+            'map_sql_url' => 'https://rof.x2.europe.travian.com/map.sql',
+            'server_timezone' => 'Europe/Berlin',
+            'speed' => 2,
+            'is_active' => true,
+        ],
     ],
 ];
