@@ -7,12 +7,12 @@ import { useI18n } from '@/lib/i18n';
 type FilterState = {
     world: string;
     q: string | null;
-    tribe_id: number | null;
-    min_population: number | null;
-    max_population: number | null;
-    x: number | null;
-    y: number | null;
-    radius: number | null;
+    tribe_id: number | string | null;
+    min_population: number | string | null;
+    max_population: number | string | null;
+    x: number | string | null;
+    y: number | string | null;
+    radius: number | string | null;
     no_alliance: boolean;
     one_village: boolean;
     stable_only: boolean;
@@ -349,14 +349,14 @@ const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tri
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.min_population_label') }}
                                 </span>
-                                <input v-model.number="form.min_population" type="number" min="0" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                <input v-model="form.min_population" type="number" min="0" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                             </label>
 
                             <label class="grid gap-2">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.max_population_label') }}
                                 </span>
-                                <input v-model.number="form.max_population" type="number" min="0" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                <input v-model="form.max_population" type="number" min="0" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                             </label>
                         </div>
 
@@ -365,21 +365,33 @@ const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tri
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.center_x_label') }}
                                 </span>
-                                <input v-model.number="form.x" type="number" min="-400" max="400" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                <input
+                                    v-model="form.x"
+                                    type="text"
+                                    inputmode="numeric"
+                                    placeholder="-15"
+                                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
+                                />
                             </label>
 
                             <label class="grid gap-2">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.center_y_label') }}
                                 </span>
-                                <input v-model.number="form.y" type="number" min="-400" max="400" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                <input
+                                    v-model="form.y"
+                                    type="text"
+                                    inputmode="numeric"
+                                    placeholder="-15"
+                                    class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none placeholder:text-[#b7a593]"
+                                />
                             </label>
 
                             <label class="grid gap-2">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.radius_label') }}
                                 </span>
-                                <input v-model.number="form.radius" type="number" min="0" max="400" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                <input v-model="form.radius" type="number" min="0" max="400" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                             </label>
                         </div>
 
