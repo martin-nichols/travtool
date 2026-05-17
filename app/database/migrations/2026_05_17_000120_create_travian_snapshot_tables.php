@@ -68,7 +68,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('tribe_id');
             $table->string('name', 255);
             $table->unsignedInteger('population');
-            $table->unsignedInteger('region_id')->nullable();
+            $table->string('region_name', 255)->nullable();
             $table->boolean('is_capital')->nullable();
             $table->boolean('is_city')->nullable();
             $table->boolean('has_harbor')->nullable();

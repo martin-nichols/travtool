@@ -28,7 +28,7 @@ return new class extends Migration
             $table->unsignedInteger('external_alliance_id')->default(0);
             $table->string('alliance_tag_raw', 64)->nullable();
             $table->unsignedInteger('population');
-            $table->unsignedInteger('region_id')->nullable();
+            $table->string('region_name_raw', 255)->nullable();
             $table->boolean('is_capital')->nullable();
             $table->boolean('is_city')->nullable();
             $table->boolean('has_harbor')->nullable();
@@ -90,7 +90,7 @@ return new class extends Migration
             $table->smallInteger('y');
             $table->unsignedTinyInteger('tribe_id');
             $table->unsignedInteger('population');
-            $table->unsignedInteger('region_id')->nullable();
+            $table->string('region_name', 255)->nullable();
             $table->boolean('is_capital')->nullable();
             $table->boolean('is_city')->nullable();
             $table->boolean('has_harbor')->nullable();

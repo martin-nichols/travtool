@@ -36,7 +36,7 @@ class MapSqlLineParser
             'external_alliance_id' => $this->toNullableInt($tokens[8]) ?? 0,
             'alliance_tag_raw' => $this->toString($tokens[9]),
             'population' => $this->toInt($tokens[10]),
-            'region_id' => $this->toNullableInt($tokens[11]),
+            'region_name_raw' => $this->toString($tokens[11]),
             'is_capital' => $this->toNullableBool($tokens[12]),
             'is_city' => $this->toNullableBool($tokens[13]),
             'has_harbor' => $this->toNullableBool($tokens[14]),

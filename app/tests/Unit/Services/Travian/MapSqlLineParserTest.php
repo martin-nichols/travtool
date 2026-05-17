@@ -25,7 +25,7 @@ class MapSqlLineParserTest extends TestCase
             'external_alliance_id' => 0,
             'alliance_tag_raw' => '',
             'population' => 498,
-            'region_id' => null,
+            'region_name_raw' => null,
             'is_capital' => false,
             'is_city' => null,
             'has_harbor' => null,
@@ -37,11 +37,11 @@ class MapSqlLineParserTest extends TestCase
     {
         $parser = new MapSqlLineParser();
 
-        $parsed = $parser->parse('INSERT INTO `x_world` VALUES (12,-44,9,3,998,\'L&#39;Etoile\',457,\'J&#34;ul\',77,\'TAG\',1234,55,TRUE,FALSE,TRUE,19);');
+        $parsed = $parser->parse('INSERT INTO `x_world` VALUES (12,-44,9,3,998,\'L&#39;Etoile\',457,\'J&#34;ul\',77,\'TAG\',1234,\'Caledonia\',TRUE,FALSE,TRUE,19);');
 
         $this->assertSame('L&#39;Etoile', $parsed['village_name_raw']);
         $this->assertSame('J&#34;ul', $parsed['player_name_raw']);
-        $this->assertSame(55, $parsed['region_id']);
+        $this->assertSame('Caledonia', $parsed['region_name_raw']);
         $this->assertTrue($parsed['is_capital']);
         $this->assertFalse($parsed['is_city']);
         $this->assertTrue($parsed['has_harbor']);
