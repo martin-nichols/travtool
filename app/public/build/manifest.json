@@ -52,7 +52,7 @@
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-MW-xl1dc.css",
+    "file": "assets/app-puZAi4fe.css",
     "name": "app",
     "names": [
       "app.css"
@@ -61,16 +61,46 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-Bf1XnH2H.js",
+    "file": "assets/app-BTDN_p2V.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
     "dynamicImports": [
+      "resources/js/pages/Auth/Login.vue",
+      "resources/js/pages/Home.vue",
+      "resources/js/pages/InactiveFinder.vue",
       "resources/js/pages/Welcome.vue"
     ]
   },
+  "resources/js/pages/Auth/Login.vue": {
+    "file": "assets/Login-CxFZjrSC.js",
+    "name": "Login",
+    "src": "resources/js/pages/Auth/Login.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.ts"
+    ]
+  },
+  "resources/js/pages/Home.vue": {
+    "file": "assets/Home-BORS49jn.js",
+    "name": "Home",
+    "src": "resources/js/pages/Home.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.ts"
+    ]
+  },
+  "resources/js/pages/InactiveFinder.vue": {
+    "file": "assets/InactiveFinder-DHE2rxIW.js",
+    "name": "InactiveFinder",
+    "src": "resources/js/pages/InactiveFinder.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.ts"
+    ]
+  },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-DNaHBLCO.js",
+    "file": "assets/Welcome-B5M_u8Ur.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,
