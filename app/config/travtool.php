@@ -25,5 +25,14 @@ return [
             'speed' => 2,
             'is_active' => true,
         ],
+        'ts2' => [
+            'name' => 'Travian Europe x1',
+            'base_url' => 'https://ts2.x1.europe.travian.com/',
+            'map_sql_url' => 'https://ts2.x1.europe.travian.com/map.sql',
+            'server_timezone' => 'UTC',
+            'import_time' => '00:10',
+            'speed' => 1,
+            'is_active' => true,
+        ],
     ],
 ];
