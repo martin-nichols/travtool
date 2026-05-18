@@ -245,8 +245,7 @@ class InactiveFinderController extends Controller
             ->get()
             ->keyBy('key');
 
-        $defaultWorldKey = $configuredWorlds->keys()->first() ?? '';
-        $selectedKey = $configuredWorlds->has($selectedWorldKey) ? $selectedWorldKey : $defaultWorldKey;
+        $selectedKey = $configuredWorlds->has($selectedWorldKey) ? $selectedWorldKey : '';
         $selectedConfig = (array) ($configuredWorlds->get($selectedKey) ?? []);
         $selectedModel = $selectedKey !== '' ? $worldModels->get($selectedKey) : null;
 

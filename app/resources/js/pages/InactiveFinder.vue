@@ -99,6 +99,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const resultsScroller = ref<HTMLElement | null>(null);
+const worldSelectionError = ref(false);
 
 const form = reactive<FilterState>({ ...props.filters });
 
@@ -108,6 +109,15 @@ watch(
         Object.assign(form, nextFilters);
     },
     { deep: true },
+);
+
+watch(
+    () => form.world,
+    (nextWorld) => {
+        if (nextWorld) {
+            worldSelectionError.value = false;
+        }
+    },
 );
 
 const numberFormatter = new Intl.NumberFormat();
@@ -149,6 +159,15 @@ const canUseDistanceSort = computed(() => {
 
     return x !== null && y !== null;
 });
+const selectedResultWorldName = computed(() => props.summary.selectedWorldName || t('inactive_finder.results.choose_world_title'));
+
+const validateWorldSelection = (): boolean => {
+    const isValid = Boolean(form.world);
+
+    worldSelectionError.value = !isValid;
+
+    return isValid;
+};
 
 const cleanedFilters = (): Record<string, string | number | boolean> => {
     const { x, y } = normalizedCenter();
@@ -182,6 +201,10 @@ const cleanedFilters = (): Record<string, string | number | boolean> => {
 };
 
 const submit = () => {
+    if (!validateWorldSelection()) {
+        return;
+    }
+
     router.get('/inactive-finder', cleanedFilters(), {
         preserveScroll: true,
         preserveState: false,
@@ -205,6 +228,14 @@ const reset = () => {
             replace: true,
         },
     );
+};
+
+const openSelectedWorld = () => {
+    if (!validateWorldSelection() || !selectedWorld.value?.base_url) {
+        return;
+    }
+
+    window.open(selectedWorld.value.base_url, '_blank', 'noopener,noreferrer');
 };
 
 const formatNumber = (value: number | null): string => {
@@ -368,49 +399,46 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
             <section class="mt-10">
                 <article class="overflow-hidden rounded-[32px] border border-[#1f1a14]/10 bg-[#1f1a14] p-5 text-[#f6ede0] shadow-[0_24px_80px_rgba(40,28,17,0.16)] sm:p-7">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#ffb36b]">
-                                {{ t('inactive_finder.filters.title') }}
-                            </p>
-                            <div class="mt-4 flex flex-wrap gap-2 text-xs font-medium text-[#f6ede0]">
-                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                                    {{ t('inactive_finder.summary.worlds') }}: {{ summary.selectedWorldName }}
-                                </span>
-                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                                    {{ t('inactive_finder.summary.snapshot') }}:
-                                    {{ summary.currentSnapshotDate ?? t('inactive_finder.results.no_data') }}
-                                </span>
-                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                                    {{ t('inactive_finder.summary.history') }}:
-                                    {{ summary.historyReady ? t('inactive_finder.summary.history_yes') : t('inactive_finder.summary.history_no') }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <a
-                            v-if="selectedWorld?.base_url"
-                            :href="selectedWorld.base_url"
-                            target="_blank"
-                            rel="noreferrer"
-                            class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-[#f4c18e] transition hover:bg-white/10 hover:text-white"
-                        >
-                            {{ t('inactive_finder.filters.open_world') }}
-                        </a>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#ffb36b]">
+                            {{ t('inactive_finder.filters.title') }}
+                        </p>
                     </div>
 
                     <form class="mt-6 grid gap-5" @submit.prevent="submit">
                         <div class="grid gap-4 lg:grid-cols-12">
-                            <label class="grid min-w-0 gap-2 lg:col-span-3">
+                            <div class="grid min-w-0 gap-3 lg:col-span-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.world_label') }}
                                 </span>
-                                <select v-model="form.world" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none">
-                                    <option v-for="world in worlds" :key="world.key" :value="world.key" class="text-[#1f1a14]">
-                                        {{ world.name }}
-                                    </option>
-                                </select>
-                            </label>
+                                <div class="relative">
+                                    <div
+                                        v-if="worldSelectionError"
+                                        class="absolute -top-3 left-4 z-10 -translate-y-full rounded-full bg-[#dc5a4a] px-3 py-1 text-xs font-semibold text-white shadow-[0_12px_24px_rgba(220,90,74,0.3)]"
+                                    >
+                                        {{ t('inactive_finder.filters.choose_world_error') }}
+                                    </div>
+                                    <select
+                                        v-model="form.world"
+                                        :class="[
+                                            'w-full min-w-0 rounded-2xl border bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none',
+                                            worldSelectionError ? 'border-[#dc5a4a] ring-2 ring-[#dc5a4a]/30' : 'border-white/10',
+                                        ]"
+                                    >
+                                        <option value="" class="text-[#1f1a14]">{{ t('inactive_finder.filters.choose_world_placeholder') }}</option>
+                                        <option v-for="world in worlds" :key="world.key" :value="world.key" class="text-[#1f1a14]">
+                                            {{ world.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-[#f4c18e] transition hover:bg-white/10 hover:text-white"
+                                    @click="openSelectedWorld"
+                                >
+                                    {{ t('inactive_finder.filters.open_world') }}
+                                </button>
+                            </div>
 
                             <label class="grid min-w-0 gap-2 lg:col-span-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
@@ -577,26 +605,37 @@ const suppressDraggedClick = (event: MouseEvent) => {
                                 {{ t('inactive_finder.results.title') }}
                             </p>
                             <h2 class="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[#1c1814] sm:text-3xl">
-                                {{ summary.selectedWorldName }}
+                                {{ selectedResultWorldName }}
                             </h2>
                             <p class="mt-2 max-w-3xl text-sm leading-7 text-[#5b5047]">
-                                {{ summary.hasImportedSnapshot ? t('inactive_finder.results.ready_description') : t('inactive_finder.results.waiting_description') }}
+                                {{
+                                    !summary.selectedWorldKey
+                                        ? t('inactive_finder.results.choose_world_description')
+                                        : summary.hasImportedSnapshot
+                                            ? t('inactive_finder.results.ready_description')
+                                            : t('inactive_finder.results.waiting_description')
+                                }}
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap gap-2 text-xs font-medium text-[#5b5047]">
+                        <div v-if="summary.selectedWorldKey" class="flex flex-wrap gap-2 text-xs font-medium text-[#5b5047]">
                             <span class="rounded-full bg-[#fcf7ee] px-3 py-2">
                                 <strong class="font-semibold text-[#1c1814]">{{ formatNumber(summary.resultsCount) }}</strong>
                                 {{ t('inactive_finder.results.items') }}
                             </span>
-                            <span class="rounded-full bg-[#fcf7ee] px-3 py-2">
-                                {{ t('inactive_finder.summary.snapshot') }}:
-                                {{ summary.currentSnapshotDate ?? t('inactive_finder.results.no_data') }}
-                            </span>
                         </div>
                     </div>
 
-                    <div v-if="!summary.hasImportedSnapshot" class="mt-6 rounded-[28px] border border-dashed border-[#8b4a27]/25 bg-[#fcf7ee] p-8">
+                    <div v-if="!summary.selectedWorldKey" class="mt-6 rounded-[28px] border border-dashed border-[#8b4a27]/25 bg-[#fcf7ee] p-8">
+                        <h3 class="text-2xl font-semibold tracking-[-0.03em] text-[#1c1814]">
+                            {{ t('inactive_finder.results.choose_world_title') }}
+                        </h3>
+                        <p class="mt-4 max-w-2xl text-sm leading-8 text-[#5b5047]">
+                            {{ t('inactive_finder.results.choose_world_description') }}
+                        </p>
+                    </div>
+
+                    <div v-else-if="!summary.hasImportedSnapshot" class="mt-6 rounded-[28px] border border-dashed border-[#8b4a27]/25 bg-[#fcf7ee] p-8">
                         <h3 class="text-2xl font-semibold tracking-[-0.03em] text-[#1c1814]">
                             {{ t('inactive_finder.results.empty_title') }}
                         </h3>
