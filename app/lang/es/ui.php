@@ -139,10 +139,12 @@ return [
             'no_match_description' => 'Amplia los filtros o espera una importacion diaria mas para activar heuristicas de inactividad mas fuertes.',
             'no_alliance' => 'Sin alianza',
             'no_data' => '-',
+            'population_prefix' => 'pop',
             'swipe_hint' => 'En movil, desliza la tabla horizontalmente para ver todas las columnas.',
             'columns' => [
                 'village' => 'Aldea',
                 'player' => 'Jugador',
+                'player_population_hint' => 'pop total',
                 'alliance' => 'Alianza',
                 'coords' => 'Coords',
                 'tribe' => 'Pueblo',

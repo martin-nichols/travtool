@@ -139,10 +139,12 @@ return [
             'no_match_description' => 'Broaden the filters or wait for one more daily import to unlock stronger inactivity heuristics.',
             'no_alliance' => 'No alliance',
             'no_data' => '-',
+            'population_prefix' => 'pop',
             'swipe_hint' => 'On mobile, swipe the table horizontally to reveal every column.',
             'columns' => [
                 'village' => 'Village',
                 'player' => 'Player',
+                'player_population_hint' => 'total pop',
                 'alliance' => 'Alliance',
                 'coords' => 'Coords',
                 'tribe' => 'Tribe',

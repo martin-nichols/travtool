@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useI18n } from '@/lib/i18n';
@@ -96,6 +96,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const resultsScroller = ref<HTMLElement | null>(null);
 
 const form = reactive<FilterState>({ ...props.filters });
 
@@ -220,6 +221,7 @@ const formatDelta = (populationDelta: number | null, villageDelta: number | null
 const coordsLabel = (x: number, y: number): string => `${x}|${y}`;
 
 const tribeLabel = (tribeId: number): string => props.tribes.find((tribe) => tribe.value === tribeId)?.label ?? String(tribeId);
+const villagePopulationLabel = (population: number): string => `${t('inactive_finder.results.population_prefix')} = ${formatNumber(population)}`;
 
 const villageMapLink = (x: number, y: number): string | null => {
     const baseUrl = props.summary.selectedWorldBaseUrl;
@@ -229,6 +231,84 @@ const villageMapLink = (x: number, y: number): string | null => {
     }
 
     return `${baseUrl.replace(/\/+$/, '')}/karte.php?x=${x}&y=${y}`;
+};
+
+const dragState = reactive({
+    active: false,
+    moved: false,
+    suppressClick: false,
+    startX: 0,
+    startScrollLeft: 0,
+    pointerId: -1,
+});
+
+const onResultsPointerDown = (event: PointerEvent) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+        return;
+    }
+
+    const scroller = resultsScroller.value;
+
+    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) {
+        return;
+    }
+
+    dragState.active = true;
+    dragState.moved = false;
+    dragState.startX = event.clientX;
+    dragState.startScrollLeft = scroller.scrollLeft;
+    dragState.pointerId = event.pointerId;
+
+    scroller.setPointerCapture?.(event.pointerId);
+};
+
+const onResultsPointerMove = (event: PointerEvent) => {
+    if (!dragState.active || dragState.pointerId !== event.pointerId) {
+        return;
+    }
+
+    const scroller = resultsScroller.value;
+
+    if (!scroller) {
+        return;
+    }
+
+    const deltaX = event.clientX - dragState.startX;
+
+    if (Math.abs(deltaX) > 6) {
+        dragState.moved = true;
+        dragState.suppressClick = true;
+    }
+
+    scroller.scrollLeft = dragState.startScrollLeft - deltaX;
+
+    if (dragState.moved && event.cancelable) {
+        event.preventDefault();
+    }
+};
+
+const resetResultsDrag = (event?: PointerEvent) => {
+    const scroller = resultsScroller.value;
+
+    if (event && scroller && dragState.pointerId === event.pointerId) {
+        scroller.releasePointerCapture?.(event.pointerId);
+    }
+
+    dragState.active = false;
+    dragState.pointerId = -1;
+
+    window.setTimeout(() => {
+        dragState.suppressClick = false;
+    }, 0);
+};
+
+const suppressDraggedClick = (event: MouseEvent) => {
+    if (!dragState.suppressClick) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
 };
 </script>
 
@@ -493,12 +573,25 @@ const villageMapLink = (x: number, y: number): string | null => {
                             {{ t('inactive_finder.results.swipe_hint') }}
                         </div>
 
-                        <div class="overflow-x-auto overscroll-x-contain touch-pan-x">
+                        <div
+                            ref="resultsScroller"
+                            class="overflow-x-auto overscroll-x-contain select-none touch-pan-x"
+                            @click.capture="suppressDraggedClick"
+                            @pointercancel="resetResultsDrag"
+                            @pointerdown="onResultsPointerDown"
+                            @pointermove="onResultsPointerMove"
+                            @pointerup="resetResultsDrag"
+                        >
                             <table class="min-w-[980px] divide-y divide-[#1f1a14]/10">
                                 <thead class="bg-[#fcf7ee] text-left">
                                     <tr class="text-xs font-semibold uppercase tracking-[0.2em] text-[#7f6d5d]">
                                         <th class="px-4 py-3 whitespace-nowrap">{{ t('inactive_finder.results.columns.village') }}</th>
-                                        <th class="px-4 py-3 whitespace-nowrap">{{ t('inactive_finder.results.columns.player') }}</th>
+                                        <th class="px-4 py-3 whitespace-nowrap">
+                                            <div>{{ t('inactive_finder.results.columns.player') }}</div>
+                                            <div class="mt-1 text-[10px] font-medium normal-case tracking-normal text-[#9a8a7c]">
+                                                {{ t('inactive_finder.results.columns.player_population_hint') }}
+                                            </div>
+                                        </th>
                                         <th class="px-4 py-3 whitespace-nowrap">{{ t('inactive_finder.results.columns.alliance') }}</th>
                                         <th class="px-4 py-3 whitespace-nowrap">{{ t('inactive_finder.results.columns.coords') }}</th>
                                         <th class="px-4 py-3 whitespace-nowrap">{{ t('inactive_finder.results.columns.tribe') }}</th>
@@ -537,6 +630,7 @@ const villageMapLink = (x: number, y: number): string | null => {
                                                 </svg>
                                             </a>
                                             <div v-else class="font-semibold text-[#1c1814]">{{ row.village_name }}</div>
+                                            <div class="mt-1 text-xs text-[#7b6b5d]">{{ villagePopulationLabel(row.population) }}</div>
                                             <div v-if="row.region_name" class="mt-1 text-xs text-[#7b6b5d]">{{ row.region_name }}</div>
                                         </td>
                                         <td class="px-4 py-4 align-top">
