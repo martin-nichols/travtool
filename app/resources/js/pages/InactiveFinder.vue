@@ -8,11 +8,13 @@ type FilterState = {
     world: string;
     q: string | null;
     tribe_id: number | string | null;
+    min_score: number | string | null;
     min_population: number | string | null;
     max_population: number | string | null;
     x: number | string | null;
     y: number | string | null;
-    radius: number | string | null;
+    radius_min: number | string | null;
+    radius_max: number | string | null;
     no_alliance: boolean;
     one_village: boolean;
     stable_only: boolean;
@@ -150,7 +152,8 @@ const canUseDistanceSort = computed(() => {
 
 const cleanedFilters = (): Record<string, string | number | boolean> => {
     const { x, y } = normalizedCenter();
-    const radius = nullableNumber(form.radius);
+    const radiusMin = nullableNumber(form.radius_min);
+    const radiusMax = nullableNumber(form.radius_max);
     const hasCenter = x !== null && y !== null;
     const effectiveSort = hasCenter && form.sort === 'score' ? 'distance_asc' : form.sort;
     const payload: Record<string, string | number | boolean> = {
@@ -164,14 +167,16 @@ const cleanedFilters = (): Record<string, string | number | boolean> => {
 
     if (form.q) payload.q = form.q;
     if (nullableNumber(form.tribe_id) !== null) payload.tribe_id = nullableNumber(form.tribe_id) as number;
+    if (nullableNumber(form.min_score) !== null) payload.min_score = nullableNumber(form.min_score) as number;
     if (nullableNumber(form.min_population) !== null) payload.min_population = nullableNumber(form.min_population) as number;
     if (nullableNumber(form.max_population) !== null) payload.max_population = nullableNumber(form.max_population) as number;
     if (x !== null) payload.x = x;
     if (y !== null) payload.y = y;
-    if (radius !== null) {
-        payload.radius = radius;
-    } else if (hasCenter) {
-        payload.radius = 25;
+    if (radiusMin !== null) payload.radius_min = radiusMin;
+    if (radiusMax !== null) {
+        payload.radius_max = radiusMax;
+    } else if (hasCenter && radiusMin === null) {
+        payload.radius_max = 25;
     }
 
     return payload;
@@ -190,6 +195,7 @@ const reset = () => {
         '/inactive-finder',
         {
             world: form.world || props.summary.selectedWorldKey,
+            min_score: 100,
             one_village: true,
             include_npcs: false,
             sort: 'score',
@@ -450,14 +456,21 @@ const suppressDraggedClick = (event: MouseEvent) => {
                                 </select>
                             </label>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-4">
+                            <label class="grid min-w-0 gap-2 lg:col-span-2">
+                                <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
+                                    {{ t('inactive_finder.filters.min_score_label') }}
+                                </span>
+                                <input v-model="form.min_score" type="number" min="0" max="999" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                            </label>
+
+                            <label class="grid min-w-0 gap-2 lg:col-span-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.min_population_label') }}
                                 </span>
                                 <input v-model="form.min_population" type="number" min="0" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                             </label>
 
-                            <label class="grid min-w-0 gap-2 lg:col-span-4">
+                            <label class="grid min-w-0 gap-2 lg:col-span-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                     {{ t('inactive_finder.filters.max_population_label') }}
                                 </span>
@@ -466,7 +479,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
                         </div>
 
                         <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
-                            <div class="grid gap-4 lg:col-span-5 lg:grid-cols-3">
+                            <div class="grid gap-4 lg:col-span-6 lg:grid-cols-4">
                                 <label class="grid min-w-0 gap-2">
                                     <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                         {{ t('inactive_finder.filters.center_x_label') }}
@@ -495,13 +508,20 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
                                 <label class="grid min-w-0 gap-2">
                                     <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
-                                        {{ t('inactive_finder.filters.radius_label') }}
+                                        {{ t('inactive_finder.filters.radius_min_label') }}
                                     </span>
-                                    <input v-model="form.radius" type="number" min="0" max="400" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                    <input v-model="form.radius_min" type="number" min="0" max="400" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
+                                </label>
+
+                                <label class="grid min-w-0 gap-2">
+                                    <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
+                                        {{ t('inactive_finder.filters.radius_max_label') }}
+                                    </span>
+                                    <input v-model="form.radius_max" type="number" min="0" max="400" class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none" />
                                 </label>
                             </div>
 
-                            <div class="grid gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 lg:col-span-7">
+                            <div class="grid gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-4 sm:px-5 lg:col-span-6">
                                 <label class="flex items-start gap-3 text-sm text-[#f6ede0]">
                                     <input v-model="form.one_village" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-transparent" />
                                     <span>{{ t('inactive_finder.filters.one_village') }}</span>
@@ -523,6 +543,10 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
                         <div class="flex flex-col gap-4 border-t border-white/10 pt-5 lg:flex-row lg:items-center lg:justify-between">
                             <p class="max-w-3xl text-sm leading-7 text-[#d8c8b7]">
+                                {{ t('inactive_finder.filters.radius_help') }}
+                            </p>
+
+                            <p class="max-w-3xl text-sm leading-7 text-[#d8c8b7] lg:text-right">
                                 {{ summary.historyReady ? t('inactive_finder.notice.history_ready') : t('inactive_finder.notice.history_waiting') }}
                             </p>
 

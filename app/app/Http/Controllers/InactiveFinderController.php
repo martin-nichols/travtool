@@ -65,11 +65,13 @@ class InactiveFinderController extends Controller
      *     world:string,
      *     q:?string,
      *     tribe_id:?int,
+     *     min_score:?int,
      *     min_population:?int,
      *     max_population:?int,
      *     x:?int,
      *     y:?int,
-     *     radius:?int,
+     *     radius_min:?int,
+     *     radius_max:?int,
      *     no_alliance:bool,
      *     one_village:bool,
      *     stable_only:bool,
@@ -83,27 +85,40 @@ class InactiveFinderController extends Controller
             'world' => ['nullable', 'string', 'max:100'],
             'q' => ['nullable', 'string', 'max:120'],
             'tribe_id' => ['nullable', 'integer', 'in:1,2,3,5,6,7,8,9'],
+            'min_score' => ['nullable', 'integer', 'min:0', 'max:999'],
             'min_population' => ['nullable', 'integer', 'min:0', 'max:999999'],
             'max_population' => ['nullable', 'integer', 'min:0', 'max:999999'],
             'x' => ['nullable', 'integer', 'min:-400', 'max:400'],
             'y' => ['nullable', 'integer', 'min:-400', 'max:400'],
-            'radius' => ['nullable', 'integer', 'min:0', 'max:400'],
+            'radius_min' => ['nullable', 'integer', 'min:0', 'max:400'],
+            'radius_max' => ['nullable', 'integer', 'min:0', 'max:400'],
             'no_alliance' => ['nullable', 'boolean'],
             'one_village' => ['nullable', 'boolean'],
             'stable_only' => ['nullable', 'boolean'],
             'include_npcs' => ['nullable', 'boolean'],
             'sort' => ['nullable', 'string', 'in:score,population_asc,population_desc,distance_asc'],
-        ])->validate();
+        ])->after(function ($validator) use (&$request): void {
+            $data = $validator->validated();
+
+            if (
+                isset($data['radius_min'], $data['radius_max'])
+                && (int) $data['radius_min'] > (int) $data['radius_max']
+            ) {
+                $validator->errors()->add('radius_min', 'The minimum radius must be less than or equal to the maximum radius.');
+            }
+        })->validate();
 
         return [
             'world' => (string) ($validated['world'] ?? ''),
             'q' => $this->filledString($validated['q'] ?? null),
             'tribe_id' => isset($validated['tribe_id']) ? (int) $validated['tribe_id'] : null,
+            'min_score' => isset($validated['min_score']) ? (int) $validated['min_score'] : 100,
             'min_population' => isset($validated['min_population']) ? (int) $validated['min_population'] : null,
             'max_population' => isset($validated['max_population']) ? (int) $validated['max_population'] : null,
             'x' => isset($validated['x']) ? (int) $validated['x'] : null,
             'y' => isset($validated['y']) ? (int) $validated['y'] : null,
-            'radius' => isset($validated['radius']) ? (int) $validated['radius'] : null,
+            'radius_min' => isset($validated['radius_min']) ? (int) $validated['radius_min'] : null,
+            'radius_max' => isset($validated['radius_max']) ? (int) $validated['radius_max'] : null,
             'no_alliance' => filter_var($validated['no_alliance'] ?? false, FILTER_VALIDATE_BOOL),
             'one_village' => filter_var($validated['one_village'] ?? true, FILTER_VALIDATE_BOOL),
             'stable_only' => filter_var($validated['stable_only'] ?? false, FILTER_VALIDATE_BOOL),
@@ -119,13 +134,13 @@ class InactiveFinderController extends Controller
     {
         $input = $request->query();
 
-        foreach (['world', 'q', 'tribe_id', 'min_population', 'max_population', 'x', 'y', 'radius', 'sort'] as $key) {
+        foreach (['world', 'q', 'tribe_id', 'min_score', 'min_population', 'max_population', 'x', 'y', 'radius', 'radius_min', 'radius_max', 'sort'] as $key) {
             if (array_key_exists($key, $input) && is_string($input[$key])) {
                 $input[$key] = trim($input[$key]);
             }
         }
 
-        foreach (['tribe_id', 'min_population', 'max_population', 'x', 'y', 'radius'] as $key) {
+        foreach (['tribe_id', 'min_score', 'min_population', 'max_population', 'x', 'y', 'radius', 'radius_min', 'radius_max'] as $key) {
             if (($input[$key] ?? null) === '') {
                 $input[$key] = null;
             }
@@ -144,6 +159,24 @@ class InactiveFinderController extends Controller
                 $input['x'] = $coordinates['x'];
                 $input['y'] = $coordinates['y'];
             }
+        }
+
+        if (($input['radius_max'] ?? null) === null && ($input['radius'] ?? null) !== null) {
+            $input['radius_max'] = $input['radius'];
+        }
+
+        if (($input['radius_max'] ?? null) === null && ($input['radius_min'] ?? null) !== null) {
+            $input['radius_max'] = $input['radius_min'];
+            $input['radius_min'] = null;
+        }
+
+        if (
+            isset($input['radius_min'], $input['radius_max'])
+            && is_numeric($input['radius_min'])
+            && is_numeric($input['radius_max'])
+            && (int) $input['radius_min'] > (int) $input['radius_max']
+        ) {
+            [$input['radius_min'], $input['radius_max']] = [$input['radius_max'], $input['radius_min']];
         }
 
         return $input;
@@ -268,11 +301,13 @@ class InactiveFinderController extends Controller
      *     world:string,
      *     q:?string,
      *     tribe_id:?int,
+     *     min_score:?int,
      *     min_population:?int,
      *     max_population:?int,
      *     x:?int,
      *     y:?int,
-     *     radius:?int,
+     *     radius_min:?int,
+     *     radius_max:?int,
      *     no_alliance:bool,
      *     one_village:bool,
      *     stable_only:bool,
@@ -365,11 +400,13 @@ class InactiveFinderController extends Controller
      *     world:string,
      *     q:?string,
      *     tribe_id:?int,
+     *     min_score:?int,
      *     min_population:?int,
      *     max_population:?int,
      *     x:?int,
      *     y:?int,
-     *     radius:?int,
+     *     radius_min:?int,
+     *     radius_max:?int,
      *     no_alliance:bool,
      *     one_village:bool,
      *     stable_only:bool,
@@ -398,6 +435,10 @@ class InactiveFinderController extends Controller
             $query->where('v.tribe_id', $filters['tribe_id']);
         }
 
+        if ($filters['min_score'] !== null) {
+            $query->whereRaw($this->scoreExpression().' >= ?', [$filters['min_score']]);
+        }
+
         if ($filters['min_population'] !== null) {
             $query->where('v.population', '>=', $filters['min_population']);
         }
@@ -419,10 +460,17 @@ class InactiveFinderController extends Controller
                 ->where('ps.village_count_delta_1d', 0);
         }
 
-        if ($filters['x'] !== null && $filters['y'] !== null && $filters['radius'] !== null) {
+        if ($filters['x'] !== null && $filters['y'] !== null && $filters['radius_max'] !== null) {
             $query->whereRaw(
                 'SQRT(POW(v.x - ?, 2) + POW(v.y - ?, 2)) <= ?',
-                [$filters['x'], $filters['y'], $filters['radius']],
+                [$filters['x'], $filters['y'], $filters['radius_max']],
+            );
+        }
+
+        if ($filters['x'] !== null && $filters['y'] !== null && $filters['radius_min'] !== null) {
+            $query->whereRaw(
+                'SQRT(POW(v.x - ?, 2) + POW(v.y - ?, 2)) >= ?',
+                [$filters['x'], $filters['y'], $filters['radius_min']],
             );
         }
     }
