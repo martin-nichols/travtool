@@ -238,8 +238,10 @@ const dragState = reactive({
     moved: false,
     suppressClick: false,
     startX: 0,
+    startY: 0,
     startScrollLeft: 0,
     pointerId: -1,
+    direction: '' as '' | 'horizontal' | 'vertical',
 });
 
 const onResultsPointerDown = (event: PointerEvent) => {
@@ -255,11 +257,11 @@ const onResultsPointerDown = (event: PointerEvent) => {
 
     dragState.active = true;
     dragState.moved = false;
+    dragState.direction = '';
     dragState.startX = event.clientX;
+    dragState.startY = event.clientY;
     dragState.startScrollLeft = scroller.scrollLeft;
     dragState.pointerId = event.pointerId;
-
-    scroller.setPointerCapture?.(event.pointerId);
 };
 
 const onResultsPointerMove = (event: PointerEvent) => {
@@ -274,6 +276,26 @@ const onResultsPointerMove = (event: PointerEvent) => {
     }
 
     const deltaX = event.clientX - dragState.startX;
+    const deltaY = event.clientY - dragState.startY;
+
+    if (dragState.direction === '') {
+        if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) {
+            return;
+        }
+
+        dragState.direction = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
+
+        if (dragState.direction === 'horizontal') {
+            scroller.setPointerCapture?.(event.pointerId);
+        } else {
+            resetResultsDrag();
+            return;
+        }
+    }
+
+    if (dragState.direction !== 'horizontal') {
+        return;
+    }
 
     if (Math.abs(deltaX) > 6) {
         dragState.moved = true;
@@ -296,6 +318,7 @@ const resetResultsDrag = (event?: PointerEvent) => {
 
     dragState.active = false;
     dragState.pointerId = -1;
+    dragState.direction = '';
 
     window.setTimeout(() => {
         dragState.suppressClick = false;
@@ -575,7 +598,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
                         <div
                             ref="resultsScroller"
-                            class="overflow-x-auto overscroll-x-contain select-none touch-pan-x"
+                            class="overflow-x-auto overscroll-x-contain select-none touch-pan-y"
                             @click.capture="suppressDraggedClick"
                             @pointercancel="resetResultsDrag"
                             @pointerdown="onResultsPointerDown"
