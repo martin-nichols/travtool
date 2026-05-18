@@ -210,6 +210,19 @@ const mapTransformStyle = computed(() => ({
     transformOrigin: 'center center',
     willChange: 'transform',
 }));
+const visibleMapSpan = computed(() => {
+    const width = props.map.view_box.width || 1;
+    const height = props.map.view_box.height || 1;
+
+    return Math.max(width, height) / mapTransform.scale;
+});
+const maxZoomScale = computed(() => {
+    const width = props.map.view_box.width || 1;
+    const height = props.map.view_box.height || 1;
+    const dominantSpan = Math.max(width, height);
+
+    return Math.max(1, dominantSpan / 10);
+});
 const mapPixelsPerUnit = computed(() => {
     const viewportWidth = mapViewport.value?.clientWidth ?? 0;
     const viewBoxWidth = props.map.view_box.width || 1;
@@ -220,30 +233,24 @@ const mapPixelsPerUnit = computed(() => {
 
     return (viewportWidth * mapTransform.scale) / viewBoxWidth;
 });
-const villagePointDiameterPx = computed(() => {
-    const shrinkProgress = clamp((mapTransform.scale - 1) / 9, 0, 1);
+const villagePointDiameterUnits = computed(() => {
+    const shrinkStartSpan = 140;
+    const shrinkEndSpan = 35;
+    const shrinkProgress = clamp((shrinkStartSpan - visibleMapSpan.value) / (shrinkStartSpan - shrinkEndSpan), 0, 1);
 
-    return 4.5 - shrinkProgress * 3.5;
+    return 3.2 - shrinkProgress * 2.2;
 });
 const villagePointRadius = computed(() => {
-    const pixelsPerUnit = mapPixelsPerUnit.value;
-
-    if (pixelsPerUnit <= 0) {
-        return 0.5;
-    }
-
-    const radius = villagePointDiameterPx.value / (2 * pixelsPerUnit);
-
-    return Math.max(0.012, radius);
+    return Math.max(0.5, villagePointDiameterUnits.value / 2);
 });
 const villagePointStrokeWidth = computed(() => {
     const pixelsPerUnit = mapPixelsPerUnit.value;
 
-    if (pixelsPerUnit <= 0 || mapTransform.scale >= 4) {
+    if (pixelsPerUnit <= 0 || visibleMapSpan.value <= 26) {
         return 0;
     }
 
-    const targetStrokePx = mapTransform.scale <= 1.5 ? 0.8 : 0.45;
+    const targetStrokePx = visibleMapSpan.value >= 90 ? 0.9 : 0.55;
 
     return Math.max(0.01, targetStrokePx / pixelsPerUnit);
 });
@@ -371,7 +378,7 @@ const clampPan = (): void => {
 };
 
 const applyScale = (nextScale: number): void => {
-    mapTransform.scale = clamp(nextScale, 1, 10);
+    mapTransform.scale = clamp(nextScale, 1, maxZoomScale.value);
     clampPan();
 };
 
