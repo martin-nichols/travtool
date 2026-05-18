@@ -128,10 +128,20 @@ return [
             'title' => 'Legend',
             'variant_of' => 'Variant of',
         ],
+        'modal' => [
+            'title' => 'Village details',
+            'close' => 'Close',
+            'coords' => 'Coordinates',
+            'population' => 'Population',
+            'player' => 'Player',
+            'alliance' => 'Alliance',
+            'region' => 'Region',
+        ],
         'results' => [
             'title' => 'Generated map',
             'ready_description' => 'The map is built from the current snapshot of the selected world, with one base color per alliance and color variations for specifically selected players.',
             'map_aria_label' => 'Generated Travtool map',
+            'interaction_hint' => 'Pinch to zoom, drag to move around the map, then tap a point to view the village.',
             'no_data' => '-',
         ],
         'state' => [

@@ -128,10 +128,20 @@ return [
             'title' => 'Leyenda',
             'variant_of' => 'Variacion de',
         ],
+        'modal' => [
+            'title' => 'Detalles de la aldea',
+            'close' => 'Cerrar',
+            'coords' => 'Coordenadas',
+            'population' => 'Poblacion',
+            'player' => 'Jugador',
+            'alliance' => 'Alianza',
+            'region' => 'Region',
+        ],
         'results' => [
             'title' => 'Mapa generado',
             'ready_description' => 'El mapa se construye a partir del snapshot actual del mundo elegido, con un color base por alianza y variaciones para los jugadores seleccionados de forma explicita.',
             'map_aria_label' => 'Mapa generado de Travtool',
+            'interaction_hint' => 'Haz un gesto de pinza para acercar, arrastra para mover el mapa y luego toca un punto para ver la aldea.',
             'no_data' => '-',
         ],
         'state' => [

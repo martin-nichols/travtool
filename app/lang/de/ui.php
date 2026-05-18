@@ -128,10 +128,20 @@ return [
             'title' => 'Legende',
             'variant_of' => 'Variante von',
         ],
+        'modal' => [
+            'title' => 'Dorfdetails',
+            'close' => 'Schliessen',
+            'coords' => 'Koordinaten',
+            'population' => 'Bevoelkerung',
+            'player' => 'Spieler',
+            'alliance' => 'Allianz',
+            'region' => 'Region',
+        ],
         'results' => [
             'title' => 'Erzeugte Karte',
             'ready_description' => 'Die Karte wird aus dem aktuellen Snapshot der gewaehlten Welt aufgebaut, mit einer Grundfarbe pro Allianz und Farbvarianten fuer gezielt ausgewaehlte Spieler.',
             'map_aria_label' => 'Erzeugte Travtool-Karte',
+            'interaction_hint' => 'Zum Zoomen zusammen- oder auseinanderziehen, zum Verschieben ziehen und dann einen Punkt antippen, um das Dorf zu sehen.',
             'no_data' => '-',
         ],
         'state' => [

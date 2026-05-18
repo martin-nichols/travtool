@@ -128,10 +128,20 @@ return [
             'title' => 'Legende',
             'variant_of' => 'Variation de',
         ],
+        'modal' => [
+            'title' => 'Details du village',
+            'close' => 'Fermer',
+            'coords' => 'Coordonnees',
+            'population' => 'Population',
+            'player' => 'Joueur',
+            'alliance' => 'Alliance',
+            'region' => 'Region',
+        ],
         'results' => [
             'title' => 'Carte generee',
             'ready_description' => 'La carte est calculee a partir du snapshot courant du monde choisi, avec une couleur de base par alliance et des variations pour les joueurs selectionnes.',
             'map_aria_label' => 'Carte Travtool generee',
+            'interaction_hint' => 'Pince pour zoomer, glisse pour deplacer la carte, puis touche un point pour voir le village.',
             'no_data' => '-',
         ],
         'state' => [

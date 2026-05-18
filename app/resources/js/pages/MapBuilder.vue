@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useI18n } from '@/lib/i18n';
@@ -104,6 +104,28 @@ const { t } = useI18n();
 const form = reactive<FilterState>({ ...props.filters });
 const worldSelectionError = ref(false);
 const shareCopied = ref(false);
+const selectedVillage = ref<MapVillage | null>(null);
+const mapViewport = ref<HTMLElement | null>(null);
+const activePointers = new Map<number, { x: number; y: number }>();
+const interactionState = reactive({
+    mode: 'idle' as 'idle' | 'pan' | 'pinch',
+    suppressClick: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    startPanX: 0,
+    startPanY: 0,
+    startDistance: 0,
+    startScale: 1,
+    startMidX: 0,
+    startMidY: 0,
+});
+const mapTransform = reactive({
+    scale: 1,
+    panX: 0,
+    panY: 0,
+});
+let removeNativeGestureGuards: (() => void) | null = null;
 
 watch(
     () => props.filters,
@@ -122,6 +144,58 @@ watch(
     },
 );
 
+watch(
+    () => props.map,
+    () => {
+        mapTransform.scale = 1;
+        mapTransform.panX = 0;
+        mapTransform.panY = 0;
+        selectedVillage.value = null;
+        activePointers.clear();
+        interactionState.mode = 'idle';
+        interactionState.suppressClick = false;
+        interactionState.moved = false;
+    },
+    { deep: true },
+);
+
+watch(mapViewport, (element) => {
+    removeNativeGestureGuards?.();
+    removeNativeGestureGuards = null;
+
+    if (!element) {
+        return;
+    }
+
+    const preventNativeGesture = (event: Event) => {
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+    };
+
+    const preventNativeTouchMove = (event: TouchEvent) => {
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+    };
+
+    element.addEventListener('gesturestart', preventNativeGesture, { passive: false });
+    element.addEventListener('gesturechange', preventNativeGesture, { passive: false });
+    element.addEventListener('gestureend', preventNativeGesture, { passive: false });
+    element.addEventListener('touchmove', preventNativeTouchMove, { passive: false });
+
+    removeNativeGestureGuards = () => {
+        element.removeEventListener('gesturestart', preventNativeGesture);
+        element.removeEventListener('gesturechange', preventNativeGesture);
+        element.removeEventListener('gestureend', preventNativeGesture);
+        element.removeEventListener('touchmove', preventNativeTouchMove);
+    };
+});
+
+onBeforeUnmount(() => {
+    removeNativeGestureGuards?.();
+});
+
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
 const resultTitle = computed(() => props.summary.selectedWorldName || t('map_builder.state.choose_world_title'));
 const viewBox = computed(() => {
@@ -131,6 +205,11 @@ const viewBox = computed(() => {
 });
 
 const hasRenderableMap = computed(() => props.map.status === 'ready' && props.map.villages.length > 0);
+const mapTransformStyle = computed(() => ({
+    transform: `translate(${mapTransform.panX}px, ${mapTransform.panY}px) scale(${mapTransform.scale})`,
+    transformOrigin: 'center center',
+    willChange: 'transform',
+}));
 
 const validateWorldSelection = (): boolean => {
     const isValid = Boolean(form.world);
@@ -225,6 +304,202 @@ const boundsLabel = computed(() => {
 
     return `X ${props.map.bounds.min_x} -> ${props.map.bounds.max_x} / Y ${props.map.bounds.min_y} -> ${props.map.bounds.max_y}`;
 });
+
+const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+const clampPan = (): void => {
+    const viewport = mapViewport.value;
+
+    if (!viewport) {
+        return;
+    }
+
+    const bounds = viewport.getBoundingClientRect();
+    const maxPanX = Math.max(0, ((mapTransform.scale - 1) * bounds.width) / 2 + 40);
+    const maxPanY = Math.max(0, ((mapTransform.scale - 1) * bounds.height) / 2 + 40);
+
+    mapTransform.panX = clamp(mapTransform.panX, -maxPanX, maxPanX);
+    mapTransform.panY = clamp(mapTransform.panY, -maxPanY, maxPanY);
+};
+
+const applyScale = (nextScale: number): void => {
+    mapTransform.scale = clamp(nextScale, 1, 14);
+    clampPan();
+};
+
+const pointerDistance = (first: { x: number; y: number }, second: { x: number; y: number }): number =>
+    Math.hypot(second.x - first.x, second.y - first.y);
+
+const pointerMidpoint = (first: { x: number; y: number }, second: { x: number; y: number }): { x: number; y: number } => ({
+    x: (first.x + second.x) / 2,
+    y: (first.y + second.y) / 2,
+});
+
+const beginPanFromPointer = (pointer: { x: number; y: number }): void => {
+    interactionState.mode = 'pan';
+    interactionState.startX = pointer.x;
+    interactionState.startY = pointer.y;
+    interactionState.startPanX = mapTransform.panX;
+    interactionState.startPanY = mapTransform.panY;
+};
+
+const beginPinchFromPointers = (): void => {
+    const [first, second] = Array.from(activePointers.values());
+
+    if (!first || !second) {
+        return;
+    }
+
+    interactionState.mode = 'pinch';
+    interactionState.startDistance = pointerDistance(first, second);
+    interactionState.startScale = mapTransform.scale;
+    interactionState.startPanX = mapTransform.panX;
+    interactionState.startPanY = mapTransform.panY;
+
+    const midpoint = pointerMidpoint(first, second);
+    interactionState.startMidX = midpoint.x;
+    interactionState.startMidY = midpoint.y;
+};
+
+const onMapPointerDown = (event: PointerEvent) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+        return;
+    }
+
+    mapViewport.value?.setPointerCapture?.(event.pointerId);
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activePointers.size === 1) {
+        interactionState.moved = false;
+        beginPanFromPointer({ x: event.clientX, y: event.clientY });
+    } else if (activePointers.size === 2) {
+        beginPinchFromPointers();
+    }
+};
+
+const onMapPointerMove = (event: PointerEvent) => {
+    if (!activePointers.has(event.pointerId)) {
+        return;
+    }
+
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (interactionState.mode === 'pinch' && activePointers.size >= 2) {
+        const [first, second] = Array.from(activePointers.values());
+
+        if (!first || !second) {
+            return;
+        }
+
+        const distance = pointerDistance(first, second);
+        const midpoint = pointerMidpoint(first, second);
+
+        if (Math.abs(distance - interactionState.startDistance) > 4 || Math.abs(midpoint.x - interactionState.startMidX) > 4 || Math.abs(midpoint.y - interactionState.startMidY) > 4) {
+            interactionState.moved = true;
+            interactionState.suppressClick = true;
+        }
+
+        applyScale(interactionState.startScale * (distance / Math.max(1, interactionState.startDistance)));
+        mapTransform.panX = interactionState.startPanX + (midpoint.x - interactionState.startMidX);
+        mapTransform.panY = interactionState.startPanY + (midpoint.y - interactionState.startMidY);
+        clampPan();
+
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+
+        return;
+    }
+
+    if (interactionState.mode !== 'pan' || activePointers.size !== 1) {
+        return;
+    }
+
+    const deltaX = event.clientX - interactionState.startX;
+    const deltaY = event.clientY - interactionState.startY;
+
+    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        interactionState.moved = true;
+        interactionState.suppressClick = true;
+    }
+
+    mapTransform.panX = interactionState.startPanX + deltaX;
+    mapTransform.panY = interactionState.startPanY + deltaY;
+    clampPan();
+
+    if (interactionState.moved && event.cancelable) {
+        event.preventDefault();
+    }
+};
+
+const resetInteractionClickSuppression = (): void => {
+    window.setTimeout(() => {
+        interactionState.suppressClick = false;
+    }, 0);
+};
+
+const onMapPointerEnd = (event: PointerEvent) => {
+    mapViewport.value?.releasePointerCapture?.(event.pointerId);
+    activePointers.delete(event.pointerId);
+
+    if (activePointers.size === 0) {
+        interactionState.mode = 'idle';
+        resetInteractionClickSuppression();
+
+        return;
+    }
+
+    if (activePointers.size === 1) {
+        const [remainingPointer] = Array.from(activePointers.values());
+
+        if (!remainingPointer) {
+            interactionState.mode = 'idle';
+            resetInteractionClickSuppression();
+
+            return;
+        }
+
+        beginPanFromPointer(remainingPointer);
+        interactionState.moved = true;
+        interactionState.suppressClick = true;
+    } else if (activePointers.size >= 2) {
+        beginPinchFromPointers();
+    }
+};
+
+const onMapWheel = (event: WheelEvent) => {
+    if (!hasRenderableMap.value) {
+        return;
+    }
+
+    if (event.cancelable) {
+        event.preventDefault();
+    }
+
+    const zoomFactor = event.deltaY < 0 ? 1.12 : 0.9;
+    applyScale(mapTransform.scale * zoomFactor);
+};
+
+const suppressDraggedClick = (event: MouseEvent) => {
+    if (!interactionState.suppressClick) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+};
+
+const openVillageModal = (village: MapVillage): void => {
+    if (interactionState.suppressClick) {
+        return;
+    }
+
+    selectedVillage.value = village;
+};
+
+const closeVillageModal = (): void => {
+    selectedVillage.value = null;
+};
 </script>
 
 <template>
@@ -444,33 +719,53 @@ const boundsLabel = computed(() => {
 
                     <div v-if="hasRenderableMap" class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
                         <div class="overflow-hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#0f171c] p-4 sm:p-5">
-                            <svg
-                                class="aspect-square w-full rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)]"
-                                :viewBox="viewBox"
-                                xmlns="http://www.w3.org/2000/svg"
-                                role="img"
-                                :aria-label="t('map_builder.results.map_aria_label')"
+                            <div class="mb-4 flex flex-wrap gap-2 text-xs font-medium text-[#d8e3e8]">
+                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                                    {{ t('map_builder.results.interaction_hint') }}
+                                </span>
+                            </div>
+
+                            <div
+                                ref="mapViewport"
+                                class="relative overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none [overscroll-behavior:contain]"
+                                @click.capture="suppressDraggedClick"
+                                @pointercancel="onMapPointerEnd"
+                                @pointerdown="onMapPointerDown"
+                                @pointermove="onMapPointerMove"
+                                @pointerup="onMapPointerEnd"
+                                @wheel="onMapWheel"
                             >
-                                <defs>
-                                    <pattern id="map-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
-                                    </pattern>
-                                </defs>
+                                <svg
+                                    class="aspect-square w-full cursor-grab active:cursor-grabbing"
+                                    :style="mapTransformStyle"
+                                    :viewBox="viewBox"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    role="img"
+                                    :aria-label="t('map_builder.results.map_aria_label')"
+                                >
+                                    <defs>
+                                        <pattern id="map-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+                                        </pattern>
+                                    </defs>
 
-                                <rect :width="props.map.world_size" :height="props.map.world_size" fill="#111a20" />
-                                <rect :width="props.map.world_size" :height="props.map.world_size" fill="url(#map-grid)" />
+                                    <rect :width="props.map.world_size" :height="props.map.world_size" fill="#111a20" />
+                                    <rect :width="props.map.world_size" :height="props.map.world_size" fill="url(#map-grid)" />
 
-                                <g v-for="village in props.map.villages" :key="village.id">
-                                    <circle
-                                        :cx="village.map.x"
-                                        :cy="village.map.y"
-                                        r="6"
-                                        :fill="village.color"
-                                        :stroke="village.stroke_color"
-                                        stroke-width="2"
-                                    />
-                                </g>
-                            </svg>
+                                    <g v-for="village in props.map.villages" :key="village.id">
+                                        <circle
+                                            :cx="village.map.x"
+                                            :cy="village.map.y"
+                                            r="6"
+                                            :fill="village.color"
+                                            :stroke="village.stroke_color"
+                                            stroke-width="2"
+                                            class="cursor-pointer transition hover:r-[7.5]"
+                                            @click.stop="openVillageModal(village)"
+                                        />
+                                    </g>
+                                </svg>
+                            </div>
 
                             <div class="mt-4 flex flex-wrap gap-3 text-xs font-medium text-[#d8e3e8]">
                                 <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2">
@@ -530,6 +825,57 @@ const boundsLabel = computed(() => {
                     </div>
                 </article>
             </section>
+        </div>
+
+        <div
+            v-if="selectedVillage"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-[#0d1318]/70 px-6 py-10 backdrop-blur-sm"
+            @click.self="closeVillageModal"
+        >
+            <div class="w-full max-w-md rounded-[28px] border border-[#1f1a14]/10 bg-white p-6 shadow-[0_24px_80px_rgba(15,19,24,0.25)] sm:p-7">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#3f6d8f]">
+                            {{ t('map_builder.modal.title') }}
+                        </p>
+                        <h3 class="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[#1c1814]">
+                            {{ selectedVillage.village_name }}
+                        </h3>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#1f1a14]/10 text-[#5b5047] transition hover:bg-[#f7f4ee] hover:text-[#1c1814]"
+                        :aria-label="t('map_builder.modal.close')"
+                        @click="closeVillageModal"
+                    >
+                        ×
+                    </button>
+                </div>
+
+                <dl class="mt-6 grid gap-4 text-sm">
+                    <div class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.coords') }}</dt>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.coords.x }}|{{ selectedVillage.coords.y }}</dd>
+                    </div>
+                    <div class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.population') }}</dt>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.population }}</dd>
+                    </div>
+                    <div class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.player') }}</dt>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.player_name }}</dd>
+                    </div>
+                    <div v-if="selectedVillage.alliance_tag" class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.alliance') }}</dt>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.alliance_tag }}</dd>
+                    </div>
+                    <div v-if="selectedVillage.region_name" class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.region') }}</dt>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.region_name }}</dd>
+                    </div>
+                </dl>
+            </div>
         </div>
     </div>
 </template>
