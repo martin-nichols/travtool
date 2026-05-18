@@ -1,12 +1,13 @@
 <?php
 
 use App\Http\Controllers\InactiveFinderController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MapBuilderController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Home')->name('home');
 Route::get('/inactive-finder', InactiveFinderController::class)->name('inactive-finder');
-Route::inertia('/map-builder', 'MapBuilder')->name('map-builder');
+Route::get('/map-builder', MapBuilderController::class)->name('map-builder');
 Route::inertia('/login', 'Auth/Login')->name('login');
 
 Route::get('/locale/{locale}', function (Request $request, string $locale) {
