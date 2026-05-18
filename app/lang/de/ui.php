@@ -15,6 +15,7 @@ return [
         'header' => [
             'tagline' => 'Travian-Intelligence, map.sql-Import, private Werkzeuge und zukuenftige Community-Module.',
             'inactive_finder' => 'Inaktiven-Suche',
+            'map_builder' => 'Kartenerstellung',
             'login' => 'Anmeldung',
         ],
         'hero' => [
@@ -39,6 +40,12 @@ return [
                 'title' => 'Anmeldung',
                 'description' => 'Zum Travtool-Arbeitsbereich, zu beobachteten Welten und spaeter zu den nur fuer das Team vorgesehenen Werkzeugen gelangen.',
                 'cta' => 'Zur Oberflaeche',
+            ],
+            'map_builder' => [
+                'eyebrow' => 'Prototyp V1',
+                'title' => 'Kartenerstellung',
+                'description' => 'Einen eigenen Arbeitsbereich fuer gut lesbare Karten aus beobachteten Welten, Radien und kuenftigen Anmerkungen vorbereiten.',
+                'cta' => 'Bildschirm oeffnen',
             ],
         ],
         'footer' => [
@@ -73,6 +80,53 @@ return [
             'remember' => 'Diese Sitzung merken',
             'submit' => 'Weiter',
             'notice' => 'Die Oberflaeche ist bereit. Die Backend-Authentifizierung ist noch nicht angeschlossen: dieser Schritt wird spaeter den privaten Laravel-Zugang verbinden.',
+        ],
+    ],
+    'map_builder' => [
+        'meta' => [
+            'title' => 'Kartenerstellung',
+        ],
+        'hero' => [
+            'badge' => 'Neues Modul in Vorbereitung',
+            'title' => 'Ein echter Arbeitsbereich fuer operative Karten',
+            'description' => 'Die Inaktiven-Suche bleibt ein Analysemodul. Dieser Bildschirm reserviert den Bereich, in dem spaeter Karten fuer Wege, Ringe, Ziellisten und danach auch Einsatzplaene gebaut werden.',
+            'copy' => 'Das Ziel ist nicht, die Suchseite zu duplizieren. Dieser Bereich wird zu einem Studio: Welt waehlen, Zentrum setzen, einzelne oder ringfoermige Radien bauen, Ebenen verwalten, Punkte markieren und saubere Exporte erzeugen.',
+        ],
+        'workflow' => [
+            'title' => 'Zielablauf',
+            'world' => 'Eine beobachtete Welt und einen klaren Referenzpunkt waehlen.',
+            'center' => 'Ein Zentrum, einen oder mehrere Radien und Arbeitszonen festlegen.',
+            'layers' => 'Danach Doerfer, Frigos, Notizen und spaetere Marker einblenden.',
+            'export' => 'Eine saubere Karte erzeugen, die sich mit einem Dual oder Team teilen laesst.',
+        ],
+        'preview' => [
+            'title' => 'Zielansicht',
+            'header_left' => 'Zentrum',
+            'header_right' => 'Ringe',
+        ],
+        'workspace' => [
+            'title' => 'Eigener Bildschirm',
+            'heading' => 'Das kuenftige Kartenstudio lebt hier',
+            'copy' => 'Dieser erste Bildschirm reserviert das Modul sauber. Spaeter koennen hier echte Weltdaten, Dorf-Ebenen und Exporte angeschlossen werden, ohne die Suchseite mit Funktionen zu ueberladen, die dort nicht hingehoeren.',
+            'settings' => [
+                'eyebrow' => 'Einstellungen',
+                'title' => 'Welt, Zentrum und Radien',
+                'description' => 'Der erste Block dient dazu, eine Welt zu waehlen, ein Referenzzentrum zu speichern und Kreise oder ringfoermige Arbeitsbereiche zu definieren.',
+            ],
+            'overlays' => [
+                'eyebrow' => 'Ebenen',
+                'title' => 'Doerfer, Frigos, Notizen',
+                'description' => 'Der zweite Block wird die nuetzlichen Ebenen anzeigen: gefilterte Doerfer, Zielspieler, manuelle Notizen und kuenftige taktische Marker.',
+            ],
+            'output' => [
+                'eyebrow' => 'Ausgabe',
+                'title' => 'Lesbare und exportierbare Karte',
+                'description' => 'Der dritte Block bereitet eine saubere Ausgabe fuer Bildschirm, Teilen und Bildexport vor, sobald der Motor bereit ist.',
+            ],
+        ],
+        'actions' => [
+            'back_to_finder' => 'Zurueck zur Inaktiven-Suche',
+            'coming_soon' => 'Modul im Aufbau',
         ],
     ],
     'inactive_finder' => [

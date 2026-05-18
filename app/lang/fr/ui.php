@@ -15,6 +15,7 @@ return [
         'header' => [
             'tagline' => 'Intelligence Travian, ingestion map.sql, outils prives et futurs modules communautaires.',
             'inactive_finder' => "Chercheur d'inactifs",
+            'map_builder' => 'Creation de cartes',
             'login' => 'Connexion',
         ],
         'hero' => [
@@ -39,6 +40,12 @@ return [
                 'title' => 'Connexion',
                 'description' => "Acceder a l'espace de travail Travtool, aux mondes suivis et plus tard aux outils reserves a l'equipe.",
                 'cta' => "Aller a l'interface",
+            ],
+            'map_builder' => [
+                'eyebrow' => 'Prototype V1',
+                'title' => 'Creation de cartes',
+                'description' => 'Preparer un espace dedie pour construire des cartes lisibles a partir des mondes suivis, des rayons et des futures annotations.',
+                'cta' => "Ouvrir l'ecran",
             ],
         ],
         'footer' => [
@@ -73,6 +80,53 @@ return [
             'remember' => 'Se souvenir de cette session',
             'submit' => 'Continuer',
             'notice' => "Interface prete. L'auth backend n'est pas encore branchee : cette etape servira ensuite a connecter l'acces prive Laravel.",
+        ],
+    ],
+    'map_builder' => [
+        'meta' => [
+            'title' => 'Creation de cartes',
+        ],
+        'hero' => [
+            'badge' => 'Nouveau module en preparation',
+            'title' => 'Un vrai espace pour preparer les cartes de travail',
+            'description' => 'La recherche d\'inactifs reste un module d\'analyse. Ici, on pose l\'ecran qui servira a fabriquer des cartes utiles pour les trajets, les couronnes, les listes de cibles et plus tard les plans d\'operations.',
+            'copy' => 'Le but n\'est pas de dupliquer la page de recherche. Cette zone deviendra un atelier : choix du monde, centre de reference, rayons simples ou en couronne, calques, points d\'interet et export propre.',
+        ],
+        'workflow' => [
+            'title' => 'Flux vise',
+            'world' => 'Choisir un monde suivi puis un point de reference clair.',
+            'center' => 'Definir un centre, un ou plusieurs rayons et des zones de travail.',
+            'layers' => 'Afficher ensuite les villages, les frigos, les notes et les futurs marqueurs.',
+            'export' => 'Sortir une carte propre a partager avec un dual ou une equipe.',
+        ],
+        'preview' => [
+            'title' => 'Apercu cible',
+            'header_left' => 'Centre',
+            'header_right' => 'Couronnes',
+        ],
+        'workspace' => [
+            'title' => 'Ecran dedie',
+            'heading' => 'Le futur atelier cartes vivra ici',
+            'copy' => 'Ce premier ecran sert a reserver proprement la place du module. On pourra ensuite y brancher les donnees reelles des mondes, des calques de villages et des exports, sans recharger la page de recherche avec des fonctions qui ne lui appartiennent pas.',
+            'settings' => [
+                'eyebrow' => 'Parametres',
+                'title' => 'Monde, centre et rayons',
+                'description' => 'Le premier bloc servira a choisir le monde, memoriser un centre de reference et definir des cercles ou des couronnes de travail.',
+            ],
+            'overlays' => [
+                'eyebrow' => 'Calques',
+                'title' => 'Villages, frigos, notes',
+                'description' => 'Le deuxieme bloc affichera les couches utiles : villages filtres, joueurs cibles, notes manuelles et futurs reperes tactiques.',
+            ],
+            'output' => [
+                'eyebrow' => 'Sortie',
+                'title' => 'Carte lisible et exportable',
+                'description' => 'Le troisieme bloc preparera une sortie propre, pensee pour lecture ecran, partage et export image quand le moteur sera pret.',
+            ],
+        ],
+        'actions' => [
+            'back_to_finder' => "Retour au chercheur d'inactifs",
+            'coming_soon' => 'Module en construction',
         ],
     ],
     'inactive_finder' => [

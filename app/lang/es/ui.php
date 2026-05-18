@@ -15,6 +15,7 @@ return [
         'header' => [
             'tagline' => 'Inteligencia para Travian, ingestion de map.sql, herramientas privadas y futuros modulos comunitarios.',
             'inactive_finder' => 'Buscador de inactivos',
+            'map_builder' => 'Creacion de mapas',
             'login' => 'Acceso',
         ],
         'hero' => [
@@ -39,6 +40,12 @@ return [
                 'title' => 'Acceso',
                 'description' => 'Entrar al espacio de trabajo de Travtool, a los mundos seguidos y mas adelante a las herramientas reservadas al equipo.',
                 'cta' => 'Abrir la interfaz',
+            ],
+            'map_builder' => [
+                'eyebrow' => 'Prototipo V1',
+                'title' => 'Creacion de mapas',
+                'description' => 'Preparar un espacio dedicado para mapas legibles construidos a partir de mundos seguidos, radios y futuras anotaciones.',
+                'cta' => 'Abrir la pantalla',
             ],
         ],
         'footer' => [
@@ -73,6 +80,53 @@ return [
             'remember' => 'Recordar esta sesion',
             'submit' => 'Continuar',
             'notice' => 'La interfaz esta lista. La autenticacion del backend todavia no esta conectada: este paso servira despues para enlazar el acceso privado de Laravel.',
+        ],
+    ],
+    'map_builder' => [
+        'meta' => [
+            'title' => 'Creacion de mapas',
+        ],
+        'hero' => [
+            'badge' => 'Nuevo modulo en preparacion',
+            'title' => 'Un verdadero espacio para construir mapas de trabajo',
+            'description' => 'El buscador de inactivos sigue siendo un modulo de analisis. Esta pantalla reserva el lugar donde despues construiremos mapas para trayectos, anillos, listas de objetivos y mas adelante planes de operaciones.',
+            'copy' => 'La idea no es duplicar la pagina de busqueda. Esta zona se convertira en un estudio: elegir mundo, definir centro, construir radios simples o en corona, gestionar capas, marcar puntos de interes y generar exportaciones limpias.',
+        ],
+        'workflow' => [
+            'title' => 'Flujo objetivo',
+            'world' => 'Elegir un mundo seguido y un punto de referencia claro.',
+            'center' => 'Definir un centro, uno o varios radios y zonas de trabajo.',
+            'layers' => 'Despues mostrar aldeas, frigos, notas y futuros marcadores.',
+            'export' => 'Generar un mapa limpio para compartir con un dual o un equipo.',
+        ],
+        'preview' => [
+            'title' => 'Vista objetivo',
+            'header_left' => 'Centro',
+            'header_right' => 'Coronas',
+        ],
+        'workspace' => [
+            'title' => 'Pantalla dedicada',
+            'heading' => 'El futuro taller de mapas vive aqui',
+            'copy' => 'Esta primera pantalla reserva el modulo de forma limpia. Despues podremos conectar aqui los datos reales de los mundos, las capas de aldeas y las exportaciones sin sobrecargar la pagina de busqueda con funciones que no le corresponden.',
+            'settings' => [
+                'eyebrow' => 'Parametros',
+                'title' => 'Mundo, centro y radios',
+                'description' => 'El primer bloque servira para elegir el mundo, guardar un centro de referencia y definir circulos o zonas de trabajo en corona.',
+            ],
+            'overlays' => [
+                'eyebrow' => 'Capas',
+                'title' => 'Aldeas, frigos, notas',
+                'description' => 'El segundo bloque mostrara las capas utiles: aldeas filtradas, jugadores objetivo, notas manuales y futuros marcadores tacticos.',
+            ],
+            'output' => [
+                'eyebrow' => 'Salida',
+                'title' => 'Mapa legible y exportable',
+                'description' => 'El tercer bloque preparara una salida limpia pensada para lectura en pantalla, compartir y exportacion de imagen cuando el motor este listo.',
+            ],
+        ],
+        'actions' => [
+            'back_to_finder' => 'Volver al buscador de inactivos',
+            'coming_soon' => 'Modulo en construccion',
         ],
     ],
     'inactive_finder' => [

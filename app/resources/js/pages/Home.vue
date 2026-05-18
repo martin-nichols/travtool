@@ -7,6 +7,7 @@ const { t } = useI18n();
 
 const actionCards = [
     { key: 'inactive', href: '/inactive-finder', accent: 'from-[#ff7a1a] to-[#ffb36b]' },
+    { key: 'map_builder', href: '/map-builder', accent: 'from-[#3f6d8f] to-[#8ec8e8]' },
     { key: 'login', href: '/login', accent: 'from-[#456f5b] to-[#9fc5a3]' },
 ];
 </script>
@@ -50,6 +51,12 @@ const actionCards = [
                         class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#8b4a27]/40 hover:bg-white/60"
                     >
                         {{ t('home.header.inactive_finder') }}
+                    </Link>
+                    <Link
+                        href="/map-builder"
+                        class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#3f6d8f]/40 hover:bg-white/60"
+                    >
+                        {{ t('home.header.map_builder') }}
                     </Link>
                     <Link
                         href="/login"

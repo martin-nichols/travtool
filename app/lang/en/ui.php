@@ -15,6 +15,7 @@ return [
         'header' => [
             'tagline' => 'Travian intelligence, map.sql ingestion, private tools and future community modules.',
             'inactive_finder' => 'Inactive finder',
+            'map_builder' => 'Map builder',
             'login' => 'Login',
         ],
         'hero' => [
@@ -39,6 +40,12 @@ return [
                 'title' => 'Login',
                 'description' => 'Reach the Travtool workspace, tracked worlds and later the tools reserved for the team.',
                 'cta' => 'Open the interface',
+            ],
+            'map_builder' => [
+                'eyebrow' => 'Prototype V1',
+                'title' => 'Map builder',
+                'description' => 'Prepare a dedicated workspace for readable maps built from tracked worlds, radius rings and future annotations.',
+                'cta' => 'Open the screen',
             ],
         ],
         'footer' => [
@@ -73,6 +80,53 @@ return [
             'remember' => 'Remember this session',
             'submit' => 'Continue',
             'notice' => 'The interface is ready. The backend authentication is not connected yet: this step will later link to the private Laravel access.',
+        ],
+    ],
+    'map_builder' => [
+        'meta' => [
+            'title' => 'Map builder',
+        ],
+        'hero' => [
+            'badge' => 'New module in preparation',
+            'title' => 'A real workspace for operational map building',
+            'description' => 'The inactive finder remains an analysis module. This screen is where we start building the dedicated workspace for routes, rings, target lists and later operation planning.',
+            'copy' => 'The goal is not to duplicate the search page. This will become a studio: choose a world, define a center, build single or ring-based radiuses, manage overlays, mark points of interest and generate clean exports.',
+        ],
+        'workflow' => [
+            'title' => 'Target workflow',
+            'world' => 'Choose a tracked world and a clear reference point.',
+            'center' => 'Define a center, one or more radiuses and working zones.',
+            'layers' => 'Then display villages, fridges, notes and future markers.',
+            'export' => 'Produce a clean map you can share with a dual or a team.',
+        ],
+        'preview' => [
+            'title' => 'Target preview',
+            'header_left' => 'Center',
+            'header_right' => 'Rings',
+        ],
+        'workspace' => [
+            'title' => 'Dedicated screen',
+            'heading' => 'The future map studio lives here',
+            'copy' => 'This first screen reserves the module cleanly. We can then connect real world data, village overlays and exports here without overloading the search page with features that do not belong there.',
+            'settings' => [
+                'eyebrow' => 'Settings',
+                'title' => 'World, center and radiuses',
+                'description' => 'The first block will let you choose the world, keep a reference center and define circles or ring-based work areas.',
+            ],
+            'overlays' => [
+                'eyebrow' => 'Overlays',
+                'title' => 'Villages, fridges, notes',
+                'description' => 'The second block will display the useful layers: filtered villages, target players, manual notes and future tactical markers.',
+            ],
+            'output' => [
+                'eyebrow' => 'Output',
+                'title' => 'Readable and exportable map',
+                'description' => 'The third block will prepare a clean output designed for screen reading, sharing and image export when the engine is ready.',
+            ],
+        ],
+        'actions' => [
+            'back_to_finder' => 'Back to inactive finder',
+            'coming_soon' => 'Module in progress',
         ],
     ],
     'inactive_finder' => [
