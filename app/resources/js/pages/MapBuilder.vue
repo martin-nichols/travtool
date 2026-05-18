@@ -254,6 +254,16 @@ const mapPixelsPerUnit = computed(() => {
 
     return Math.min(viewportWidth / viewBoxWidth, viewportHeight / viewBoxHeight);
 });
+const gridStep = computed(() => {
+    const span = visibleMapSpan.value;
+
+    if (span > 220) return 40;
+    if (span > 120) return 20;
+    if (span > 60) return 10;
+    if (span > 24) return 5;
+
+    return 2;
+});
 const villagePointDiameterUnits = computed(() => {
     const shrinkStartSpan = 140;
     const shrinkEndSpan = 35;
@@ -285,6 +295,39 @@ const villageHitRadius = computed(() => {
     const radius = 10 / pixelsPerUnit;
 
     return Math.max(villagePointRadius.value, radius);
+});
+const gridOverlay = computed(() => {
+    const box = interactiveViewBox.value;
+    const step = gridStep.value;
+    const verticalLines: Array<{ key: string; mapX: number; left: string; label: string }> = [];
+    const horizontalLines: Array<{ key: string; mapY: number; top: string; label: string }> = [];
+    const startX = Math.ceil(box.x / step) * step;
+    const endX = Math.floor((box.x + box.width) / step) * step;
+    const startY = Math.ceil(box.y / step) * step;
+    const endY = Math.floor((box.y + box.height) / step) * step;
+
+    for (let mapX = startX; mapX <= endX; mapX += step) {
+        verticalLines.push({
+            key: `x-${mapX}`,
+            mapX,
+            left: `${((mapX - box.x) / box.width) * 100}%`,
+            label: String(mapX - 400),
+        });
+    }
+
+    for (let mapY = startY; mapY <= endY; mapY += step) {
+        horizontalLines.push({
+            key: `y-${mapY}`,
+            mapY,
+            top: `${((mapY - box.y) / box.height) * 100}%`,
+            label: String(400 - mapY),
+        });
+    }
+
+    return {
+        verticalLines,
+        horizontalLines,
+    };
 });
 
 const validateWorldSelection = (): boolean => {
@@ -483,6 +526,11 @@ const onMapPointerDown = (event: PointerEvent) => {
         return;
     }
 
+    if (activePointers.size === 0) {
+        interactionState.suppressClick = false;
+        interactionState.moved = false;
+    }
+
     mapViewport.value?.setPointerCapture?.(event.pointerId);
     activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
@@ -608,6 +656,16 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
 const openVillageModal = (village: MapVillage): void => {
     if (interactionState.suppressClick) {
+        return;
+    }
+
+    selectedVillage.value = village;
+};
+
+const onVillagePointerUp = (event: PointerEvent, village: MapVillage): void => {
+    event.stopPropagation();
+
+    if (interactionState.moved || interactionState.mode === 'pinch' || interactionState.suppressClick) {
         return;
     }
 
@@ -844,7 +902,7 @@ const closeVillageModal = (): void => {
 
                             <div
                                 ref="mapViewport"
-                                class="relative overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none [overscroll-behavior:contain]"
+                                class="relative mx-auto aspect-[4/3] w-full max-w-[1120px] overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none lg:aspect-[16/10] xl:aspect-[16/9] [overscroll-behavior:contain]"
                                 @click.capture="suppressDraggedClick"
                                 @pointercancel="onMapPointerEnd"
                                 @pointerdown="onMapPointerDown"
@@ -853,20 +911,20 @@ const closeVillageModal = (): void => {
                                 @wheel="onMapWheel"
                             >
                                 <svg
-                                    class="aspect-square w-full cursor-grab active:cursor-grabbing"
+                                    class="h-full w-full cursor-grab active:cursor-grabbing"
                                     :viewBox="viewBox"
                                     xmlns="http://www.w3.org/2000/svg"
                                     role="img"
                                     :aria-label="t('map_builder.results.map_aria_label')"
                                 >
                                     <defs>
-                                        <pattern id="map-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+                                        <pattern :id="`map-grid-${gridStep}`" :width="gridStep" :height="gridStep" patternUnits="userSpaceOnUse">
+                                            <path :d="`M ${gridStep} 0 L 0 0 0 ${gridStep}`" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
                                         </pattern>
                                     </defs>
 
                                     <rect :width="props.map.world_size" :height="props.map.world_size" fill="#111a20" />
-                                    <rect :width="props.map.world_size" :height="props.map.world_size" fill="url(#map-grid)" />
+                                    <rect :width="props.map.world_size" :height="props.map.world_size" :fill="`url(#map-grid-${gridStep})`" />
 
                                     <g v-for="village in props.map.villages" :key="village.id">
                                         <circle
@@ -884,10 +942,29 @@ const closeVillageModal = (): void => {
                                             :r="villageHitRadius"
                                             fill="transparent"
                                             class="cursor-pointer"
-                                            @click.stop="openVillageModal(village)"
+                                            @pointerup="onVillagePointerUp($event, village)"
                                         />
                                     </g>
                                 </svg>
+
+                                <div class="pointer-events-none absolute inset-0">
+                                    <div
+                                        v-for="line in gridOverlay.horizontalLines"
+                                        :key="line.key"
+                                        class="absolute left-2 -translate-y-1/2 rounded-full bg-[#0f171c]/88 px-2 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#d8e3e8] shadow-[0_8px_18px_rgba(0,0,0,0.24)] sm:text-[11px]"
+                                        :style="{ top: line.top }"
+                                    >
+                                        {{ line.label }}
+                                    </div>
+                                    <div
+                                        v-for="line in gridOverlay.verticalLines"
+                                        :key="line.key"
+                                        class="absolute bottom-2 -translate-x-1/2 rounded-full bg-[#0f171c]/88 px-2 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#d8e3e8] shadow-[0_8px_18px_rgba(0,0,0,0.24)] sm:text-[11px]"
+                                        :style="{ left: line.left }"
+                                    >
+                                        {{ line.label }}
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mt-4 flex flex-wrap gap-3 text-xs font-medium text-[#d8e3e8]">
