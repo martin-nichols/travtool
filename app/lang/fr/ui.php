@@ -125,7 +125,7 @@ return [
             'distance_asc' => 'Distance depuis le centre',
         ],
         'notice' => [
-            'history_ready' => "L'historique est pret. Tu peux deja filtrer les comptes restes stables depuis hier.",
+            'history_ready' => 'Salut Bob !!! Si tu as une minute, tu me donneras tes commentaires 😉',
             'history_waiting' => "L'historique n'est pas encore pret. Aujourd'hui cet ecran est deja un bon outil de recherche; demain il devient un vrai chercheur d'inactifs.",
         ],
         'results' => [
