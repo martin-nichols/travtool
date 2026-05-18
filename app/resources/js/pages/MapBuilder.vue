@@ -210,6 +210,16 @@ const mapTransformStyle = computed(() => ({
     transformOrigin: 'center center',
     willChange: 'transform',
 }));
+const villagePointRadius = computed(() => {
+    const radius = 6 / Math.pow(mapTransform.scale, 1.35);
+
+    return Math.max(1.2, radius);
+});
+const villagePointStrokeWidth = computed(() => {
+    const width = 2 / Math.pow(mapTransform.scale, 1.35);
+
+    return Math.max(0.7, width);
+});
 
 const validateWorldSelection = (): boolean => {
     const isValid = Boolean(form.world);
@@ -756,11 +766,11 @@ const closeVillageModal = (): void => {
                                         <circle
                                             :cx="village.map.x"
                                             :cy="village.map.y"
-                                            r="6"
+                                            :r="villagePointRadius"
                                             :fill="village.color"
                                             :stroke="village.stroke_color"
-                                            stroke-width="2"
-                                            class="cursor-pointer transition hover:r-[7.5]"
+                                            :stroke-width="villagePointStrokeWidth"
+                                            class="cursor-pointer"
                                             @click.stop="openVillageModal(village)"
                                         />
                                     </g>
