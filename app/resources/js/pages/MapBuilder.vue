@@ -36,6 +36,7 @@ type MapVillage = {
     player_name: string;
     alliance_tag: string | null;
     region_name: string | null;
+    tribe_id: number | null;
     population: number;
     coords: {
         x: number;
@@ -379,6 +380,29 @@ const boundsLabel = computed(() => {
 
     return `X ${props.map.bounds.min_x} -> ${props.map.bounds.max_x} / Y ${props.map.bounds.min_y} -> ${props.map.bounds.max_y}`;
 });
+
+const tribeLabel = (tribeId: number | null): string => {
+    switch (tribeId) {
+        case 1:
+            return t('map_builder.tribes.romans');
+        case 2:
+            return t('map_builder.tribes.teutons');
+        case 3:
+            return t('map_builder.tribes.gauls');
+        case 5:
+            return t('map_builder.tribes.natars');
+        case 6:
+            return t('map_builder.tribes.egyptians');
+        case 7:
+            return t('map_builder.tribes.huns');
+        case 8:
+            return t('map_builder.tribes.spartans');
+        case 9:
+            return t('map_builder.tribes.vikings');
+        default:
+            return t('map_builder.results.no_data');
+    }
+};
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
@@ -952,7 +976,7 @@ const closeVillageModal = (): void => {
                     </button>
                 </div>
 
-                <dl class="mt-6 grid gap-4 text-sm">
+                <dl class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
                     <div class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
                         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.coords') }}</dt>
                         <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.coords.x }}|{{ selectedVillage.coords.y }}</dd>
@@ -965,9 +989,13 @@ const closeVillageModal = (): void => {
                         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.player') }}</dt>
                         <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.player_name }}</dd>
                     </div>
-                    <div v-if="selectedVillage.alliance_tag" class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                    <div class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
                         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.alliance') }}</dt>
-                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.alliance_tag }}</dd>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ selectedVillage.alliance_tag ?? t('map_builder.modal.no_alliance') }}</dd>
+                    </div>
+                    <div class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.tribe') }}</dt>
+                        <dd class="mt-2 font-medium text-[#1c1814]">{{ tribeLabel(selectedVillage.tribe_id) }}</dd>
                     </div>
                     <div v-if="selectedVillage.region_name" class="rounded-[22px] bg-[#f7f4ee] px-4 py-3">
                         <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">{{ t('map_builder.modal.region') }}</dt>

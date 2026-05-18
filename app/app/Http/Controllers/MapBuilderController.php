@@ -285,6 +285,7 @@ class MapBuilderController extends Controller
                 'v.name as village_name',
                 'v.x',
                 'v.y',
+                'v.tribe_id',
                 'v.population',
                 'v.region_name',
                 'p.name as player_name',
@@ -388,6 +389,7 @@ class MapBuilderController extends Controller
                 'player_name' => $playerName,
                 'alliance_tag' => $allianceTag,
                 'region_name' => $regionName,
+                'tribe_id' => $row->tribe_id !== null ? (int) $row->tribe_id : null,
                 'population' => (int) $row->population,
                 'coords' => [
                     'x' => (int) $row->x,
