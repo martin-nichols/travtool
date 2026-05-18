@@ -648,7 +648,7 @@ const closeVillageModal = (): void => {
                 </div>
             </header>
 
-            <section class="mt-10 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+            <section class="mt-10 grid gap-6">
                 <article class="rounded-[32px] border border-[#1f1a14]/10 bg-[#1d262b] p-6 text-[#edf3f6] shadow-[0_24px_80px_rgba(27,39,48,0.18)] sm:p-8">
                     <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#9fd1ef]">
                         <span class="h-2 w-2 rounded-full bg-[#7fc4f1]" />
@@ -663,9 +663,9 @@ const closeVillageModal = (): void => {
                         {{ t('map_builder.hero.copy') }}
                     </p>
 
-                    <form class="mt-8 grid gap-5" @submit.prevent="submit">
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div class="grid gap-3">
+                    <form class="mt-8 grid gap-6" @submit.prevent="submit">
+                        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+                            <div class="grid min-w-0 gap-3">
                                 <label class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
                                     {{ t('map_builder.filters.world_label') }}
                                 </label>
@@ -691,14 +691,14 @@ const closeVillageModal = (): void => {
                                 </div>
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-[#bfe3ff] transition hover:bg-white/10 hover:text-white"
+                                    class="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-[#bfe3ff] transition hover:bg-white/10 hover:text-white sm:w-auto xl:w-full"
                                     @click="openSelectedWorld"
                                 >
                                     {{ t('map_builder.filters.open_world') }}
                                 </button>
                             </div>
 
-                            <div class="rounded-[28px] border border-white/10 bg-white/5 p-5">
+                            <div class="min-w-0 rounded-[28px] border border-white/10 bg-white/5 p-5">
                                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#9fd1ef]">
                                     {{ t('map_builder.summary.title') }}
                                 </p>
@@ -723,8 +723,8 @@ const closeVillageModal = (): void => {
                             </div>
                         </div>
 
-                        <div class="grid gap-4 lg:grid-cols-3">
-                            <label class="grid gap-3">
+                        <div class="grid gap-4 xl:grid-cols-3">
+                            <label class="grid min-w-0 gap-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
                                     {{ t('map_builder.filters.alliance_tags_label') }}
                                 </span>
@@ -732,11 +732,11 @@ const closeVillageModal = (): void => {
                                     v-model="form.alliance_tags"
                                     rows="6"
                                     :placeholder="t('map_builder.filters.alliance_tags_placeholder')"
-                                    class="min-h-[160px] rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[#edf3f6] outline-none placeholder:text-[#8ea5b2]"
+                                    class="min-h-[180px] w-full min-w-0 rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[#edf3f6] outline-none placeholder:text-[#8ea5b2]"
                                 />
                             </label>
 
-                            <label class="grid gap-3">
+                            <label class="grid min-w-0 gap-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
                                     {{ t('map_builder.filters.player_names_label') }}
                                 </span>
@@ -744,11 +744,11 @@ const closeVillageModal = (): void => {
                                     v-model="form.player_names"
                                     rows="6"
                                     :placeholder="t('map_builder.filters.player_names_placeholder')"
-                                    class="min-h-[160px] rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[#edf3f6] outline-none placeholder:text-[#8ea5b2]"
+                                    class="min-h-[180px] w-full min-w-0 rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[#edf3f6] outline-none placeholder:text-[#8ea5b2]"
                                 />
                             </label>
 
-                            <label class="grid gap-3">
+                            <label class="grid min-w-0 gap-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
                                     {{ t('map_builder.filters.region_names_label') }}
                                 </span>
@@ -756,12 +756,12 @@ const closeVillageModal = (): void => {
                                     v-model="form.region_names"
                                     rows="6"
                                     :placeholder="t('map_builder.filters.region_names_placeholder')"
-                                    class="min-h-[160px] rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[#edf3f6] outline-none placeholder:text-[#8ea5b2]"
+                                    class="min-h-[180px] w-full min-w-0 rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[#edf3f6] outline-none placeholder:text-[#8ea5b2]"
                                 />
                             </label>
                         </div>
 
-                        <div class="flex flex-col gap-4 border-t border-white/10 pt-5 xl:flex-row xl:items-center xl:justify-between">
+                        <div class="flex flex-col gap-4 border-t border-white/10 pt-5 lg:flex-row lg:items-end lg:justify-between">
                             <p class="max-w-3xl text-sm leading-7 text-[#c6d3da]">
                                 {{ t('map_builder.filters.help') }}
                             </p>
@@ -786,7 +786,7 @@ const closeVillageModal = (): void => {
                 </article>
 
                 <article class="rounded-[32px] border border-[#1f1a14]/10 bg-white p-6 shadow-[0_20px_60px_rgba(56,43,27,0.08)] sm:p-8">
-                    <div class="flex flex-col gap-4 border-b border-[#1f1a14]/10 pb-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="flex flex-col gap-6 border-b border-[#1f1a14]/10 pb-5 xl:flex-row xl:items-start xl:justify-between">
                         <div class="min-w-0">
                             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#3f6d8f]">
                                 {{ t('map_builder.results.title') }}
@@ -803,15 +803,15 @@ const closeVillageModal = (): void => {
                             </p>
                         </div>
 
-                        <div v-if="props.summary.shareUrl" class="grid min-w-0 gap-2 lg:max-w-sm">
+                        <div v-if="props.summary.shareUrl" class="grid min-w-0 gap-2 xl:w-[440px] xl:max-w-full">
                             <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">
                                 {{ t('map_builder.share.title') }}
                             </p>
-                            <div class="flex gap-2">
+                            <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                                 <input
                                     :value="props.summary.shareUrl"
                                     readonly
-                                    class="min-w-0 flex-1 rounded-2xl border border-[#1f1a14]/10 bg-[#f7f4ee] px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                    class="min-w-0 w-full rounded-2xl border border-[#1f1a14]/10 bg-[#f7f4ee] px-4 py-3 text-sm text-[#1f1a14] outline-none"
                                 />
                                 <button
                                     type="button"
@@ -834,8 +834,8 @@ const closeVillageModal = (): void => {
                         </span>
                     </div>
 
-                    <div v-if="hasRenderableMap" class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-                        <div class="overflow-hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#0f171c] p-4 sm:p-5">
+                    <div v-if="hasRenderableMap" class="mt-6 grid gap-6">
+                        <div class="overflow-hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#0f171c] p-4 sm:p-5 lg:p-6">
                             <div class="mb-4 flex flex-wrap gap-2 text-xs font-medium text-[#d8e3e8]">
                                 <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2">
                                     {{ t('map_builder.results.interaction_hint') }}
@@ -900,37 +900,35 @@ const closeVillageModal = (): void => {
                             </div>
                         </div>
 
-                        <div class="grid gap-4">
-                            <div class="rounded-[28px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-5">
-                                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">
-                                    {{ t('map_builder.legend.title') }}
-                                </p>
+                        <div class="rounded-[28px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-5 lg:p-6">
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">
+                                {{ t('map_builder.legend.title') }}
+                            </p>
 
-                                <div class="mt-4 grid gap-3">
-                                    <div
-                                        v-for="item in props.map.legend"
-                                        :key="item.key"
-                                        class="rounded-[22px] border px-4 py-3"
-                                        :class="item.type === 'player' && item.parent_label ? 'border-[#3f6d8f]/18 bg-[#eef5fb]' : 'border-[#1f1a14]/10 bg-white'"
-                                    >
-                                        <div class="flex items-start gap-3">
-                                            <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
-                                            <div class="min-w-0 flex-1">
-                                                <div class="flex items-center justify-between gap-3">
-                                                    <p class="truncate text-sm font-semibold text-[#1c1814]">
-                                                        {{ item.label }}
-                                                    </p>
-                                                    <span
-                                                        v-if="item.count > 0"
-                                                        class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]"
-                                                    >
-                                                        {{ item.count }}
-                                                    </span>
-                                                </div>
-                                                <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
-                                                    {{ legendNote(item) }}
+                            <div class="mt-4 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                                <div
+                                    v-for="item in props.map.legend"
+                                    :key="item.key"
+                                    class="rounded-[22px] border px-4 py-3"
+                                    :class="item.type === 'player' && item.parent_label ? 'border-[#3f6d8f]/18 bg-[#eef5fb]' : 'border-[#1f1a14]/10 bg-white'"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="truncate text-sm font-semibold text-[#1c1814]">
+                                                    {{ item.label }}
                                                 </p>
+                                                <span
+                                                    v-if="item.count > 0"
+                                                    class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]"
+                                                >
+                                                    {{ item.count }}
+                                                </span>
                                             </div>
+                                            <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
+                                                {{ legendNote(item) }}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
