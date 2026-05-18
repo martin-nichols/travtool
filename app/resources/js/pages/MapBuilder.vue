@@ -211,14 +211,19 @@ const mapTransformStyle = computed(() => ({
     willChange: 'transform',
 }));
 const villagePointRadius = computed(() => {
-    const radius = 6 / Math.pow(mapTransform.scale, 1.35);
+    const radius = 4.5 / Math.pow(mapTransform.scale, 1.95);
 
-    return Math.max(1.2, radius);
+    return Math.max(0.18, radius);
 });
 const villagePointStrokeWidth = computed(() => {
-    const width = 2 / Math.pow(mapTransform.scale, 1.35);
+    const width = 1.4 / Math.pow(mapTransform.scale, 1.95);
 
-    return Math.max(0.7, width);
+    return Math.max(0.08, width);
+});
+const villageHitRadius = computed(() => {
+    const radius = 12 / mapTransform.scale;
+
+    return Math.max(0.85, radius);
 });
 
 const validateWorldSelection = (): boolean => {
@@ -770,6 +775,13 @@ const closeVillageModal = (): void => {
                                             :fill="village.color"
                                             :stroke="village.stroke_color"
                                             :stroke-width="villagePointStrokeWidth"
+                                            class="pointer-events-none"
+                                        />
+                                        <circle
+                                            :cx="village.map.x"
+                                            :cy="village.map.y"
+                                            :r="villageHitRadius"
+                                            fill="transparent"
                                             class="cursor-pointer"
                                             @click.stop="openVillageModal(village)"
                                         />
