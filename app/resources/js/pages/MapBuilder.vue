@@ -210,20 +210,53 @@ const mapTransformStyle = computed(() => ({
     transformOrigin: 'center center',
     willChange: 'transform',
 }));
-const villagePointRadius = computed(() => {
-    const radius = 4.5 / Math.pow(mapTransform.scale, 1.95);
+const mapPixelsPerUnit = computed(() => {
+    const viewportWidth = mapViewport.value?.clientWidth ?? 0;
+    const viewBoxWidth = props.map.view_box.width || 1;
 
-    return Math.max(0.18, radius);
+    if (viewportWidth <= 0) {
+        return mapTransform.scale;
+    }
+
+    return (viewportWidth * mapTransform.scale) / viewBoxWidth;
+});
+const villagePointDiameterPx = computed(() => {
+    const shrinkProgress = clamp((mapTransform.scale - 1) / 9, 0, 1);
+
+    return 4.5 - shrinkProgress * 3.5;
+});
+const villagePointRadius = computed(() => {
+    const pixelsPerUnit = mapPixelsPerUnit.value;
+
+    if (pixelsPerUnit <= 0) {
+        return 0.5;
+    }
+
+    const radius = villagePointDiameterPx.value / (2 * pixelsPerUnit);
+
+    return Math.max(0.012, radius);
 });
 const villagePointStrokeWidth = computed(() => {
-    const width = 1.4 / Math.pow(mapTransform.scale, 1.95);
+    const pixelsPerUnit = mapPixelsPerUnit.value;
 
-    return Math.max(0.08, width);
+    if (pixelsPerUnit <= 0 || mapTransform.scale >= 4) {
+        return 0;
+    }
+
+    const targetStrokePx = mapTransform.scale <= 1.5 ? 0.8 : 0.45;
+
+    return Math.max(0.01, targetStrokePx / pixelsPerUnit);
 });
 const villageHitRadius = computed(() => {
-    const radius = 12 / mapTransform.scale;
+    const pixelsPerUnit = mapPixelsPerUnit.value;
 
-    return Math.max(0.85, radius);
+    if (pixelsPerUnit <= 0) {
+        return 1.2;
+    }
+
+    const radius = 10 / pixelsPerUnit;
+
+    return Math.max(villagePointRadius.value, radius);
 });
 
 const validateWorldSelection = (): boolean => {
@@ -338,7 +371,7 @@ const clampPan = (): void => {
 };
 
 const applyScale = (nextScale: number): void => {
-    mapTransform.scale = clamp(nextScale, 1, 14);
+    mapTransform.scale = clamp(nextScale, 1, 10);
     clampPan();
 };
 
