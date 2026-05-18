@@ -198,40 +198,60 @@ onBeforeUnmount(() => {
 
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
 const resultTitle = computed(() => props.summary.selectedWorldName || t('map_builder.state.choose_world_title'));
+const baseViewBox = computed(() => props.map.view_box);
+const interactiveViewBox = computed(() => {
+    const box = baseViewBox.value;
+    const viewportWidth = mapViewport.value?.clientWidth ?? 0;
+    const viewportHeight = mapViewport.value?.clientHeight ?? 0;
+    const scaledWidth = box.width / mapTransform.scale;
+    const scaledHeight = box.height / mapTransform.scale;
+    const baseCenterX = box.x + box.width / 2;
+    const baseCenterY = box.y + box.height / 2;
+    const centerShiftX =
+        viewportWidth > 0 ? (mapTransform.panX * box.width) / (viewportWidth * mapTransform.scale) : 0;
+    const centerShiftY =
+        viewportHeight > 0 ? (mapTransform.panY * box.height) / (viewportHeight * mapTransform.scale) : 0;
+    const centerX = clamp(baseCenterX - centerShiftX, scaledWidth / 2, props.map.world_size - scaledWidth / 2);
+    const centerY = clamp(baseCenterY - centerShiftY, scaledHeight / 2, props.map.world_size - scaledHeight / 2);
+
+    return {
+        x: centerX - scaledWidth / 2,
+        y: centerY - scaledHeight / 2,
+        width: scaledWidth,
+        height: scaledHeight,
+    };
+});
 const viewBox = computed(() => {
-    const box = props.map.view_box;
+    const box = interactiveViewBox.value;
 
     return `${box.x} ${box.y} ${box.width} ${box.height}`;
 });
 
 const hasRenderableMap = computed(() => props.map.status === 'ready' && props.map.villages.length > 0);
-const mapTransformStyle = computed(() => ({
-    transform: `translate(${mapTransform.panX}px, ${mapTransform.panY}px) scale(${mapTransform.scale})`,
-    transformOrigin: 'center center',
-    willChange: 'transform',
-}));
 const visibleMapSpan = computed(() => {
-    const width = props.map.view_box.width || 1;
-    const height = props.map.view_box.height || 1;
+    const width = interactiveViewBox.value.width || 1;
+    const height = interactiveViewBox.value.height || 1;
 
-    return Math.max(width, height) / mapTransform.scale;
+    return Math.max(width, height);
 });
 const maxZoomScale = computed(() => {
-    const width = props.map.view_box.width || 1;
-    const height = props.map.view_box.height || 1;
+    const width = baseViewBox.value.width || 1;
+    const height = baseViewBox.value.height || 1;
     const dominantSpan = Math.max(width, height);
 
     return Math.max(1, dominantSpan / 10);
 });
 const mapPixelsPerUnit = computed(() => {
     const viewportWidth = mapViewport.value?.clientWidth ?? 0;
-    const viewBoxWidth = props.map.view_box.width || 1;
+    const viewportHeight = mapViewport.value?.clientHeight ?? 0;
+    const viewBoxWidth = interactiveViewBox.value.width || 1;
+    const viewBoxHeight = interactiveViewBox.value.height || 1;
 
-    if (viewportWidth <= 0) {
+    if (viewportWidth <= 0 || viewportHeight <= 0) {
         return mapTransform.scale;
     }
 
-    return (viewportWidth * mapTransform.scale) / viewBoxWidth;
+    return Math.min(viewportWidth / viewBoxWidth, viewportHeight / viewBoxHeight);
 });
 const villagePointDiameterUnits = computed(() => {
     const shrinkStartSpan = 140;
@@ -369,12 +389,30 @@ const clampPan = (): void => {
         return;
     }
 
-    const bounds = viewport.getBoundingClientRect();
-    const maxPanX = Math.max(0, ((mapTransform.scale - 1) * bounds.width) / 2 + 40);
-    const maxPanY = Math.max(0, ((mapTransform.scale - 1) * bounds.height) / 2 + 40);
+    const viewportWidth = viewport.clientWidth;
+    const viewportHeight = viewport.clientHeight;
+    const box = baseViewBox.value;
+    const scaledWidth = box.width / mapTransform.scale;
+    const scaledHeight = box.height / mapTransform.scale;
+    const baseCenterX = box.x + box.width / 2;
+    const baseCenterY = box.y + box.height / 2;
+    const desiredCenterShiftX =
+        viewportWidth > 0 ? (mapTransform.panX * box.width) / (viewportWidth * mapTransform.scale) : 0;
+    const desiredCenterShiftY =
+        viewportHeight > 0 ? (mapTransform.panY * box.height) / (viewportHeight * mapTransform.scale) : 0;
+    const desiredCenterX = baseCenterX - desiredCenterShiftX;
+    const desiredCenterY = baseCenterY - desiredCenterShiftY;
+    const clampedCenterX = clamp(desiredCenterX, scaledWidth / 2, props.map.world_size - scaledWidth / 2);
+    const clampedCenterY = clamp(desiredCenterY, scaledHeight / 2, props.map.world_size - scaledHeight / 2);
 
-    mapTransform.panX = clamp(mapTransform.panX, -maxPanX, maxPanX);
-    mapTransform.panY = clamp(mapTransform.panY, -maxPanY, maxPanY);
+    mapTransform.panX =
+        viewportWidth > 0
+            ? ((baseCenterX - clampedCenterX) * viewportWidth * mapTransform.scale) / box.width
+            : 0;
+    mapTransform.panY =
+        viewportHeight > 0
+            ? ((baseCenterY - clampedCenterY) * viewportHeight * mapTransform.scale) / box.height
+            : 0;
 };
 
 const applyScale = (nextScale: number): void => {
@@ -792,7 +830,6 @@ const closeVillageModal = (): void => {
                             >
                                 <svg
                                     class="aspect-square w-full cursor-grab active:cursor-grabbing"
-                                    :style="mapTransformStyle"
                                     :viewBox="viewBox"
                                     xmlns="http://www.w3.org/2000/svg"
                                     role="img"
