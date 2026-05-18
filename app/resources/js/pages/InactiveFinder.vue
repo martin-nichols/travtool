@@ -155,14 +155,13 @@ const cleanedFilters = (): Record<string, string | number | boolean> => {
     const radiusMin = nullableNumber(form.radius_min);
     const radiusMax = nullableNumber(form.radius_max);
     const hasCenter = x !== null && y !== null;
-    const effectiveSort = hasCenter && form.sort === 'score' ? 'distance_asc' : form.sort;
     const payload: Record<string, string | number | boolean> = {
         world: form.world,
         one_village: form.one_village,
         include_npcs: form.include_npcs,
         no_alliance: form.no_alliance,
         stable_only: form.stable_only,
-        sort: effectiveSort,
+        sort: form.sort,
     };
 
     if (form.q) payload.q = form.q;
