@@ -62,7 +62,12 @@ class MapBuilderController extends Controller
     /**
      * @var list<int>
      */
-    private const PLAYER_VARIANTS = [26, 14, -12, -24, 34, -18];
+    private const PLAYER_VARIANTS = [18, -14, 32, -28, 8, -8, 42, -38];
+
+    /**
+     * @var list<int>
+     */
+    private const PALETTE_CYCLE_VARIANTS = [22, -18, 34, -30, 12, -42];
 
     private const WORLD_MIN = -400;
     private const WORLD_MAX = 400;
@@ -466,7 +471,7 @@ class MapBuilderController extends Controller
                 'key' => $key,
                 'type' => 'alliance',
                 'label' => $allianceTag,
-                'color' => $this->pickPaletteColor($allianceTag, self::ALLIANCE_PALETTE),
+                'color' => $this->pickSequentialPaletteColor(count($allianceLegend), self::ALLIANCE_PALETTE),
                 'count' => 0,
                 'parent_key' => null,
                 'parent_label' => null,
@@ -486,11 +491,16 @@ class MapBuilderController extends Controller
         $key = 'player:'.$playerName;
 
         if (! isset($playerLegend[$key])) {
+            $variantIndex = count(array_filter(
+                $playerLegend,
+                static fn (array $item): bool => ($item['parent_key'] ?? null) === 'alliance:'.$allianceTag,
+            ));
+
             $playerLegend[$key] = [
                 'key' => $key,
                 'type' => 'player',
                 'label' => $playerName,
-                'color' => $this->buildPlayerVariantColor($baseAllianceColor, $playerName),
+                'color' => $this->buildPlayerVariantColor($baseAllianceColor, $variantIndex),
                 'count' => 0,
                 'parent_key' => 'alliance:'.$allianceTag,
                 'parent_label' => $allianceTag,
@@ -510,11 +520,16 @@ class MapBuilderController extends Controller
         $key = 'player:'.$playerName;
 
         if (! isset($playerLegend[$key])) {
+            $standaloneCount = count(array_filter(
+                $playerLegend,
+                static fn (array $item): bool => ($item['parent_key'] ?? null) === null,
+            ));
+
             $playerLegend[$key] = [
                 'key' => $key,
                 'type' => 'player',
                 'label' => $playerName,
-                'color' => $this->pickPaletteColor($playerName, self::STANDALONE_PLAYER_PALETTE),
+                'color' => $this->pickSequentialPaletteColor($standaloneCount, self::STANDALONE_PLAYER_PALETTE),
                 'count' => 0,
                 'parent_key' => null,
                 'parent_label' => null,
@@ -538,7 +553,7 @@ class MapBuilderController extends Controller
                 'key' => $key,
                 'type' => 'region',
                 'label' => $regionName,
-                'color' => $this->pickPaletteColor($regionName, self::REGION_PALETTE),
+                'color' => $this->pickSequentialPaletteColor(count($regionLegend), self::REGION_PALETTE),
                 'count' => 0,
                 'parent_key' => null,
                 'parent_label' => null,
@@ -606,21 +621,35 @@ class MapBuilderController extends Controller
         return array_values($legend);
     }
 
-    private function pickPaletteColor(string $seed, array $palette): string
+    private function pickSequentialPaletteColor(int $index, array $palette): string
     {
-        return $palette[$this->hashIndex($seed, count($palette))];
+        if ($palette === []) {
+            return '#7f8c8d';
+        }
+
+        $paletteSize = count($palette);
+        $baseColor = $palette[$index % $paletteSize];
+        $cycle = intdiv($index, $paletteSize);
+
+        if ($cycle === 0) {
+            return $baseColor;
+        }
+
+        $delta = self::PALETTE_CYCLE_VARIANTS[($cycle - 1) % count(self::PALETTE_CYCLE_VARIANTS)];
+
+        return $this->adjustHexColor($baseColor, $delta);
     }
 
-    private function buildPlayerVariantColor(string $baseHex, string $seed): string
+    private function buildPlayerVariantColor(string $baseHex, int $variantIndex): string
     {
-        $delta = self::PLAYER_VARIANTS[$this->hashIndex($seed, count(self::PLAYER_VARIANTS))];
+        $delta = self::PLAYER_VARIANTS[$variantIndex % count(self::PLAYER_VARIANTS)];
+
+        if ($variantIndex >= count(self::PLAYER_VARIANTS)) {
+            $cycleIndex = (intdiv($variantIndex, count(self::PLAYER_VARIANTS)) - 1) % count(self::PALETTE_CYCLE_VARIANTS);
+            $delta += self::PALETTE_CYCLE_VARIANTS[$cycleIndex];
+        }
 
         return $this->adjustHexColor($baseHex, $delta);
-    }
-
-    private function hashIndex(string $seed, int $size): int
-    {
-        return $size > 0 ? abs((int) crc32($seed)) % $size : 0;
     }
 
     private function adjustHexColor(string $hex, int $delta): string
