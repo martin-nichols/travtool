@@ -1023,13 +1023,7 @@ const closeVillageModal = (): void => {
                     </div>
 
                     <div v-if="hasRenderableMap" class="mt-6 grid gap-6">
-                        <div class="overflow-hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#0f171c] p-4 sm:p-5 lg:p-6">
-                            <div class="mb-4 flex flex-wrap gap-2 text-xs font-medium text-[#d8e3e8]">
-                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2">
-                                    {{ t('map_builder.results.interaction_hint') }}
-                                </span>
-                            </div>
-
+                        <div class="overflow-hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#0f171c] p-2 sm:p-3 lg:p-4">
                             <div
                                 ref="mapViewport"
                                 class="relative mx-auto aspect-[4/3] w-full max-w-[1080px] overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none lg:aspect-[2/1] xl:aspect-[21/10] [overscroll-behavior:contain]"
@@ -1097,15 +1091,6 @@ const closeVillageModal = (): void => {
                                         {{ line.label }}
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="mt-4 flex flex-wrap gap-3 text-xs font-medium text-[#d8e3e8]">
-                                <span class="rounded-full border border-white/10 bg-white/5 px-3 py-2">
-                                    {{ t('map_builder.summary.villages') }}: {{ props.summary.matchedVillageCount }}
-                                </span>
-                                <span v-if="boundsLabel" class="rounded-full border border-white/10 bg-white/5 px-3 py-2">
-                                    {{ boundsLabel }}
-                                </span>
                             </div>
                         </div>
 
