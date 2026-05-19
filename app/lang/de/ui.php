@@ -93,6 +93,7 @@ return [
             'copy' => 'Das Ziel ist nicht, die Suchseite zu duplizieren. Dieser Bereich wird zu einem Studio: Welt waehlen, Zentrum setzen, einzelne oder ringfoermige Radien bauen, Ebenen verwalten, Punkte markieren und saubere Exporte erzeugen.',
         ],
         'filters' => [
+            'panel_title' => 'Kartengenerator',
             'world_label' => 'Welt',
             'choose_world_placeholder' => 'Welt auswaehlen',
             'choose_world_error' => 'Welt auswaehlen',

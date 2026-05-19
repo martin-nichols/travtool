@@ -93,6 +93,7 @@ return [
             'copy' => 'The goal is not to duplicate the search page. This will become a studio: choose a world, define a center, build single or ring-based radiuses, manage overlays, mark points of interest and generate clean exports.',
         ],
         'filters' => [
+            'panel_title' => 'Map generator',
             'world_label' => 'World',
             'choose_world_placeholder' => 'Choose a world',
             'choose_world_error' => 'Choose a world',

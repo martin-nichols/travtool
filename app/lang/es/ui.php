@@ -93,6 +93,7 @@ return [
             'copy' => 'La idea no es duplicar la pagina de busqueda. Esta zona se convertira en un estudio: elegir mundo, definir centro, construir radios simples o en corona, gestionar capas, marcar puntos de interes y generar exportaciones limpias.',
         ],
         'filters' => [
+            'panel_title' => 'Generador de mapas',
             'world_label' => 'Mundo',
             'choose_world_placeholder' => 'Elegir un mundo',
             'choose_world_error' => 'Elegir un mundo',

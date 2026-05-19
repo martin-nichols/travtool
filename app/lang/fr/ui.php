@@ -93,6 +93,7 @@ return [
             'copy' => 'Le but n\'est pas de dupliquer la page de recherche. Cette zone deviendra un atelier : choix du monde, centre de reference, rayons simples ou en couronne, calques, points d\'interet et export propre.',
         ],
         'filters' => [
+            'panel_title' => 'Generateur de cartes',
             'world_label' => 'Monde',
             'choose_world_placeholder' => 'Choisir un monde',
             'choose_world_error' => 'Choisir un monde',
