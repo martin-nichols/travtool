@@ -94,6 +94,9 @@ return [
         ],
         'filters' => [
             'panel_title' => 'Generador de mapas',
+            'active_criteria' => 'Criterios activos',
+            'modify' => 'Editar criterios',
+            'collapse' => 'Plegar',
             'world_label' => 'Mundo',
             'choose_world_placeholder' => 'Elegir un mundo',
             'choose_world_error' => 'Elegir un mundo',

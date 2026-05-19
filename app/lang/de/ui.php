@@ -94,6 +94,9 @@ return [
         ],
         'filters' => [
             'panel_title' => 'Kartengenerator',
+            'active_criteria' => 'Aktive Kriterien',
+            'modify' => 'Kriterien bearbeiten',
+            'collapse' => 'Einklappen',
             'world_label' => 'Welt',
             'choose_world_placeholder' => 'Welt auswaehlen',
             'choose_world_error' => 'Welt auswaehlen',

@@ -94,6 +94,9 @@ return [
         ],
         'filters' => [
             'panel_title' => 'Generateur de cartes',
+            'active_criteria' => 'Criteres actifs',
+            'modify' => 'Modifier les criteres',
+            'collapse' => 'Replier',
             'world_label' => 'Monde',
             'choose_world_placeholder' => 'Choisir un monde',
             'choose_world_error' => 'Choisir un monde',

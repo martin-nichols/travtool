@@ -109,6 +109,7 @@ const selectedVillage = ref<MapVillage | null>(null);
 const activeLegendKeys = ref<string[]>([]);
 const blinkPhase = ref(false);
 const isMobileFullscreen = ref(false);
+const isFiltersCollapsed = ref(props.map.has_criteria);
 const pressedVillageId = ref<number | null>(null);
 const inlineMapViewport = ref<HTMLElement | null>(null);
 const fullscreenMapViewport = ref<HTMLElement | null>(null);
@@ -176,6 +177,14 @@ watch(isMobileFullscreen, (nextValue) => {
     document.body.style.overflow = nextValue ? 'hidden' : '';
     document.documentElement.style.overflow = nextValue ? 'hidden' : '';
 });
+
+watch(
+    () => props.map.has_criteria,
+    (hasCriteria) => {
+        isFiltersCollapsed.value = hasCriteria;
+    },
+    { immediate: true },
+);
 
 const clearBlinkInterval = (): void => {
     if (blinkIntervalId !== null) {
@@ -409,6 +418,7 @@ const submit = () => {
 const reset = () => {
     shareCopied.value = false;
     worldSelectionError.value = false;
+    isFiltersCollapsed.value = false;
 
     router.get(
         '/map-builder',
@@ -419,6 +429,18 @@ const reset = () => {
             replace: true,
         },
     );
+};
+
+const expandFiltersPanel = (): void => {
+    isFiltersCollapsed.value = false;
+};
+
+const collapseFiltersPanel = (): void => {
+    if (!props.map.has_criteria) {
+        return;
+    }
+
+    isFiltersCollapsed.value = true;
 };
 
 const openSelectedWorld = () => {
@@ -450,6 +472,7 @@ const criteriaChips = computed(() => [
     ...props.map.criteria.players.map((value) => ({ key: `player:${value}`, label: `${t('map_builder.criteria.player_prefix')}: ${value}` })),
     ...props.map.criteria.regions.map((value) => ({ key: `region:${value}`, label: `${t('map_builder.criteria.region_prefix')}: ${value}` })),
 ]);
+const criteriaCount = computed(() => criteriaChips.value.length);
 
 const stateTitle = computed(() => t(`map_builder.state.${props.map.status}_title`));
 const stateDescription = computed(() => t(`map_builder.state.${props.map.status}_description`));
@@ -864,11 +887,57 @@ const closeMobileFullscreen = (): void => {
 
             <section class="mt-10 grid gap-6">
                 <article class="rounded-[32px] border border-[#1f1a14]/10 bg-[#1d262b] p-6 text-[#edf3f6] shadow-[0_24px_80px_rgba(27,39,48,0.18)] sm:p-8">
-                    <h2 class="text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
-                        {{ t('map_builder.filters.panel_title') }}
-                    </h2>
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 class="text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+                                {{ t('map_builder.filters.panel_title') }}
+                            </h2>
+                        </div>
 
-                    <form class="mt-8 grid gap-6" @submit.prevent="submit">
+                        <button
+                            v-if="props.map.has_criteria && !isFiltersCollapsed"
+                            type="button"
+                            class="inline-flex items-center justify-center self-start rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-[#edf3f6] transition hover:bg-white/10"
+                            @click="collapseFiltersPanel"
+                        >
+                            {{ t('map_builder.filters.collapse') }}
+                        </button>
+                    </div>
+
+                    <div
+                        v-if="isFiltersCollapsed"
+                        class="mt-8 grid gap-4 rounded-[28px] border border-white/10 bg-white/5 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                    >
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="rounded-[22px] border border-white/8 bg-[#243038] px-4 py-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9fd1ef]">
+                                    {{ t('map_builder.summary.world') }}
+                                </p>
+                                <p class="mt-2 text-sm font-medium text-white">
+                                    {{ props.summary.selectedWorldName || t('map_builder.state.choose_world_title') }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-[22px] border border-white/8 bg-[#243038] px-4 py-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#9fd1ef]">
+                                    {{ t('map_builder.filters.active_criteria') }}
+                                </p>
+                                <p class="mt-2 text-sm font-medium text-white">
+                                    {{ criteriaCount }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center rounded-full bg-[#7fc4f1] px-5 py-3 text-sm font-medium text-[#0f1a21] transition hover:bg-[#a6dcfa]"
+                            @click="expandFiltersPanel"
+                        >
+                            {{ t('map_builder.filters.modify') }}
+                        </button>
+                    </div>
+
+                    <form v-else class="mt-8 grid gap-6" @submit.prevent="submit">
                         <div class="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
                             <div class="grid min-w-0 gap-3">
                                 <label class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
