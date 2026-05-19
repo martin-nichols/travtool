@@ -106,7 +106,7 @@ const form = reactive<FilterState>({ ...props.filters });
 const worldSelectionError = ref(false);
 const shareCopied = ref(false);
 const selectedVillage = ref<MapVillage | null>(null);
-const activeLegendKey = ref<string | null>(null);
+const activeLegendKeys = ref<string[]>([]);
 const blinkPhase = ref(false);
 const pressedVillageId = ref<number | null>(null);
 const mapViewport = ref<HTMLElement | null>(null);
@@ -156,7 +156,7 @@ watch(
         mapTransform.panX = 0;
         mapTransform.panY = 0;
         selectedVillage.value = null;
-        activeLegendKey.value = null;
+        activeLegendKeys.value = [];
         pressedVillageId.value = null;
         activePointers.clear();
         interactionState.mode = 'idle';
@@ -173,11 +173,11 @@ const clearBlinkInterval = (): void => {
     }
 };
 
-watch(activeLegendKey, (nextKey) => {
+watch(activeLegendKeys, (nextKeys) => {
     clearBlinkInterval();
     blinkPhase.value = false;
 
-    if (!nextKey) {
+    if (nextKeys.length === 0) {
         return;
     }
 
@@ -491,17 +491,70 @@ const villageIdFromEventTarget = (target: EventTarget | null): number | null => 
     return Number.isFinite(id) ? id : null;
 };
 
-const isLegendActive = (legendKey: string): boolean => activeLegendKey.value === legendKey;
+const isLegendActive = (legendKey: string): boolean => activeLegendKeys.value.includes(legendKey);
 
-const toggleLegendFocus = (legendKey: string): void => {
-    activeLegendKey.value = activeLegendKey.value === legendKey ? null : legendKey;
+const toggleLegendFocus = (item: MapLegendItem): void => {
+    const currentKeys = [...activeLegendKeys.value];
+    const existingIndex = currentKeys.indexOf(item.key);
+
+    if (existingIndex >= 0) {
+        currentKeys.splice(existingIndex, 1);
+        activeLegendKeys.value = currentKeys;
+
+        return;
+    }
+
+    if (item.type !== 'player') {
+        activeLegendKeys.value = [item.key];
+
+        return;
+    }
+
+    const playerKeys = currentKeys.filter((key) => key.startsWith('player:'));
+    const nextPlayerKeys = playerKeys.length >= 2 ? [...playerKeys.slice(1), item.key] : [...playerKeys, item.key];
+
+    activeLegendKeys.value = nextPlayerKeys;
+};
+
+const villageMatchesLegendKey = (village: MapVillage, legendKey: string): boolean => {
+    if (legendKey.startsWith('player:')) {
+        return legendKey === `player:${village.player_name}`;
+    }
+
+    if (legendKey.startsWith('alliance:')) {
+        return village.alliance_tag !== null && legendKey === `alliance:${village.alliance_tag}`;
+    }
+
+    if (legendKey.startsWith('region:')) {
+        return village.region_name !== null && legendKey === `region:${village.region_name}`;
+    }
+
+    return false;
+};
+
+const isBlinkingVillage = (village: MapVillage): boolean => {
+    const activeKeys = activeLegendKeys.value;
+
+    if (activeKeys.length === 0) {
+        return false;
+    }
+
+    if (activeKeys.length === 1) {
+        return villageMatchesLegendKey(village, activeKeys[0]) && blinkPhase.value;
+    }
+
+    if (!activeKeys.some((legendKey) => villageMatchesLegendKey(village, legendKey))) {
+        return false;
+    }
+
+    return villageMatchesLegendKey(village, activeKeys[0]) ? !blinkPhase.value : blinkPhase.value;
 };
 
 const villageDisplayFill = (village: MapVillage): string =>
-    activeLegendKey.value === village.legend_key && blinkPhase.value ? '#ffffff' : village.color;
+    isBlinkingVillage(village) ? '#ffffff' : village.color;
 
 const villageDisplayStroke = (village: MapVillage): string =>
-    activeLegendKey.value === village.legend_key && blinkPhase.value ? '#ffffff' : village.stroke_color;
+    isBlinkingVillage(village) ? '#ffffff' : village.stroke_color;
 
 const legendItemClasses = (item: MapLegendItem): string => {
     if (isLegendActive(item.key)) {
@@ -1070,9 +1123,9 @@ const closeVillageModal = (): void => {
                                     role="button"
                                     tabindex="0"
                                     :aria-pressed="isLegendActive(item.key)"
-                                    @click="toggleLegendFocus(item.key)"
-                                    @keydown.enter.prevent="toggleLegendFocus(item.key)"
-                                    @keydown.space.prevent="toggleLegendFocus(item.key)"
+                                    @click="toggleLegendFocus(item)"
+                                    @keydown.enter.prevent="toggleLegendFocus(item)"
+                                    @keydown.space.prevent="toggleLegendFocus(item)"
                                 >
                                     <div class="flex items-start gap-3">
                                         <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
