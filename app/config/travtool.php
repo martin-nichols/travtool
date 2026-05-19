@@ -6,6 +6,7 @@ return [
         'fr' => 'Francais',
         'de' => 'Deutsch',
         'es' => 'Espanol',
+        'hu' => 'Magyar',
     ],
 
     'imports' => [
