@@ -106,6 +106,8 @@ const form = reactive<FilterState>({ ...props.filters });
 const worldSelectionError = ref(false);
 const shareCopied = ref(false);
 const selectedVillage = ref<MapVillage | null>(null);
+const activeLegendKey = ref<string | null>(null);
+const blinkPhase = ref(false);
 const mapViewport = ref<HTMLElement | null>(null);
 const activePointers = new Map<number, { x: number; y: number }>();
 const interactionState = reactive({
@@ -127,6 +129,7 @@ const mapTransform = reactive({
     panY: 0,
 });
 let removeNativeGestureGuards: (() => void) | null = null;
+let blinkIntervalId: number | null = null;
 
 watch(
     () => props.filters,
@@ -152,6 +155,7 @@ watch(
         mapTransform.panX = 0;
         mapTransform.panY = 0;
         selectedVillage.value = null;
+        activeLegendKey.value = null;
         activePointers.clear();
         interactionState.mode = 'idle';
         interactionState.suppressClick = false;
@@ -159,6 +163,26 @@ watch(
     },
     { deep: true },
 );
+
+const clearBlinkInterval = (): void => {
+    if (blinkIntervalId !== null) {
+        window.clearInterval(blinkIntervalId);
+        blinkIntervalId = null;
+    }
+};
+
+watch(activeLegendKey, (nextKey) => {
+    clearBlinkInterval();
+    blinkPhase.value = false;
+
+    if (!nextKey) {
+        return;
+    }
+
+    blinkIntervalId = window.setInterval(() => {
+        blinkPhase.value = !blinkPhase.value;
+    }, 420);
+});
 
 watch(mapViewport, (element) => {
     removeNativeGestureGuards?.();
@@ -195,6 +219,7 @@ watch(mapViewport, (element) => {
 
 onBeforeUnmount(() => {
     removeNativeGestureGuards?.();
+    clearBlinkInterval();
 });
 
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
@@ -447,6 +472,30 @@ const tribeLabel = (tribeId: number | null): string => {
     }
 };
 
+const isLegendActive = (legendKey: string): boolean => activeLegendKey.value === legendKey;
+
+const toggleLegendFocus = (legendKey: string): void => {
+    activeLegendKey.value = activeLegendKey.value === legendKey ? null : legendKey;
+};
+
+const villageDisplayFill = (village: MapVillage): string =>
+    activeLegendKey.value === village.legend_key && blinkPhase.value ? '#ffffff' : village.color;
+
+const villageDisplayStroke = (village: MapVillage): string =>
+    activeLegendKey.value === village.legend_key && blinkPhase.value ? '#ffffff' : village.stroke_color;
+
+const legendItemClasses = (item: MapLegendItem): string => {
+    if (isLegendActive(item.key)) {
+        return 'border-[#8b4a27]/28 bg-[#e8dcc9] shadow-[0_16px_32px_rgba(139,74,39,0.14)]';
+    }
+
+    if (item.type === 'player' && item.parent_label) {
+        return 'border-[#3f6d8f]/18 bg-[#eef5fb]';
+    }
+
+    return 'border-[#1f1a14]/10 bg-white';
+};
+
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const clampPan = (): void => {
@@ -655,17 +704,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
 };
 
 const openVillageModal = (village: MapVillage): void => {
-    if (interactionState.suppressClick) {
-        return;
-    }
-
-    selectedVillage.value = village;
-};
-
-const onVillagePointerUp = (event: PointerEvent, village: MapVillage): void => {
-    event.stopPropagation();
-
-    if (interactionState.moved || interactionState.mode === 'pinch' || interactionState.suppressClick) {
+    if (interactionState.suppressClick || interactionState.moved || interactionState.mode === 'pinch') {
         return;
     }
 
@@ -902,7 +941,7 @@ const closeVillageModal = (): void => {
 
                             <div
                                 ref="mapViewport"
-                                class="relative mx-auto aspect-[4/3] w-full max-w-[1120px] overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none lg:aspect-[16/10] xl:aspect-[16/9] [overscroll-behavior:contain]"
+                                class="relative mx-auto aspect-[4/3] w-full max-w-[1080px] overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none lg:aspect-[2/1] xl:aspect-[21/10] [overscroll-behavior:contain]"
                                 @click.capture="suppressDraggedClick"
                                 @pointercancel="onMapPointerEnd"
                                 @pointerdown="onMapPointerDown"
@@ -931,8 +970,8 @@ const closeVillageModal = (): void => {
                                             :cx="village.map.x"
                                             :cy="village.map.y"
                                             :r="villagePointRadius"
-                                            :fill="village.color"
-                                            :stroke="village.stroke_color"
+                                            :fill="villageDisplayFill(village)"
+                                            :stroke="villageDisplayStroke(village)"
                                             :stroke-width="villagePointStrokeWidth"
                                             class="pointer-events-none"
                                         />
@@ -942,7 +981,7 @@ const closeVillageModal = (): void => {
                                             :r="villageHitRadius"
                                             fill="transparent"
                                             class="cursor-pointer"
-                                            @pointerup="onVillagePointerUp($event, village)"
+                                            @click.stop="openVillageModal(village)"
                                         />
                                     </g>
                                 </svg>
@@ -986,8 +1025,14 @@ const closeVillageModal = (): void => {
                                 <div
                                     v-for="item in props.map.legend"
                                     :key="item.key"
-                                    class="rounded-[22px] border px-4 py-3"
-                                    :class="item.type === 'player' && item.parent_label ? 'border-[#3f6d8f]/18 bg-[#eef5fb]' : 'border-[#1f1a14]/10 bg-white'"
+                                    class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                    :class="legendItemClasses(item)"
+                                    role="button"
+                                    tabindex="0"
+                                    :aria-pressed="isLegendActive(item.key)"
+                                    @click="toggleLegendFocus(item.key)"
+                                    @keydown.enter.prevent="toggleLegendFocus(item.key)"
+                                    @keydown.space.prevent="toggleLegendFocus(item.key)"
                                 >
                                     <div class="flex items-start gap-3">
                                         <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
