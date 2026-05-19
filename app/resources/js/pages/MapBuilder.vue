@@ -1130,7 +1130,7 @@ const closeMobileFullscreen = (): void => {
                             </div>
                         </div>
 
-                        <div class="hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-5 lg:block lg:p-6">
+                        <div class="rounded-[28px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-5 lg:p-6">
                             <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">
                                 {{ t('map_builder.legend.title') }}
                             </p>
