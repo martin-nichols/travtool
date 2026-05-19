@@ -126,6 +126,8 @@ const interactionState = reactive({
     startScale: 1,
     startMidX: 0,
     startMidY: 0,
+    startAnchorMapX: 0,
+    startAnchorMapY: 0,
 });
 const mapTransform = reactive({
     scale: 1,
@@ -611,6 +613,44 @@ const legendItemClasses = (item: MapLegendItem): string => {
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
+const getViewportAnchorRatio = (clientX: number, clientY: number): { x: number; y: number } => {
+    const viewport = mapViewport.value;
+
+    if (!viewport) {
+        return { x: 0.5, y: 0.5 };
+    }
+
+    const rect = viewport.getBoundingClientRect();
+
+    return {
+        x: rect.width > 0 ? clamp((clientX - rect.left) / rect.width, 0, 1) : 0.5,
+        y: rect.height > 0 ? clamp((clientY - rect.top) / rect.height, 0, 1) : 0.5,
+    };
+};
+
+const setPanForCenter = (centerX: number, centerY: number): void => {
+    const viewport = mapViewport.value;
+
+    if (!viewport) {
+        return;
+    }
+
+    const viewportWidth = viewport.clientWidth;
+    const viewportHeight = viewport.clientHeight;
+    const box = baseViewBox.value;
+    const baseCenterX = box.x + box.width / 2;
+    const baseCenterY = box.y + box.height / 2;
+
+    mapTransform.panX =
+        viewportWidth > 0
+            ? ((baseCenterX - centerX) * viewportWidth * mapTransform.scale) / box.width
+            : 0;
+    mapTransform.panY =
+        viewportHeight > 0
+            ? ((baseCenterY - centerY) * viewportHeight * mapTransform.scale) / box.height
+            : 0;
+};
+
 const clampPan = (): void => {
     const viewport = mapViewport.value;
 
@@ -644,8 +684,33 @@ const clampPan = (): void => {
             : 0;
 };
 
-const applyScale = (nextScale: number): void => {
-    mapTransform.scale = clamp(nextScale, 1, maxZoomScale.value);
+const applyScale = (nextScale: number, anchorClientX?: number, anchorClientY?: number): void => {
+    const clampedScale = clamp(nextScale, 1, maxZoomScale.value);
+    const viewport = mapViewport.value;
+
+    if (!viewport) {
+        mapTransform.scale = clampedScale;
+        clampPan();
+
+        return;
+    }
+
+    const currentBox = interactiveViewBox.value;
+    const anchor =
+        anchorClientX !== undefined && anchorClientY !== undefined
+            ? getViewportAnchorRatio(anchorClientX, anchorClientY)
+            : { x: 0.5, y: 0.5 };
+    const anchorMapX = currentBox.x + currentBox.width * anchor.x;
+    const anchorMapY = currentBox.y + currentBox.height * anchor.y;
+
+    mapTransform.scale = clampedScale;
+
+    const nextWidth = baseViewBox.value.width / mapTransform.scale;
+    const nextHeight = baseViewBox.value.height / mapTransform.scale;
+    const desiredCenterX = anchorMapX + nextWidth * (0.5 - anchor.x);
+    const desiredCenterY = anchorMapY + nextHeight * (0.5 - anchor.y);
+
+    setPanForCenter(desiredCenterX, desiredCenterY);
     clampPan();
 };
 
@@ -681,6 +746,10 @@ const beginPinchFromPointers = (): void => {
     const midpoint = pointerMidpoint(first, second);
     interactionState.startMidX = midpoint.x;
     interactionState.startMidY = midpoint.y;
+    const anchor = getViewportAnchorRatio(midpoint.x, midpoint.y);
+    const currentBox = interactiveViewBox.value;
+    interactionState.startAnchorMapX = currentBox.x + currentBox.width * anchor.x;
+    interactionState.startAnchorMapY = currentBox.y + currentBox.height * anchor.y;
 };
 
 const onMapPointerDown = (event: PointerEvent) => {
@@ -729,9 +798,19 @@ const onMapPointerMove = (event: PointerEvent) => {
             pressedVillageId.value = null;
         }
 
-        applyScale(interactionState.startScale * (distance / Math.max(1, interactionState.startDistance)));
-        mapTransform.panX = interactionState.startPanX + (midpoint.x - interactionState.startMidX);
-        mapTransform.panY = interactionState.startPanY + (midpoint.y - interactionState.startMidY);
+        mapTransform.scale = clamp(
+            interactionState.startScale * (distance / Math.max(1, interactionState.startDistance)),
+            1,
+            maxZoomScale.value,
+        );
+
+        const anchor = getViewportAnchorRatio(midpoint.x, midpoint.y);
+        const nextWidth = baseViewBox.value.width / mapTransform.scale;
+        const nextHeight = baseViewBox.value.height / mapTransform.scale;
+        const desiredCenterX = interactionState.startAnchorMapX + nextWidth * (0.5 - anchor.x);
+        const desiredCenterY = interactionState.startAnchorMapY + nextHeight * (0.5 - anchor.y);
+
+        setPanForCenter(desiredCenterX, desiredCenterY);
         clampPan();
 
         if (event.cancelable) {
