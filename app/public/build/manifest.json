@@ -1,6 +1,6 @@
 {
-  "_LanguageSwitcher-DqbHzdWv.js": {
-    "file": "assets/LanguageSwitcher-DqbHzdWv.js",
+  "_LanguageSwitcher-y-xkGe36.js": {
+    "file": "assets/LanguageSwitcher-y-xkGe36.js",
     "name": "LanguageSwitcher",
     "imports": [
       "resources/js/app.ts"
@@ -68,7 +68,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-Bxu6fqQC.js",
+    "file": "assets/app-BrCctqCf.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -81,47 +81,47 @@
     ]
   },
   "resources/js/pages/Auth/Login.vue": {
-    "file": "assets/Login-BwpkJjD_.js",
+    "file": "assets/Login-_uXWJ2n7.js",
     "name": "Login",
     "src": "resources/js/pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DqbHzdWv.js"
+      "_LanguageSwitcher-y-xkGe36.js"
     ]
   },
   "resources/js/pages/Home.vue": {
-    "file": "assets/Home-DCUVGoGm.js",
+    "file": "assets/Home-TsHajj3N.js",
     "name": "Home",
     "src": "resources/js/pages/Home.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DqbHzdWv.js"
+      "_LanguageSwitcher-y-xkGe36.js"
     ]
   },
   "resources/js/pages/InactiveFinder.vue": {
-    "file": "assets/InactiveFinder-CZBy34Wz.js",
+    "file": "assets/InactiveFinder-BQ2cevj9.js",
     "name": "InactiveFinder",
     "src": "resources/js/pages/InactiveFinder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DqbHzdWv.js"
+      "_LanguageSwitcher-y-xkGe36.js"
     ]
   },
   "resources/js/pages/MapBuilder.vue": {
-    "file": "assets/MapBuilder-BE97p6Y1.js",
+    "file": "assets/MapBuilder-CPa6vAXa.js",
     "name": "MapBuilder",
     "src": "resources/js/pages/MapBuilder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DqbHzdWv.js"
+      "_LanguageSwitcher-y-xkGe36.js"
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-wFry9A5s.js",
+    "file": "assets/Welcome-3-9lVFiJ.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,

@@ -108,6 +108,7 @@ const shareCopied = ref(false);
 const selectedVillage = ref<MapVillage | null>(null);
 const activeLegendKey = ref<string | null>(null);
 const blinkPhase = ref(false);
+const pressedVillageId = ref<number | null>(null);
 const mapViewport = ref<HTMLElement | null>(null);
 const activePointers = new Map<number, { x: number; y: number }>();
 const interactionState = reactive({
@@ -156,6 +157,7 @@ watch(
         mapTransform.panY = 0;
         selectedVillage.value = null;
         activeLegendKey.value = null;
+        pressedVillageId.value = null;
         activePointers.clear();
         interactionState.mode = 'idle';
         interactionState.suppressClick = false;
@@ -223,6 +225,7 @@ onBeforeUnmount(() => {
 });
 
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
+const villagesById = computed(() => new Map(props.map.villages.map((village) => [village.id, village])));
 const resultTitle = computed(() => props.summary.selectedWorldName || t('map_builder.state.choose_world_title'));
 const baseViewBox = computed(() => props.map.view_box);
 const interactiveViewBox = computed(() => {
@@ -472,6 +475,22 @@ const tribeLabel = (tribeId: number | null): string => {
     }
 };
 
+const villageIdFromEventTarget = (target: EventTarget | null): number | null => {
+    if (!target || !(target instanceof Element)) {
+        return null;
+    }
+
+    const value = target.getAttribute('data-village-id');
+
+    if (!value) {
+        return null;
+    }
+
+    const id = Number.parseInt(value, 10);
+
+    return Number.isFinite(id) ? id : null;
+};
+
 const isLegendActive = (legendKey: string): boolean => activeLegendKey.value === legendKey;
 
 const toggleLegendFocus = (legendKey: string): void => {
@@ -578,6 +597,7 @@ const onMapPointerDown = (event: PointerEvent) => {
     if (activePointers.size === 0) {
         interactionState.suppressClick = false;
         interactionState.moved = false;
+        pressedVillageId.value = villageIdFromEventTarget(event.target);
     }
 
     mapViewport.value?.setPointerCapture?.(event.pointerId);
@@ -587,6 +607,7 @@ const onMapPointerDown = (event: PointerEvent) => {
         interactionState.moved = false;
         beginPanFromPointer({ x: event.clientX, y: event.clientY });
     } else if (activePointers.size === 2) {
+        pressedVillageId.value = null;
         beginPinchFromPointers();
     }
 };
@@ -611,6 +632,7 @@ const onMapPointerMove = (event: PointerEvent) => {
         if (Math.abs(distance - interactionState.startDistance) > 4 || Math.abs(midpoint.x - interactionState.startMidX) > 4 || Math.abs(midpoint.y - interactionState.startMidY) > 4) {
             interactionState.moved = true;
             interactionState.suppressClick = true;
+            pressedVillageId.value = null;
         }
 
         applyScale(interactionState.startScale * (distance / Math.max(1, interactionState.startDistance)));
@@ -635,6 +657,7 @@ const onMapPointerMove = (event: PointerEvent) => {
     if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
         interactionState.moved = true;
         interactionState.suppressClick = true;
+        pressedVillageId.value = null;
     }
 
     mapTransform.panX = interactionState.startPanX + deltaX;
@@ -655,10 +678,23 @@ const resetInteractionClickSuppression = (): void => {
 const onMapPointerEnd = (event: PointerEvent) => {
     mapViewport.value?.releasePointerCapture?.(event.pointerId);
     activePointers.delete(event.pointerId);
+    const shouldOpenPressedVillage =
+        activePointers.size === 0 &&
+        pressedVillageId.value !== null &&
+        !interactionState.moved &&
+        interactionState.mode !== 'pinch' &&
+        !interactionState.suppressClick;
 
     if (activePointers.size === 0) {
+        const villageToOpen = shouldOpenPressedVillage ? villagesById.value.get(pressedVillageId.value as number) ?? null : null;
+
         interactionState.mode = 'idle';
+        pressedVillageId.value = null;
         resetInteractionClickSuppression();
+
+        if (villageToOpen) {
+            selectedVillage.value = villageToOpen;
+        }
 
         return;
     }
@@ -676,7 +712,9 @@ const onMapPointerEnd = (event: PointerEvent) => {
         beginPanFromPointer(remainingPointer);
         interactionState.moved = true;
         interactionState.suppressClick = true;
+        pressedVillageId.value = null;
     } else if (activePointers.size >= 2) {
+        pressedVillageId.value = null;
         beginPinchFromPointers();
     }
 };
@@ -980,7 +1018,9 @@ const closeVillageModal = (): void => {
                                             :cy="village.map.y"
                                             :r="villageHitRadius"
                                             fill="transparent"
+                                            :data-village-id="village.id"
                                             class="cursor-pointer"
+                                            pointer-events="all"
                                             @click.stop="openVillageModal(village)"
                                         />
                                     </g>
