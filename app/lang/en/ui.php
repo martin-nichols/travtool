@@ -154,6 +154,8 @@ return [
             'ready_description' => 'The map is built from the current snapshot of the selected world, with one base color per alliance and color variations for specifically selected players.',
             'map_aria_label' => 'Generated Travtool map',
             'interaction_hint' => 'Pinch to zoom, drag to move around the map, then tap a point to view the village.',
+            'open_fullscreen' => 'Open map fullscreen',
+            'close_fullscreen' => 'Close fullscreen',
             'no_data' => '-',
         ],
         'state' => [

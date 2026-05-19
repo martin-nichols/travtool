@@ -1,6 +1,6 @@
 {
-  "_LanguageSwitcher-VD2grj8O.js": {
-    "file": "assets/LanguageSwitcher-VD2grj8O.js",
+  "_LanguageSwitcher-D2HbZqjP.js": {
+    "file": "assets/LanguageSwitcher-D2HbZqjP.js",
     "name": "LanguageSwitcher",
     "imports": [
       "resources/js/app.ts"
@@ -59,7 +59,7 @@
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BQCPvNVH.css",
+    "file": "assets/app-BUZP17k3.css",
     "name": "app",
     "names": [
       "app.css"
@@ -68,7 +68,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-BYpgR22T.js",
+    "file": "assets/app-Dyg8iqNs.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -81,47 +81,47 @@
     ]
   },
   "resources/js/pages/Auth/Login.vue": {
-    "file": "assets/Login-DQjeIBws.js",
+    "file": "assets/Login-DJn9uiuw.js",
     "name": "Login",
     "src": "resources/js/pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-VD2grj8O.js"
+      "_LanguageSwitcher-D2HbZqjP.js"
     ]
   },
   "resources/js/pages/Home.vue": {
-    "file": "assets/Home-CcJpIGwM.js",
+    "file": "assets/Home-ZibWan3t.js",
     "name": "Home",
     "src": "resources/js/pages/Home.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-VD2grj8O.js"
+      "_LanguageSwitcher-D2HbZqjP.js"
     ]
   },
   "resources/js/pages/InactiveFinder.vue": {
-    "file": "assets/InactiveFinder-W3U1iMhj.js",
+    "file": "assets/InactiveFinder-DbUpzKAo.js",
     "name": "InactiveFinder",
     "src": "resources/js/pages/InactiveFinder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-VD2grj8O.js"
+      "_LanguageSwitcher-D2HbZqjP.js"
     ]
   },
   "resources/js/pages/MapBuilder.vue": {
-    "file": "assets/MapBuilder-C8nhAyCF.js",
+    "file": "assets/MapBuilder-BnfOpygv.js",
     "name": "MapBuilder",
     "src": "resources/js/pages/MapBuilder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-VD2grj8O.js"
+      "_LanguageSwitcher-D2HbZqjP.js"
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-D1bk9mvw.js",
+    "file": "assets/Welcome-NUJ8nJrw.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,

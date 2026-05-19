@@ -154,6 +154,8 @@ return [
             'ready_description' => 'El mapa se construye a partir del snapshot actual del mundo elegido, con un color base por alianza y variaciones para los jugadores seleccionados de forma explicita.',
             'map_aria_label' => 'Mapa generado de Travtool',
             'interaction_hint' => 'Haz un gesto de pinza para acercar, arrastra para mover el mapa y luego toca un punto para ver la aldea.',
+            'open_fullscreen' => 'Abrir mapa a pantalla completa',
+            'close_fullscreen' => 'Cerrar pantalla completa',
             'no_data' => '-',
         ],
         'state' => [

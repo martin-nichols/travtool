@@ -154,6 +154,8 @@ return [
             'ready_description' => 'La carte est calculee a partir du snapshot courant du monde choisi, avec une couleur de base par alliance et des variations pour les joueurs selectionnes.',
             'map_aria_label' => 'Carte Travtool generee',
             'interaction_hint' => 'Pince pour zoomer, glisse pour deplacer la carte, puis touche un point pour voir le village.',
+            'open_fullscreen' => 'Ouvrir la carte en plein ecran',
+            'close_fullscreen' => 'Fermer le plein ecran',
             'no_data' => '-',
         ],
         'state' => [

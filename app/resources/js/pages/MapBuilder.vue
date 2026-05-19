@@ -108,8 +108,10 @@ const shareCopied = ref(false);
 const selectedVillage = ref<MapVillage | null>(null);
 const activeLegendKeys = ref<string[]>([]);
 const blinkPhase = ref(false);
+const isMobileFullscreen = ref(false);
 const pressedVillageId = ref<number | null>(null);
-const mapViewport = ref<HTMLElement | null>(null);
+const inlineMapViewport = ref<HTMLElement | null>(null);
+const fullscreenMapViewport = ref<HTMLElement | null>(null);
 const activePointers = new Map<number, { x: number; y: number }>();
 const interactionState = reactive({
     mode: 'idle' as 'idle' | 'pan' | 'pinch',
@@ -166,6 +168,15 @@ watch(
     { deep: true },
 );
 
+watch(isMobileFullscreen, (nextValue) => {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    document.body.style.overflow = nextValue ? 'hidden' : '';
+    document.documentElement.style.overflow = nextValue ? 'hidden' : '';
+});
+
 const clearBlinkInterval = (): void => {
     if (blinkIntervalId !== null) {
         window.clearInterval(blinkIntervalId);
@@ -185,6 +196,8 @@ watch(activeLegendKeys, (nextKeys) => {
         blinkPhase.value = !blinkPhase.value;
     }, 420);
 });
+
+const mapViewport = computed(() => (isMobileFullscreen.value ? fullscreenMapViewport.value : inlineMapViewport.value));
 
 watch(mapViewport, (element) => {
     removeNativeGestureGuards?.();
@@ -222,6 +235,11 @@ watch(mapViewport, (element) => {
 onBeforeUnmount(() => {
     removeNativeGestureGuards?.();
     clearBlinkInterval();
+
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+    }
 });
 
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
@@ -805,6 +823,14 @@ const openVillageModal = (village: MapVillage): void => {
 const closeVillageModal = (): void => {
     selectedVillage.value = null;
 };
+
+const openMobileFullscreen = (): void => {
+    isMobileFullscreen.value = true;
+};
+
+const closeMobileFullscreen = (): void => {
+    isMobileFullscreen.value = false;
+};
 </script>
 
 <template>
@@ -1023,9 +1049,19 @@ const closeVillageModal = (): void => {
                     </div>
 
                     <div v-if="hasRenderableMap" class="mt-6 grid gap-6">
+                        <div class="flex lg:hidden">
+                            <button
+                                type="button"
+                                class="inline-flex w-full items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#3f6d8f]"
+                                @click="openMobileFullscreen"
+                            >
+                                {{ t('map_builder.results.open_fullscreen') }}
+                            </button>
+                        </div>
+
                         <div class="overflow-hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#0f171c] p-2 sm:p-3 lg:p-4">
                             <div
-                                ref="mapViewport"
+                                ref="inlineMapViewport"
                                 class="relative mx-auto aspect-[4/3] w-full max-w-[1080px] overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none lg:aspect-[2/1] xl:aspect-[21/10] [overscroll-behavior:contain]"
                                 @click.capture="suppressDraggedClick"
                                 @pointercancel="onMapPointerEnd"
@@ -1094,7 +1130,7 @@ const closeVillageModal = (): void => {
                             </div>
                         </div>
 
-                        <div class="rounded-[28px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-5 lg:p-6">
+                        <div class="hidden rounded-[28px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-5 lg:block lg:p-6">
                             <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">
                                 {{ t('map_builder.legend.title') }}
                             </p>
@@ -1146,6 +1182,140 @@ const closeVillageModal = (): void => {
                     </div>
                 </article>
             </section>
+        </div>
+
+        <div
+            v-if="isMobileFullscreen && hasRenderableMap"
+            class="fixed inset-0 z-40 bg-[#0d1318] lg:hidden"
+        >
+            <div class="grid h-[100dvh] grid-rows-[minmax(0,2fr)_minmax(0,1fr)]">
+                <section class="flex min-h-0 flex-col border-b border-white/10 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <p class="min-w-0 truncate text-sm font-semibold text-[#f6ede0]">
+                            {{ resultTitle }}
+                        </p>
+                        <button
+                            type="button"
+                            class="inline-flex shrink-0 items-center justify-center rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                            @click="closeMobileFullscreen"
+                        >
+                            {{ t('map_builder.results.close_fullscreen') }}
+                        </button>
+                    </div>
+
+                    <div
+                        ref="fullscreenMapViewport"
+                        class="relative min-h-0 flex-1 overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(127,196,241,0.12),transparent_45%)] touch-none [overscroll-behavior:contain]"
+                        @click.capture="suppressDraggedClick"
+                        @pointercancel="onMapPointerEnd"
+                        @pointerdown="onMapPointerDown"
+                        @pointermove="onMapPointerMove"
+                        @pointerup="onMapPointerEnd"
+                        @wheel="onMapWheel"
+                    >
+                        <svg
+                            class="h-full w-full cursor-grab active:cursor-grabbing"
+                            :viewBox="viewBox"
+                            xmlns="http://www.w3.org/2000/svg"
+                            role="img"
+                            :aria-label="t('map_builder.results.map_aria_label')"
+                        >
+                            <defs>
+                                <pattern :id="`mobile-map-grid-${gridStep}`" :width="gridStep" :height="gridStep" patternUnits="userSpaceOnUse">
+                                    <path :d="`M ${gridStep} 0 L 0 0 0 ${gridStep}`" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+                                </pattern>
+                            </defs>
+
+                            <rect :width="props.map.world_size" :height="props.map.world_size" fill="#111a20" />
+                            <rect :width="props.map.world_size" :height="props.map.world_size" :fill="`url(#mobile-map-grid-${gridStep})`" />
+
+                            <g v-for="village in props.map.villages" :key="`fullscreen-${village.id}`">
+                                <circle
+                                    :cx="village.map.x"
+                                    :cy="village.map.y"
+                                    :r="villagePointRadius"
+                                    :fill="villageDisplayFill(village)"
+                                    :stroke="villageDisplayStroke(village)"
+                                    :stroke-width="villagePointStrokeWidth"
+                                    class="pointer-events-none"
+                                />
+                                <circle
+                                    :cx="village.map.x"
+                                    :cy="village.map.y"
+                                    :r="villageHitRadius"
+                                    fill="transparent"
+                                    :data-village-id="village.id"
+                                    class="cursor-pointer"
+                                    pointer-events="all"
+                                    @click.stop="openVillageModal(village)"
+                                />
+                            </g>
+                        </svg>
+
+                        <div class="pointer-events-none absolute inset-0">
+                            <div
+                                v-for="line in gridOverlay.horizontalLines"
+                                :key="`fullscreen-${line.key}`"
+                                class="absolute left-2 -translate-y-1/2 rounded-full bg-[#0f171c]/88 px-2 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#d8e3e8] shadow-[0_8px_18px_rgba(0,0,0,0.24)]"
+                                :style="{ top: line.top }"
+                            >
+                                {{ line.label }}
+                            </div>
+                            <div
+                                v-for="line in gridOverlay.verticalLines"
+                                :key="`fullscreen-${line.key}`"
+                                class="absolute bottom-2 -translate-x-1/2 rounded-full bg-[#0f171c]/88 px-2 py-1 text-[10px] font-semibold tracking-[0.08em] text-[#d8e3e8] shadow-[0_8px_18px_rgba(0,0,0,0.24)]"
+                                :style="{ left: line.left }"
+                            >
+                                {{ line.label }}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="min-h-0 overflow-y-auto bg-[#f8f3eb] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+                    <div class="rounded-[22px] border border-[#1f1a14]/10 bg-[#f8f3eb] p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">
+                            {{ t('map_builder.legend.title') }}
+                        </p>
+
+                        <div class="mt-4 grid gap-3">
+                            <div
+                                v-for="item in props.map.legend"
+                                :key="`fullscreen-legend-${item.key}`"
+                                class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                :class="legendItemClasses(item)"
+                                role="button"
+                                tabindex="0"
+                                :aria-pressed="isLegendActive(item.key)"
+                                @click="toggleLegendFocus(item)"
+                                @keydown.enter.prevent="toggleLegendFocus(item)"
+                                @keydown.space.prevent="toggleLegendFocus(item)"
+                            >
+                                <div class="flex items-start gap-3">
+                                    <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <p class="truncate text-sm font-semibold text-[#1c1814]">
+                                                {{ item.label }}
+                                            </p>
+                                            <span
+                                                v-if="item.count > 0"
+                                                class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]"
+                                            >
+                                                {{ item.count }}
+                                            </span>
+                                        </div>
+                                        <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
+                                            {{ legendNote(item) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
 
         <div
