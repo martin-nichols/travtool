@@ -14,7 +14,6 @@ use Inertia\Response;
 class InactiveFinderController extends Controller
 {
     private const PER_PAGE = 25;
-    private const TORUS_WRAP_SIZE = 801;
 
     /**
      * @var array<int, array{value:int,label:string}>
@@ -228,6 +227,7 @@ class InactiveFinderController extends Controller
      *     selected_world_name:string,
      *     selected_world_base_url:string,
      *     selected_world_topology:string,
+     *     selected_world_radius:int,
      *     current_snapshot_id:?int,
      *     current_snapshot_date:?string,
      *     last_import_at:?string,
@@ -276,6 +276,7 @@ class InactiveFinderController extends Controller
             'selected_world_name' => (string) ($selectedConfig['name'] ?? $selectedKey),
             'selected_world_base_url' => (string) ($selectedConfig['base_url'] ?? ''),
             'selected_world_topology' => (string) ($selectedConfig['map_topology'] ?? 'torus'),
+            'selected_world_radius' => (int) ($selectedConfig['map_radius'] ?? 400),
             'current_snapshot_id' => $selectedModel?->current_snapshot_id,
             'current_snapshot_date' => $selectedModel?->currentSnapshot?->snapshot_date?->toDateString(),
             'last_import_at' => $selectedModel?->currentSnapshot?->completed_at?->toIso8601String(),
@@ -293,6 +294,7 @@ class InactiveFinderController extends Controller
      *     selected_world_name:string,
      *     selected_world_base_url:string,
      *     selected_world_topology:string,
+     *     selected_world_radius:int,
      *     current_snapshot_id:?int,
      *     current_snapshot_date:?string,
      *     last_import_at:?string,
@@ -361,6 +363,7 @@ class InactiveFinderController extends Controller
                 $filters['x'],
                 $filters['y'],
                 $worldContext['selected_world_topology'],
+                $worldContext['selected_world_radius'],
             );
 
             $query->selectRaw(
@@ -371,7 +374,13 @@ class InactiveFinderController extends Controller
             $query->selectRaw('NULL as distance');
         }
 
-        $this->applyFilters($query, $filters, $worldContext['history_ready'], $worldContext['selected_world_topology']);
+        $this->applyFilters(
+            $query,
+            $filters,
+            $worldContext['history_ready'],
+            $worldContext['selected_world_topology'],
+            $worldContext['selected_world_radius'],
+        );
         $this->applySorting($query, $filters['sort'], $hasDistanceSearch);
 
         $results = $query
@@ -423,7 +432,13 @@ class InactiveFinderController extends Controller
      *     sort:string
      * } $filters
      */
-    private function applyFilters(Builder $query, array $filters, bool $historyReady, string $worldTopology): void
+    private function applyFilters(
+        Builder $query,
+        array $filters,
+        bool $historyReady,
+        string $worldTopology,
+        int $worldRadius,
+    ): void
     {
         if (! $filters['include_npcs']) {
             $query->where('v.tribe_id', '!=', 5);
@@ -474,6 +489,7 @@ class InactiveFinderController extends Controller
                 $filters['x'],
                 $filters['y'],
                 $worldTopology,
+                $worldRadius,
             );
 
             $query->whereRaw(
@@ -487,6 +503,7 @@ class InactiveFinderController extends Controller
                 $filters['x'],
                 $filters['y'],
                 $worldTopology,
+                $worldRadius,
             );
 
             $query->whereRaw(
@@ -499,7 +516,7 @@ class InactiveFinderController extends Controller
     /**
      * @return array{0:string,1:list<int|string>}
      */
-    private function distanceSql(int $centerX, int $centerY, string $topology): array
+    private function distanceSql(int $centerX, int $centerY, string $topology, int $worldRadius): array
     {
         if ($topology === 'plane') {
             return [
@@ -508,14 +525,16 @@ class InactiveFinderController extends Controller
             ];
         }
 
+        $wrapSize = ($worldRadius * 2) + 1;
+
         return [
             'SQRT(POW(LEAST(ABS(v.x - ?), ? - ABS(v.x - ?)), 2) + POW(LEAST(ABS(v.y - ?), ? - ABS(v.y - ?)), 2))',
             [
                 $centerX,
-                self::TORUS_WRAP_SIZE,
+                $wrapSize,
                 $centerX,
                 $centerY,
-                self::TORUS_WRAP_SIZE,
+                $wrapSize,
                 $centerY,
             ],
         ];
