@@ -14,6 +14,7 @@ use Inertia\Response;
 class InactiveFinderController extends Controller
 {
     private const PER_PAGE = 25;
+    private const TORUS_WRAP_SIZE = 801;
 
     /**
      * @var array<int, array{value:int,label:string}>
@@ -226,6 +227,7 @@ class InactiveFinderController extends Controller
      *     selected_world_key:string,
      *     selected_world_name:string,
      *     selected_world_base_url:string,
+     *     selected_world_topology:string,
      *     current_snapshot_id:?int,
      *     current_snapshot_date:?string,
      *     last_import_at:?string,
@@ -273,6 +275,7 @@ class InactiveFinderController extends Controller
             'selected_world_key' => $selectedKey,
             'selected_world_name' => (string) ($selectedConfig['name'] ?? $selectedKey),
             'selected_world_base_url' => (string) ($selectedConfig['base_url'] ?? ''),
+            'selected_world_topology' => (string) ($selectedConfig['map_topology'] ?? 'torus'),
             'current_snapshot_id' => $selectedModel?->current_snapshot_id,
             'current_snapshot_date' => $selectedModel?->currentSnapshot?->snapshot_date?->toDateString(),
             'last_import_at' => $selectedModel?->currentSnapshot?->completed_at?->toIso8601String(),
@@ -289,6 +292,7 @@ class InactiveFinderController extends Controller
      *     selected_world_key:string,
      *     selected_world_name:string,
      *     selected_world_base_url:string,
+     *     selected_world_topology:string,
      *     current_snapshot_id:?int,
      *     current_snapshot_date:?string,
      *     last_import_at:?string,
@@ -353,15 +357,21 @@ class InactiveFinderController extends Controller
             ->selectRaw($this->scoreExpression().' as score');
 
         if ($hasDistanceSearch) {
+            [$distanceExpression, $distanceBindings] = $this->distanceSql(
+                $filters['x'],
+                $filters['y'],
+                $worldContext['selected_world_topology'],
+            );
+
             $query->selectRaw(
-                'ROUND(SQRT(POW(v.x - ?, 2) + POW(v.y - ?, 2)), 2) as distance',
-                [$filters['x'], $filters['y']],
+                'ROUND('.$distanceExpression.', 2) as distance',
+                $distanceBindings,
             );
         } else {
             $query->selectRaw('NULL as distance');
         }
 
-        $this->applyFilters($query, $filters, $worldContext['history_ready']);
+        $this->applyFilters($query, $filters, $worldContext['history_ready'], $worldContext['selected_world_topology']);
         $this->applySorting($query, $filters['sort'], $hasDistanceSearch);
 
         $results = $query
@@ -413,7 +423,7 @@ class InactiveFinderController extends Controller
      *     sort:string
      * } $filters
      */
-    private function applyFilters(Builder $query, array $filters, bool $historyReady): void
+    private function applyFilters(Builder $query, array $filters, bool $historyReady, string $worldTopology): void
     {
         if (! $filters['include_npcs']) {
             $query->where('v.tribe_id', '!=', 5);
@@ -460,18 +470,55 @@ class InactiveFinderController extends Controller
         }
 
         if ($filters['x'] !== null && $filters['y'] !== null && $filters['radius_max'] !== null) {
+            [$distanceExpression, $distanceBindings] = $this->distanceSql(
+                $filters['x'],
+                $filters['y'],
+                $worldTopology,
+            );
+
             $query->whereRaw(
-                'SQRT(POW(v.x - ?, 2) + POW(v.y - ?, 2)) <= ?',
-                [$filters['x'], $filters['y'], $filters['radius_max']],
+                $distanceExpression.' <= ?',
+                [...$distanceBindings, $filters['radius_max']],
             );
         }
 
         if ($filters['x'] !== null && $filters['y'] !== null && $filters['radius_min'] !== null) {
+            [$distanceExpression, $distanceBindings] = $this->distanceSql(
+                $filters['x'],
+                $filters['y'],
+                $worldTopology,
+            );
+
             $query->whereRaw(
-                'SQRT(POW(v.x - ?, 2) + POW(v.y - ?, 2)) >= ?',
-                [$filters['x'], $filters['y'], $filters['radius_min']],
+                $distanceExpression.' >= ?',
+                [...$distanceBindings, $filters['radius_min']],
             );
         }
+    }
+
+    /**
+     * @return array{0:string,1:list<int|string>}
+     */
+    private function distanceSql(int $centerX, int $centerY, string $topology): array
+    {
+        if ($topology === 'plane') {
+            return [
+                'SQRT(POW(v.x - ?, 2) + POW(v.y - ?, 2))',
+                [$centerX, $centerY],
+            ];
+        }
+
+        return [
+            'SQRT(POW(LEAST(ABS(v.x - ?), ? - ABS(v.x - ?)), 2) + POW(LEAST(ABS(v.y - ?), ? - ABS(v.y - ?)), 2))',
+            [
+                $centerX,
+                self::TORUS_WRAP_SIZE,
+                $centerX,
+                $centerY,
+                self::TORUS_WRAP_SIZE,
+                $centerY,
+            ],
+        ];
     }
 
     private function applySorting(Builder $query, string $sort, bool $hasDistanceSearch): void
