@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\World;
+use App\Services\UserWorldPreferenceService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -75,10 +76,22 @@ class MapBuilderController extends Controller
     private const VIEWBOX_PADDING = 22;
     private const MIN_VIEWBOX_SIZE = 120;
 
+    public function __construct(
+        private readonly UserWorldPreferenceService $worldPreferences,
+    ) {
+    }
+
     public function __invoke(Request $request): Response
     {
         $filters = $this->validatedFilters($request);
+        $requestedWorldKey = $filters['world'];
+        $filters['world'] = $this->worldPreferences->resolveSelectedWorldKey($request->user(), $filters['world']);
         $worldContext = $this->worldContext($filters['world']);
+
+        if ($request->user() !== null && $requestedWorldKey !== '' && $worldContext['selected_world_key'] !== '') {
+            $this->worldPreferences->rememberWorld($request->user(), $worldContext['selected_world_key']);
+        }
+
         $mapData = $this->buildMapData($worldContext, $filters);
 
         return Inertia::render('MapBuilder', [

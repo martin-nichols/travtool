@@ -4,6 +4,9 @@ return [
     'common' => [
         'app_name' => 'Travtool',
         'back_home' => 'Zur Startseite',
+        'login' => 'Anmeldung',
+        'create_account' => 'Konto erstellen',
+        'logout' => 'Abmelden',
         'go_to_login' => 'Zum Login',
         'open_prototype' => 'Prototyp oeffnen',
         'language' => 'Sprache',
@@ -47,6 +50,12 @@ return [
                 'description' => 'Einen eigenen Arbeitsbereich fuer gut lesbare Karten aus beobachteten Welten, Radien und kuenftigen Anmerkungen vorbereiten.',
                 'cta' => 'Bildschirm oeffnen',
             ],
+            'register' => [
+                'eyebrow' => 'Benutzerkonto',
+                'title' => 'Konto erstellen',
+                'description' => 'Die gespielten Welten speichern, die zuletzt verwendete automatisch wieder oeffnen und kuenftige private Module freischalten.',
+                'cta' => 'Konto erstellen',
+            ],
         ],
         'footer' => [
             'line_1' => 'Aktueller Schritt: Landingpage, privater Zugang und Prototyp der Inaktiven-Suche.',
@@ -64,7 +73,9 @@ return [
         'panel' => [
             'eyebrow' => 'Privater Bereich',
             'title' => 'Travtool-Login-Oberflaeche',
-            'description' => 'Dieser erste Bildschirm bereitet den Zugang zu beobachteten Welten, map.sql-Importen und internen Werkzeugen vor. Das Auth-Backend wird als Naechstes angebunden.',
+            'description' => 'Melde dich an, um deine zuletzt aktive Welt sofort wieder zu oeffnen und die kuenftigen kontobasierten Funktionen in Travtool zu nutzen.',
+            'memory_title' => 'Weltspeicher',
+            'memory_text' => 'Travtool merkt sich die Server, die du spielst, und stellt nach der Anmeldung automatisch die zuletzt aktive Welt wieder her.',
             'future_title' => 'Spaeter',
             'future_text' => 'Private Konten, Teams, beobachtete Welten und ein Protokoll der taeglichen Importe.',
             'today_title' => 'Heute',
@@ -79,7 +90,43 @@ return [
             'password_placeholder' => '********',
             'remember' => 'Diese Sitzung merken',
             'submit' => 'Weiter',
+            'submitting' => 'Anmeldung laeuft...',
+            'create_account_link' => 'Konto erstellen',
             'notice' => 'Die Oberflaeche ist bereit. Die Backend-Authentifizierung ist noch nicht angeschlossen: dieser Schritt wird spaeter den privaten Laravel-Zugang verbinden.',
+        ],
+    ],
+    'register' => [
+        'meta' => [
+            'title' => 'Konto erstellen',
+        ],
+        'panel' => [
+            'eyebrow' => 'Neues Konto',
+            'title' => 'Travtool-Arbeitsbereich eroefnen',
+            'description' => 'Das Konto dient zuerst dazu, die gespielten Welten zu speichern, die zuletzt aktive automatisch wieder zu oeffnen und spaetere private Funktionen vorzubereiten.',
+            'memory_title' => 'Zuletzt aktive Welt',
+            'memory_text' => 'Sobald du im eingeloggten Zustand eine Welt waehlst, speichert Travtool sie und setzt sie beim naechsten Besuch wieder als Standard.',
+            'features_title' => 'Naechste Produktschritte',
+            'features_text' => 'Kommende private Funktionen bauen auf diesem Konto auf: Einstellungen, gespielte Welten, reservierte Werkzeuge und persoenliche Parameter.',
+        ],
+        'form' => [
+            'eyebrow' => 'Registrierung',
+            'title' => 'Konto erstellen',
+            'name' => 'Name',
+            'name_placeholder' => 'Martin',
+            'email' => 'E-Mail-Adresse',
+            'email_placeholder' => 'martin@travtool.app',
+            'password' => 'Passwort',
+            'password_placeholder' => 'Mindestens 8 Zeichen',
+            'password_confirmation' => 'Passwort bestaetigen',
+            'password_confirmation_placeholder' => 'Passwort erneut eingeben',
+            'submit' => 'Konto erstellen',
+            'submitting' => 'Erstellung laeuft...',
+            'login_link' => 'Ich habe bereits ein Konto',
+        ],
+    ],
+    'auth' => [
+        'messages' => [
+            'failed' => 'Diese Zugangsdaten stimmen mit keinem Konto ueberein.',
         ],
     ],
     'map_builder' => [

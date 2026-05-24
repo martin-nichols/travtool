@@ -4,6 +4,9 @@ return [
     'common' => [
         'app_name' => 'Travtool',
         'back_home' => "Retour a l'accueil",
+        'login' => 'Connexion',
+        'create_account' => 'Creer un compte',
+        'logout' => 'Deconnexion',
         'go_to_login' => 'Aller a la connexion',
         'open_prototype' => 'Ouvrir le prototype',
         'language' => 'Langue',
@@ -47,6 +50,12 @@ return [
                 'description' => 'Preparer un espace dedie pour construire des cartes lisibles a partir des mondes suivis, des rayons et des futures annotations.',
                 'cta' => "Ouvrir l'ecran",
             ],
+            'register' => [
+                'eyebrow' => 'Compte utilisateur',
+                'title' => 'Creer un compte',
+                'description' => 'Memoriser les mondes joues, retrouver automatiquement le dernier utilise et debloquer les futurs modules prives.',
+                'cta' => 'Creer le compte',
+            ],
         ],
         'footer' => [
             'line_1' => "Etape actuelle : landing, acces prive, prototype du chercheur d'inactifs.",
@@ -64,7 +73,9 @@ return [
         'panel' => [
             'eyebrow' => 'Espace prive',
             'title' => 'Interface de connexion Travtool',
-            'description' => "Ce premier ecran prepare l'acces aux mondes suivis, aux imports map.sql et aux outils internes. Le backend d'authentification sera branche ensuite.",
+            'description' => "Connecte-toi pour retrouver directement ton dernier monde utilise et preparer les futures fonctions reservees aux comptes Travtool.",
+            'memory_title' => 'Memoire des mondes',
+            'memory_text' => "Travtool memorise les serveurs que tu joues et remet automatiquement le dernier monde actif au premier plan apres connexion.",
             'future_title' => 'A terme',
             'future_text' => 'Comptes prives, equipes, mondes suivis et journal des imports quotidiens.',
             'today_title' => "Aujourd'hui",
@@ -79,7 +90,43 @@ return [
             'password_placeholder' => '********',
             'remember' => 'Se souvenir de cette session',
             'submit' => 'Continuer',
+            'submitting' => 'Connexion...',
+            'create_account_link' => 'Creer un compte',
             'notice' => "Interface prete. L'auth backend n'est pas encore branchee : cette etape servira ensuite a connecter l'acces prive Laravel.",
+        ],
+    ],
+    'register' => [
+        'meta' => [
+            'title' => 'Creer un compte',
+        ],
+        'panel' => [
+            'eyebrow' => 'Nouveau compte',
+            'title' => 'Ouvrir un espace Travtool',
+            'description' => "Le compte sert d'abord a memoriser les mondes que tu joues, a rouvrir automatiquement le dernier utilise et a preparer les futures fonctions reservees.",
+            'memory_title' => 'Dernier monde actif',
+            'memory_text' => "Des que tu selectionnes un monde en etant connecte, Travtool le retient et le remet par defaut a la prochaine visite.",
+            'features_title' => 'Suite du produit',
+            'features_text' => "Les prochaines fonctions privees s'appuieront sur ce compte : preferences, mondes joues, outils reserves et parametres personnels.",
+        ],
+        'form' => [
+            'eyebrow' => 'Inscription',
+            'title' => 'Creer le compte',
+            'name' => 'Nom',
+            'name_placeholder' => 'Martin',
+            'email' => 'Adresse e-mail',
+            'email_placeholder' => 'martin@travtool.app',
+            'password' => 'Mot de passe',
+            'password_placeholder' => 'Au moins 8 caracteres',
+            'password_confirmation' => 'Confirmation du mot de passe',
+            'password_confirmation_placeholder' => 'Retape le mot de passe',
+            'submit' => 'Creer le compte',
+            'submitting' => 'Creation...',
+            'login_link' => 'Jai deja un compte',
+        ],
+    ],
+    'auth' => [
+        'messages' => [
+            'failed' => 'Ces identifiants ne correspondent a aucun compte.',
         ],
     ],
     'map_builder' => [

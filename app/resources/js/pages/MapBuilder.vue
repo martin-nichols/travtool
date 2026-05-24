@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useI18n } from '@/lib/i18n';
+import type { User as AuthUser } from '@/types';
 
 type FilterState = {
     world: string;
@@ -101,6 +102,8 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const page = usePage<{ auth: { user: AuthUser | null } }>();
+const authUser = computed(() => page.props.auth.user);
 
 const form = reactive<FilterState>({ ...props.filters });
 const worldSelectionError = ref(false);
@@ -955,12 +958,33 @@ const closeMobileFullscreen = (): void => {
 
                 <div class="flex flex-col items-start gap-4 md:items-end">
                     <LanguageSwitcher />
-                    <Link
-                        href="/login"
-                        class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#3f6d8f]"
-                    >
-                        {{ t('common.go_to_login') }}
-                    </Link>
+                    <div v-if="authUser" class="flex flex-wrap items-center gap-3 md:justify-end">
+                        <div class="rounded-full border border-[#1f1a14]/10 bg-white/65 px-4 py-2 text-sm font-medium text-[#3b3129]">
+                            {{ authUser.name }}
+                        </div>
+                        <Link
+                            as="button"
+                            method="post"
+                            href="/logout"
+                            class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#3f6d8f]"
+                        >
+                            {{ t('common.logout') }}
+                        </Link>
+                    </div>
+                    <div v-else class="flex flex-wrap items-center gap-3 md:justify-end">
+                        <Link
+                            href="/login"
+                            class="inline-flex items-center justify-center rounded-full border border-[#1f1a14]/10 px-5 py-3 text-sm font-medium text-[#3b3129] transition hover:border-[#3f6d8f]/40 hover:bg-white/60"
+                        >
+                            {{ t('common.login') }}
+                        </Link>
+                        <Link
+                            href="/register"
+                            class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#3f6d8f]"
+                        >
+                            {{ t('common.create_account') }}
+                        </Link>
+                    </div>
                 </div>
             </header>
 

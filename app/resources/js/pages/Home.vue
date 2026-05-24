@@ -1,15 +1,26 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useI18n } from '@/lib/i18n';
+import type { User as AuthUser } from '@/types';
 
 const { t } = useI18n();
+const page = usePage<{ auth: { user: AuthUser | null } }>();
+const authUser = computed(() => page.props.auth.user);
 
-const actionCards = [
-    { key: 'inactive', href: '/inactive-finder', accent: 'from-[#ff7a1a] to-[#ffb36b]' },
-    { key: 'map_builder', href: '/map-builder', accent: 'from-[#3f6d8f] to-[#8ec8e8]' },
-    { key: 'login', href: '/login', accent: 'from-[#456f5b] to-[#9fc5a3]' },
-];
+const actionCards = computed(() =>
+    authUser.value
+        ? [
+              { key: 'inactive', href: '/inactive-finder', accent: 'from-[#ff7a1a] to-[#ffb36b]' },
+              { key: 'map_builder', href: '/map-builder', accent: 'from-[#3f6d8f] to-[#8ec8e8]' },
+          ]
+        : [
+              { key: 'inactive', href: '/inactive-finder', accent: 'from-[#ff7a1a] to-[#ffb36b]' },
+              { key: 'map_builder', href: '/map-builder', accent: 'from-[#3f6d8f] to-[#8ec8e8]' },
+              { key: 'register', href: '/register', accent: 'from-[#456f5b] to-[#9fc5a3]' },
+          ],
+);
 </script>
 
 <template>
@@ -46,24 +57,45 @@ const actionCards = [
                     <LanguageSwitcher />
 
                     <nav class="flex items-center gap-3">
-                    <Link
-                        href="/inactive-finder"
-                        class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#8b4a27]/40 hover:bg-white/60"
-                    >
-                        {{ t('home.header.inactive_finder') }}
-                    </Link>
-                    <Link
-                        href="/map-builder"
-                        class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#3f6d8f]/40 hover:bg-white/60"
-                    >
-                        {{ t('home.header.map_builder') }}
-                    </Link>
-                    <Link
-                        href="/login"
-                        class="rounded-full bg-[#1f1a14] px-4 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
-                    >
-                        {{ t('home.header.login') }}
-                    </Link>
+                        <Link
+                            href="/inactive-finder"
+                            class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#8b4a27]/40 hover:bg-white/60"
+                        >
+                            {{ t('home.header.inactive_finder') }}
+                        </Link>
+                        <Link
+                            href="/map-builder"
+                            class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#3f6d8f]/40 hover:bg-white/60"
+                        >
+                            {{ t('home.header.map_builder') }}
+                        </Link>
+                        <template v-if="authUser">
+                            <div class="rounded-full border border-[#1f1a14]/10 bg-white/65 px-4 py-2 text-sm font-medium text-[#3b3129]">
+                                {{ authUser.name }}
+                            </div>
+                            <Link
+                                as="button"
+                                method="post"
+                                href="/logout"
+                                class="rounded-full bg-[#1f1a14] px-4 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                            >
+                                {{ t('common.logout') }}
+                            </Link>
+                        </template>
+                        <template v-else>
+                            <Link
+                                href="/login"
+                                class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:border-[#8b4a27]/40 hover:bg-white/60"
+                            >
+                                {{ t('common.login') }}
+                            </Link>
+                            <Link
+                                href="/register"
+                                class="rounded-full bg-[#1f1a14] px-4 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                            >
+                                {{ t('common.create_account') }}
+                            </Link>
+                        </template>
                     </nav>
                 </div>
             </header>

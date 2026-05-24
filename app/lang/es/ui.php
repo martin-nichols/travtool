@@ -4,6 +4,9 @@ return [
     'common' => [
         'app_name' => 'Travtool',
         'back_home' => 'Volver al inicio',
+        'login' => 'Acceso',
+        'create_account' => 'Crear cuenta',
+        'logout' => 'Cerrar sesion',
         'go_to_login' => 'Ir al acceso',
         'open_prototype' => 'Abrir el prototipo',
         'language' => 'Idioma',
@@ -47,6 +50,12 @@ return [
                 'description' => 'Preparar un espacio dedicado para mapas legibles construidos a partir de mundos seguidos, radios y futuras anotaciones.',
                 'cta' => 'Abrir la pantalla',
             ],
+            'register' => [
+                'eyebrow' => 'Cuenta de usuario',
+                'title' => 'Crear una cuenta',
+                'description' => 'Guardar los mundos que juegas, reabrir automaticamente el ultimo usado y desbloquear los futuros modulos privados.',
+                'cta' => 'Crear cuenta',
+            ],
         ],
         'footer' => [
             'line_1' => 'Paso actual: landing, acceso privado y prototipo del buscador de inactivos.',
@@ -64,7 +73,9 @@ return [
         'panel' => [
             'eyebrow' => 'Area privada',
             'title' => 'Interfaz de acceso de Travtool',
-            'description' => 'Esta primera pantalla prepara el acceso a los mundos seguidos, a las importaciones de map.sql y a las herramientas internas. El backend de autenticacion se conectara despues.',
+            'description' => 'Inicia sesion para reabrir enseguida tu ultimo mundo activo y preparar las futuras funciones reservadas a las cuentas de Travtool.',
+            'memory_title' => 'Memoria de mundos',
+            'memory_text' => 'Travtool recuerda los servidores que juegas y restaura automaticamente el ultimo mundo activo despues del acceso.',
             'future_title' => 'Mas adelante',
             'future_text' => 'Cuentas privadas, equipos, mundos seguidos y un registro de importaciones diarias.',
             'today_title' => 'Hoy',
@@ -79,7 +90,43 @@ return [
             'password_placeholder' => '********',
             'remember' => 'Recordar esta sesion',
             'submit' => 'Continuar',
+            'submitting' => 'Entrando...',
+            'create_account_link' => 'Crear una cuenta',
             'notice' => 'La interfaz esta lista. La autenticacion del backend todavia no esta conectada: este paso servira despues para enlazar el acceso privado de Laravel.',
+        ],
+    ],
+    'register' => [
+        'meta' => [
+            'title' => 'Crear cuenta',
+        ],
+        'panel' => [
+            'eyebrow' => 'Nueva cuenta',
+            'title' => 'Abrir un espacio Travtool',
+            'description' => 'La cuenta sirve primero para recordar los mundos que juegas, reabrir automaticamente el ultimo activo y preparar las futuras funciones privadas.',
+            'memory_title' => 'Ultimo mundo activo',
+            'memory_text' => 'En cuanto eliges un mundo con la sesion abierta, Travtool lo guarda y lo vuelve a usar por defecto en tu proxima visita.',
+            'features_title' => 'Proximos pasos',
+            'features_text' => 'Las proximas funciones privadas se apoyaran en esta cuenta: preferencias, mundos jugados, herramientas reservadas y parametros personales.',
+        ],
+        'form' => [
+            'eyebrow' => 'Registro',
+            'title' => 'Crear la cuenta',
+            'name' => 'Nombre',
+            'name_placeholder' => 'Martin',
+            'email' => 'Correo electronico',
+            'email_placeholder' => 'martin@travtool.app',
+            'password' => 'Contrasena',
+            'password_placeholder' => 'Al menos 8 caracteres',
+            'password_confirmation' => 'Confirmar contrasena',
+            'password_confirmation_placeholder' => 'Vuelve a escribir la contrasena',
+            'submit' => 'Crear cuenta',
+            'submitting' => 'Creando...',
+            'login_link' => 'Ya tengo una cuenta',
+        ],
+    ],
+    'auth' => [
+        'messages' => [
+            'failed' => 'Estas credenciales no corresponden a ninguna cuenta.',
         ],
     ],
     'map_builder' => [

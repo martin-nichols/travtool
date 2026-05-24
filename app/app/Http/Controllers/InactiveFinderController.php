@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\World;
+use App\Services\UserWorldPreferenceService;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,6 +15,11 @@ use Inertia\Response;
 class InactiveFinderController extends Controller
 {
     private const PER_PAGE = 25;
+
+    public function __construct(
+        private readonly UserWorldPreferenceService $worldPreferences,
+    ) {
+    }
 
     /**
      * @var array<int, array{value:int,label:string}>
@@ -32,7 +38,14 @@ class InactiveFinderController extends Controller
     public function __invoke(Request $request): Response
     {
         $filters = $this->validatedFilters($request);
+        $requestedWorldKey = $filters['world'];
+        $filters['world'] = $this->worldPreferences->resolveSelectedWorldKey($request->user(), $filters['world']);
         $worldContext = $this->worldContext($filters['world']);
+
+        if ($request->user() !== null && $requestedWorldKey !== '' && $worldContext['selected_world_key'] !== '') {
+            $this->worldPreferences->rememberWorld($request->user(), $worldContext['selected_world_key']);
+        }
+
         $searchContext = $this->searchResults($request, $worldContext, $filters);
 
         return Inertia::render('InactiveFinder', [

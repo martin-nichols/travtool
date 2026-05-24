@@ -4,6 +4,9 @@ return [
     'common' => [
         'app_name' => 'Travtool',
         'back_home' => 'Back to home',
+        'login' => 'Login',
+        'create_account' => 'Create account',
+        'logout' => 'Logout',
         'go_to_login' => 'Go to login',
         'open_prototype' => 'Open prototype',
         'language' => 'Language',
@@ -47,6 +50,12 @@ return [
                 'description' => 'Prepare a dedicated workspace for readable maps built from tracked worlds, radius rings and future annotations.',
                 'cta' => 'Open the screen',
             ],
+            'register' => [
+                'eyebrow' => 'User account',
+                'title' => 'Create an account',
+                'description' => 'Save the worlds you play, reopen the last one automatically and unlock the future private modules.',
+                'cta' => 'Create account',
+            ],
         ],
         'footer' => [
             'line_1' => 'Current step: landing page, private access and inactive finder prototype.',
@@ -64,7 +73,9 @@ return [
         'panel' => [
             'eyebrow' => 'Private area',
             'title' => 'Travtool login interface',
-            'description' => 'This first screen prepares access to tracked worlds, map.sql imports and internal tools. The authentication backend will be wired in next.',
+            'description' => 'Log in to reopen your last active world immediately and prepare the future account-only features inside Travtool.',
+            'memory_title' => 'World memory',
+            'memory_text' => 'Travtool remembers the servers you play and automatically restores the last active world after you sign in.',
             'future_title' => 'Eventually',
             'future_text' => 'Private accounts, teams, tracked worlds and a log of daily imports.',
             'today_title' => 'Today',
@@ -79,7 +90,43 @@ return [
             'password_placeholder' => '********',
             'remember' => 'Remember this session',
             'submit' => 'Continue',
+            'submitting' => 'Signing in...',
+            'create_account_link' => 'Create an account',
             'notice' => 'The interface is ready. The backend authentication is not connected yet: this step will later link to the private Laravel access.',
+        ],
+    ],
+    'register' => [
+        'meta' => [
+            'title' => 'Create account',
+        ],
+        'panel' => [
+            'eyebrow' => 'New account',
+            'title' => 'Open a Travtool workspace',
+            'description' => 'The account starts by remembering the worlds you play, reopening the last active one automatically and preparing the future private features.',
+            'memory_title' => 'Last active world',
+            'memory_text' => 'As soon as you select a world while signed in, Travtool stores it and restores it by default on your next visit.',
+            'features_title' => 'Next product steps',
+            'features_text' => 'Upcoming private features will build on this account: preferences, played worlds, reserved tools and personal settings.',
+        ],
+        'form' => [
+            'eyebrow' => 'Sign up',
+            'title' => 'Create the account',
+            'name' => 'Name',
+            'name_placeholder' => 'Martin',
+            'email' => 'Email address',
+            'email_placeholder' => 'martin@travtool.app',
+            'password' => 'Password',
+            'password_placeholder' => 'At least 8 characters',
+            'password_confirmation' => 'Confirm password',
+            'password_confirmation_placeholder' => 'Type the password again',
+            'submit' => 'Create account',
+            'submitting' => 'Creating...',
+            'login_link' => 'I already have an account',
+        ],
+    ],
+    'auth' => [
+        'messages' => [
+            'failed' => 'These credentials do not match any account.',
         ],
     ],
     'map_builder' => [
