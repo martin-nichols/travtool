@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Throwable;
 
 class TravianWorldCatalogService
 {
@@ -26,11 +27,13 @@ class TravianWorldCatalogService
         $calendarPayload = $this->loadJsonPayload(
             $calendarSource,
             (string) config('travtool.catalog.calendar_url'),
+            'calendar',
         );
 
         $metadataPayload = $this->loadJsonPayload(
             $metadataSource,
             (string) config('travtool.catalog.metadata_url'),
+            'metadata',
         );
 
         $calendarWorlds = $this->normalizeCalendarPayload($calendarPayload);
@@ -413,7 +416,7 @@ class TravianWorldCatalogService
         throw new RuntimeException('Unsupported world catalog payload structure.');
     }
 
-    private function loadJsonPayload(?string $sourcePath, string $url): mixed
+    private function loadJsonPayload(?string $sourcePath, string $url, string $label): mixed
     {
         if ($sourcePath !== null) {
             if (! is_file($sourcePath)) {
@@ -426,24 +429,63 @@ class TravianWorldCatalogService
                 throw new RuntimeException(sprintf('Unable to read catalog source file: %s', $sourcePath));
             }
         } else {
-            $response = $this->http
-                ->timeout(60)
-                ->connectTimeout(20)
-                ->retry(3, 2000)
-                ->withUserAgent('Travtool/0.1')
-                ->get($url);
+            $normalizedUrl = trim($url);
 
-            if (! $response->successful()) {
-                throw new RuntimeException(sprintf('Failed to load world catalog from %s (HTTP %s).', $url, $response->status()));
+            if ($normalizedUrl === '') {
+                throw new RuntimeException(sprintf('Missing %s catalog URL.', $label));
             }
 
-            $raw = $response->body();
+            try {
+                $response = $this->http
+                    ->timeout(60)
+                    ->connectTimeout(20)
+                    ->retry(3, 2000)
+                    ->withUserAgent('Travtool/0.1')
+                    ->get($normalizedUrl);
+
+                if (! $response->successful()) {
+                    throw new RuntimeException(sprintf(
+                        'Failed to load %s catalog from %s (HTTP %s).',
+                        $label,
+                        $normalizedUrl,
+                        $response->status(),
+                    ));
+                }
+
+                $raw = $response->body();
+            } catch (Throwable $exception) {
+                $raw = $this->fallbackRemoteRead($normalizedUrl);
+
+                if ($raw === null) {
+                    throw new RuntimeException(sprintf(
+                        'Failed to load %s catalog from %s: %s',
+                        $label,
+                        $normalizedUrl,
+                        $exception->getMessage(),
+                    ), previous: $exception);
+                }
+            }
         }
 
         /** @var mixed $decoded */
         $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 
         return $decoded;
+    }
+
+    private function fallbackRemoteRead(string $url): ?string
+    {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'timeout' => 60,
+                'header' => "User-Agent: Travtool/0.1\r\n",
+            ],
+        ]);
+
+        $content = @file_get_contents($url, false, $context);
+
+        return $content === false ? null : $content;
     }
 
     private function uniqueWorldKey(string $catalogSlug, string $externalUuid): string
