@@ -3,9 +3,9 @@
 namespace App\Services\Travian;
 
 use App\Models\World;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
