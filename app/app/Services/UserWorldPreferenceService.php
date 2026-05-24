@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\World;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -12,14 +13,14 @@ class UserWorldPreferenceService
      */
     public function activeWorldKeys(): array
     {
-        return $this->activeWorldMap()->keys()->all();
+        return $this->availableWorldMap()->keys()->all();
     }
 
     public function isActiveWorldKey(?string $worldKey): bool
     {
         $worldKey = trim((string) $worldKey);
 
-        return $worldKey !== '' && $this->activeWorldMap()->has($worldKey);
+        return $worldKey !== '' && $this->availableWorldMap()->has($worldKey);
     }
 
     public function resolveSelectedWorldKey(?User $user, ?string $requestedWorldKey): string
@@ -79,8 +80,26 @@ class UserWorldPreferenceService
     /**
      * @return Collection<string, array<string, mixed>>
      */
-    private function activeWorldMap(): Collection
+    public function availableWorldMap(): Collection
     {
+        $storedWorlds = World::query()
+            ->where('key', '!=', '')
+            ->where('base_url', '!=', '')
+            ->where('map_sql_url', '!=', '')
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->get(['key', 'name', 'base_url', 'is_active']);
+
+        if ($storedWorlds->isNotEmpty()) {
+            return $storedWorlds->mapWithKeys(static fn (World $world): array => [
+                $world->key => [
+                    'name' => $world->name,
+                    'base_url' => $world->base_url,
+                    'is_active' => (bool) $world->is_active,
+                ],
+            ]);
+        }
+
         return collect(config('travtool.worlds', []))
             ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true));
     }

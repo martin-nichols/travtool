@@ -28,7 +28,13 @@ class TravianMapImportService
      */
     public function configuredWorldKeys(): array
     {
-        return array_keys(config('travtool.worlds', []));
+        $configKeys = array_keys(config('travtool.worlds', []));
+        $storedKeys = World::query()
+            ->where('key', '!=', '')
+            ->pluck('key')
+            ->all();
+
+        return array_values(array_unique([...$configKeys, ...$storedKeys]));
     }
 
     /**
@@ -36,10 +42,19 @@ class TravianMapImportService
      */
     public function activeConfiguredWorldKeys(): array
     {
-        return array_values(array_keys(array_filter(
+        $configKeys = array_values(array_keys(array_filter(
             config('travtool.worlds', []),
             static fn (array $world): bool => (bool) ($world['is_active'] ?? true),
         )));
+
+        $storedKeys = World::query()
+            ->where('is_active', true)
+            ->where('key', '!=', '')
+            ->where('map_sql_url', '!=', '')
+            ->pluck('key')
+            ->all();
+
+        return array_values(array_unique([...$configKeys, ...$storedKeys]));
     }
 
     /**

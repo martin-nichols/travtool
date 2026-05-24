@@ -151,29 +151,28 @@ class MapBuilderController extends Controller
      */
     private function worldContext(string $selectedWorldKey): array
     {
-        $configuredWorlds = collect(config('travtool.worlds', []))
-            ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true));
+        $availableWorlds = $this->worldPreferences->availableWorldMap();
 
         $worldModels = World::query()
             ->with('currentSnapshot:id,snapshot_date')
-            ->whereIn('key', $configuredWorlds->keys()->all())
+            ->whereIn('key', $availableWorlds->keys()->all())
             ->get()
             ->keyBy('key');
 
-        $selectedKey = $configuredWorlds->has($selectedWorldKey) ? $selectedWorldKey : '';
-        $selectedConfig = (array) ($configuredWorlds->get($selectedKey) ?? []);
+        $selectedKey = $availableWorlds->has($selectedWorldKey) ? $selectedWorldKey : '';
+        $selectedWorld = (array) ($availableWorlds->get($selectedKey) ?? []);
         $selectedModel = $selectedKey !== '' ? $worldModels->get($selectedKey) : null;
 
-        $worlds = $configuredWorlds
-            ->map(function (array $configuredWorld, string $key) use ($worldModels): array {
+        $worlds = $availableWorlds
+            ->map(function (array $availableWorld, string $key) use ($worldModels): array {
                 /** @var World|null $model */
                 $model = $worldModels->get($key);
                 $currentSnapshot = $model?->currentSnapshot;
 
                 return [
                     'key' => $key,
-                    'name' => (string) ($configuredWorld['name'] ?? $key),
-                    'base_url' => (string) ($configuredWorld['base_url'] ?? ''),
+                    'name' => (string) ($availableWorld['name'] ?? $key),
+                    'base_url' => (string) ($availableWorld['base_url'] ?? ''),
                     'has_imported_snapshot' => $currentSnapshot !== null,
                     'current_snapshot_date' => $currentSnapshot?->snapshot_date?->toDateString(),
                 ];
@@ -184,8 +183,8 @@ class MapBuilderController extends Controller
         return [
             'worlds' => $worlds,
             'selected_world_key' => $selectedKey,
-            'selected_world_name' => (string) ($selectedConfig['name'] ?? ''),
-            'selected_world_base_url' => (string) ($selectedConfig['base_url'] ?? ''),
+            'selected_world_name' => (string) ($selectedWorld['name'] ?? ''),
+            'selected_world_base_url' => (string) ($selectedWorld['base_url'] ?? ''),
             'current_snapshot_id' => $selectedModel?->current_snapshot_id,
             'current_snapshot_date' => $selectedModel?->currentSnapshot?->snapshot_date?->toDateString(),
             'has_imported_snapshot' => $selectedModel?->currentSnapshot !== null,

@@ -251,29 +251,29 @@ class InactiveFinderController extends Controller
      */
     private function worldContext(string $selectedWorldKey): array
     {
-        $configuredWorlds = collect(config('travtool.worlds', []))
-            ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true));
+        $availableWorlds = $this->worldPreferences->availableWorldMap();
 
         $worldModels = World::query()
             ->with('currentSnapshot:id,snapshot_date,completed_at,previous_snapshot_id')
-            ->whereIn('key', $configuredWorlds->keys()->all())
+            ->whereIn('key', $availableWorlds->keys()->all())
             ->get()
             ->keyBy('key');
 
-        $selectedKey = $configuredWorlds->has($selectedWorldKey) ? $selectedWorldKey : '';
-        $selectedConfig = (array) ($configuredWorlds->get($selectedKey) ?? []);
+        $selectedKey = $availableWorlds->has($selectedWorldKey) ? $selectedWorldKey : '';
+        $selectedWorld = (array) ($availableWorlds->get($selectedKey) ?? []);
+        $selectedConfig = (array) config('travtool.worlds.'.$selectedKey, []);
         $selectedModel = $selectedKey !== '' ? $worldModels->get($selectedKey) : null;
 
-        $worlds = $configuredWorlds
-            ->map(function (array $configuredWorld, string $key) use ($worldModels): array {
+        $worlds = $availableWorlds
+            ->map(function (array $availableWorld, string $key) use ($worldModels): array {
                 /** @var World|null $model */
                 $model = $worldModels->get($key);
                 $currentSnapshot = $model?->currentSnapshot;
 
                 return [
                     'key' => $key,
-                    'name' => (string) ($configuredWorld['name'] ?? $key),
-                    'base_url' => (string) ($configuredWorld['base_url'] ?? ''),
+                    'name' => (string) ($availableWorld['name'] ?? $key),
+                    'base_url' => (string) ($availableWorld['base_url'] ?? ''),
                     'has_imported_snapshot' => $currentSnapshot !== null,
                     'current_snapshot_date' => $currentSnapshot?->snapshot_date?->toDateString(),
                     'history_ready' => $currentSnapshot?->previous_snapshot_id !== null,
@@ -286,8 +286,8 @@ class InactiveFinderController extends Controller
             'worlds' => $worlds,
             'active_world_count' => count($worlds),
             'selected_world_key' => $selectedKey,
-            'selected_world_name' => (string) ($selectedConfig['name'] ?? $selectedKey),
-            'selected_world_base_url' => (string) ($selectedConfig['base_url'] ?? ''),
+            'selected_world_name' => (string) ($selectedWorld['name'] ?? $selectedConfig['name'] ?? $selectedKey),
+            'selected_world_base_url' => (string) ($selectedWorld['base_url'] ?? $selectedConfig['base_url'] ?? ''),
             'selected_world_topology' => (string) ($selectedModel?->map_topology ?? $selectedConfig['map_topology'] ?? 'torus'),
             'selected_world_radius' => (int) ($selectedModel?->map_radius ?? $selectedConfig['map_radius'] ?? 400),
             'current_snapshot_id' => $selectedModel?->current_snapshot_id,
