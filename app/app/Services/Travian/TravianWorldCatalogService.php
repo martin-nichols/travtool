@@ -5,6 +5,7 @@ namespace App\Services\Travian;
 use App\Models\World;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
@@ -109,8 +110,8 @@ class TravianWorldCatalogService
      *     map_sql_url:?string,
      *     game_type:?string,
      *     speed:?int,
-     *     starts_at:?Carbon,
-     *     ends_at:?Carbon,
+     *     starts_at:?CarbonInterface,
+     *     ends_at:?CarbonInterface,
      *     registration_closed:?bool,
      *     mainpage_background:?string,
      *     mainpage_groups:array<int,string>,
@@ -148,8 +149,8 @@ class TravianWorldCatalogService
      *     map_sql_url:?string,
      *     game_type:?string,
      *     speed:?int,
-     *     starts_at:?Carbon,
-     *     ends_at:?Carbon,
+     *     starts_at:?CarbonInterface,
+     *     ends_at:?CarbonInterface,
      *     registration_closed:?bool,
      *     mainpage_background:?string,
      *     mainpage_groups:array<int,string>,
@@ -262,7 +263,7 @@ class TravianWorldCatalogService
      * @param array<string, mixed> $worldData
      * @return array<string, mixed>
      */
-    private function worldAttributes(World $world, array $worldData, Carbon $now): array
+    private function worldAttributes(World $world, array $worldData, CarbonInterface $now): array
     {
         $derivedGeometry = $this->deriveGeometryFromCatalog(
             $worldData['game_type'],
@@ -349,8 +350,8 @@ class TravianWorldCatalogService
      *     map_sql_url:?string,
      *     game_type:?string,
      *     speed:?int,
-     *     starts_at:?Carbon,
-     *     ends_at:?Carbon,
+     *     starts_at:?CarbonInterface,
+     *     ends_at:?CarbonInterface,
      *     registration_closed:?bool,
      *     mainpage_background:?string,
      *     mainpage_groups:array<int,string>,
@@ -579,7 +580,7 @@ class TravianWorldCatalogService
         return array_values(array_unique($items));
     }
 
-    private function timestampToCarbon(mixed $value): ?Carbon
+    private function timestampToCarbon(mixed $value): ?CarbonInterface
     {
         if ($value === null || $value === '') {
             return null;
