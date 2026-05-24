@@ -16,6 +16,14 @@ return [
         'snapshot_chunk_size' => (int) env('TRAVTOOL_IMPORT_SNAPSHOT_CHUNK_SIZE', 500),
     ],
 
+    'catalog' => [
+        'calendar_url' => env('TRAVTOOL_CATALOG_CALENDAR_URL', 'https://lobby.legends.travian.com/api/calendar'),
+        'metadata_url' => env('TRAVTOOL_CATALOG_METADATA_URL', 'https://lobby.legends.travian.com/api/metadata'),
+        'default_server_timezone' => env('TRAVTOOL_CATALOG_DEFAULT_SERVER_TIMEZONE', 'UTC'),
+        'default_import_time' => env('TRAVTOOL_CATALOG_DEFAULT_IMPORT_TIME', '00:10'),
+        'activate_new_worlds' => (bool) env('TRAVTOOL_CATALOG_ACTIVATE_NEW_WORLDS', false),
+    ],
+
     'worlds' => [
         'rof' => [
             'name' => 'Rise of Fire Europe x2',

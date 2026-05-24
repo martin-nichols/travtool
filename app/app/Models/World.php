@@ -14,6 +14,16 @@ class World extends Model
     {
         return [
             'is_active' => 'boolean',
+            'has_regions' => 'boolean',
+            'registration_closed' => 'boolean',
+            'mainpage_groups' => 'array',
+            'languages' => 'array',
+            'tribe_names' => 'array',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
+            'catalog_last_seen_at' => 'datetime',
+            'catalog_synced_at' => 'datetime',
+            'map_metadata_detected_at' => 'datetime',
         ];
     }
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\Travian\TravianMapImportService;
+use App\Services\Travian\TravianWorldCatalogService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -44,12 +45,16 @@ Artisan::command('travian:import-map {worldKey? : Configured world key, for exam
         }
 
         $this->info(sprintf(
-            'Imported [%s] snapshot %s (%d lines, run #%d, snapshot #%d).',
+            'Imported [%s] snapshot %s (%d lines, run #%d, snapshot #%d, %s, %s).',
             $result['world_key'],
             $result['snapshot_date'],
             $result['line_count'],
             $result['import_run_id'],
             $result['snapshot_id'],
+            $result['map_width'] !== null && $result['map_height'] !== null
+                ? sprintf('%dx%d', $result['map_width'], $result['map_height'])
+                : 'unknown map size',
+            $result['map_topology'],
         ));
     }
 
@@ -96,7 +101,38 @@ Artisan::command('travian:import-due-maps', function (TravianMapImportService $s
     return Command::SUCCESS;
 })->purpose('Import map.sql for all active worlds that are due now');
 
+Artisan::command('travian:sync-worlds {--calendar-source= : Local path to a saved calendar JSON payload} {--metadata-source= : Local path to a saved metadata JSON payload} {--activate-new : Mark newly discovered worlds as active}', function (TravianWorldCatalogService $service): int {
+    $this->line('Syncing Travian world catalog...');
+
+    try {
+        $result = $service->sync(
+            $this->option('calendar-source'),
+            $this->option('metadata-source'),
+            (bool) $this->option('activate-new'),
+        );
+    } catch (\Throwable $exception) {
+        $this->error(sprintf('World catalog sync failed: %s', $exception->getMessage()));
+
+        return Command::FAILURE;
+    }
+
+    $this->info(sprintf(
+        'World catalog synced (%d processed, %d created, %d updated, %d skipped).',
+        $result['processed'],
+        $result['created'],
+        $result['updated'],
+        $result['skipped'],
+    ));
+
+    return Command::SUCCESS;
+})->purpose('Sync Travian worlds from the public calendar and metadata catalog');
+
 Schedule::command('travian:import-due-maps')
     ->everyMinute()
     ->withoutOverlapping(30)
     ->name('travian-import-due-maps');
+
+Schedule::command('travian:sync-worlds')
+    ->everySixHours()
+    ->withoutOverlapping(30)
+    ->name('travian-sync-worlds');

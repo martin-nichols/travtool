@@ -18,6 +18,7 @@ class TravianMapImportService
 {
     public function __construct(
         private readonly MapSqlLineParser $parser,
+        private readonly WorldMapMetadataDetector $worldMapMetadataDetector,
         private readonly HttpFactory $http,
     ) {
     }
@@ -77,7 +78,20 @@ class TravianMapImportService
     }
 
     /**
-     * @return array{world_key:string,snapshot_date:string,import_run_id:int,snapshot_id:int,line_count:int,stored_path:string,used_source:string}
+     * @return array{
+     *     world_key:string,
+     *     snapshot_date:string,
+     *     import_run_id:int,
+     *     snapshot_id:int,
+     *     line_count:int,
+     *     stored_path:string,
+     *     used_source:string,
+     *     map_width:?int,
+     *     map_height:?int,
+     *     map_radius:?int,
+     *     map_topology:string,
+     *     has_regions:bool
+     * }
      */
     public function importWorld(
         string $worldKey,
@@ -127,6 +141,7 @@ class TravianMapImportService
             ])->save();
 
             $lineCount = $this->loadStagingRows($world, $importRun, $resolvedSnapshotDate, $storedPath);
+            $worldMapMetadata = $this->syncDetectedWorldMapMetadata($world, $importRun->id);
 
             $importRun->forceFill([
                 'status' => MapImportRun::STATUS_STAGED,
@@ -154,6 +169,11 @@ class TravianMapImportService
                 'line_count' => $lineCount,
                 'stored_path' => $storedPath,
                 'used_source' => $sourcePath !== null ? 'local-file' : 'remote-download',
+                'map_width' => $worldMapMetadata['map_width'],
+                'map_height' => $worldMapMetadata['map_height'],
+                'map_radius' => $worldMapMetadata['map_radius'],
+                'map_topology' => $worldMapMetadata['map_topology'],
+                'has_regions' => $worldMapMetadata['has_regions'],
             ];
         } catch (Throwable $exception) {
             $importRun->forceFill([
@@ -172,7 +192,7 @@ class TravianMapImportService
     }
 
     /**
-     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool} $configuredWorld
+     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool,map_topology:?string,map_radius:?int} $configuredWorld
      */
     private function syncWorld(string $worldKey, array $configuredWorld): World
     {
@@ -183,7 +203,10 @@ class TravianMapImportService
                 'base_url' => $configuredWorld['base_url'],
                 'map_sql_url' => $configuredWorld['map_sql_url'],
                 'server_timezone' => $configuredWorld['server_timezone'],
+                'import_time' => $configuredWorld['import_time'],
                 'speed' => $configuredWorld['speed'],
+                'map_topology' => $configuredWorld['map_topology'],
+                'map_radius' => $configuredWorld['map_radius'],
                 'is_active' => $configuredWorld['is_active'],
             ],
         );
@@ -215,7 +238,7 @@ class TravianMapImportService
     }
 
     /**
-     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool} $configuredWorld
+     * @param array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool,map_topology:?string,map_radius:?int} $configuredWorld
      */
     private function prepareSnapshot(
         World $world,
@@ -276,13 +299,33 @@ class TravianMapImportService
     }
 
     /**
-     * @return array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool}
+     * @return array{name:string,base_url:string,map_sql_url:string,server_timezone:string,import_time:string,speed:int|null,is_active:bool,map_topology:?string,map_radius:?int}
      */
     private function configuredWorld(string $worldKey): array
     {
         $worlds = config('travtool.worlds', []);
 
-        if (! isset($worlds[$worldKey])) {
+        if (isset($worlds[$worldKey])) {
+            $world = $worlds[$worldKey];
+
+            return [
+                'name' => (string) $world['name'],
+                'base_url' => rtrim((string) $world['base_url'], '/').'/',
+                'map_sql_url' => (string) ($world['map_sql_url'] ?? rtrim((string) $world['base_url'], '/').'/map.sql'),
+                'server_timezone' => (string) ($world['server_timezone'] ?? 'UTC'),
+                'import_time' => (string) ($world['import_time'] ?? '00:10'),
+                'speed' => isset($world['speed']) ? (int) $world['speed'] : null,
+                'map_topology' => isset($world['map_topology']) ? (string) $world['map_topology'] : null,
+                'map_radius' => isset($world['map_radius']) ? (int) $world['map_radius'] : null,
+                'is_active' => (bool) ($world['is_active'] ?? true),
+            ];
+        }
+
+        $storedWorld = World::query()
+            ->where('key', $worldKey)
+            ->first();
+
+        if ($storedWorld === null || $storedWorld->base_url === '' || $storedWorld->map_sql_url === '') {
             throw new RuntimeException(sprintf(
                 'Unknown world key [%s]. Configured worlds: %s',
                 $worldKey,
@@ -290,16 +333,16 @@ class TravianMapImportService
             ));
         }
 
-        $world = $worlds[$worldKey];
-
         return [
-            'name' => (string) $world['name'],
-            'base_url' => rtrim((string) $world['base_url'], '/').'/',
-            'map_sql_url' => (string) ($world['map_sql_url'] ?? rtrim((string) $world['base_url'], '/').'/map.sql'),
-            'server_timezone' => (string) ($world['server_timezone'] ?? 'UTC'),
-            'import_time' => (string) ($world['import_time'] ?? '00:10'),
-            'speed' => isset($world['speed']) ? (int) $world['speed'] : null,
-            'is_active' => (bool) ($world['is_active'] ?? true),
+            'name' => (string) $storedWorld->name,
+            'base_url' => rtrim((string) $storedWorld->base_url, '/').'/',
+            'map_sql_url' => (string) $storedWorld->map_sql_url,
+            'server_timezone' => (string) ($storedWorld->server_timezone ?: config('travtool.catalog.default_server_timezone', 'UTC')),
+            'import_time' => (string) ($storedWorld->import_time ?: config('travtool.catalog.default_import_time', '00:10')),
+            'speed' => $storedWorld->speed !== null ? (int) $storedWorld->speed : null,
+            'map_topology' => $storedWorld->map_topology !== null ? (string) $storedWorld->map_topology : null,
+            'map_radius' => $storedWorld->map_radius !== null ? (int) $storedWorld->map_radius : null,
+            'is_active' => (bool) $storedWorld->is_active,
         ];
     }
 
@@ -431,6 +474,42 @@ class TravianMapImportService
         }
 
         return $lineNumber;
+    }
+
+    /**
+     * @return array{
+     *     has_regions: bool,
+     *     map_topology: string,
+     *     map_width: ?int,
+     *     map_height: ?int,
+     *     map_tile_count: ?int,
+     *     map_radius: ?int
+     * }
+     */
+    private function syncDetectedWorldMapMetadata(World $world, int $importRunId): array
+    {
+        $summary = DB::table('staging_map_rows')
+            ->where('import_run_id', $importRunId)
+            ->selectRaw('MAX(map_tile_id) as max_map_tile_id')
+            ->selectRaw("MAX(CASE WHEN region_name_raw IS NOT NULL AND region_name_raw <> '' THEN 1 ELSE 0 END) as has_regions")
+            ->first();
+
+        $detected = $this->worldMapMetadataDetector->detect(
+            (int) ($summary->max_map_tile_id ?? 0),
+            ((int) ($summary->has_regions ?? 0)) === 1,
+        );
+
+        $world->forceFill([
+            'has_regions' => $detected['has_regions'],
+            'map_topology' => $detected['map_topology'],
+            'map_width' => $detected['map_width'],
+            'map_height' => $detected['map_height'],
+            'map_tile_count' => $detected['map_tile_count'],
+            'map_radius' => $detected['map_radius'],
+            'map_metadata_detected_at' => now(),
+        ])->save();
+
+        return $detected;
     }
 
     private function normalizeSnapshot(
