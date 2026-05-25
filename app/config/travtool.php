@@ -12,6 +12,8 @@ return [
     'imports' => [
         'disk' => env('TRAVTOOL_IMPORT_DISK', 'local'),
         'directory' => env('TRAVTOOL_IMPORT_DIRECTORY', 'map-imports'),
+        'temporary_directory' => env('TRAVTOOL_IMPORT_TEMP_DIRECTORY', 'map-imports-temp'),
+        'retain_raw_files' => (bool) env('TRAVTOOL_IMPORT_RETAIN_RAW_FILES', false),
         'staging_chunk_size' => (int) env('TRAVTOOL_IMPORT_STAGING_CHUNK_SIZE', 500),
         'snapshot_chunk_size' => (int) env('TRAVTOOL_IMPORT_SNAPSHOT_CHUNK_SIZE', 500),
     ],

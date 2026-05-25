@@ -135,27 +135,29 @@ class TravianMapImportService
             'started_at' => now(),
         ]);
 
+        $sourceFile = null;
+
         try {
-            $storedPath = $this->storeSourceFile($worldKey, $configuredWorld['map_sql_url'], $resolvedSnapshotDate, $importRun->id, $sourcePath);
-            $fileMetadata = $this->sourceMetadata($storedPath);
+            $sourceFile = $this->prepareSourceFile($worldKey, $configuredWorld['map_sql_url'], $resolvedSnapshotDate, $importRun->id, $sourcePath);
+            $fileMetadata = $this->sourceMetadata($sourceFile['absolute_path']);
 
             $importRun->forceFill([
                 'status' => MapImportRun::STATUS_DOWNLOADED,
-                'raw_file_path' => $storedPath,
+                'raw_file_path' => $sourceFile['stored_path'],
                 'checksum' => $fileMetadata['checksum'],
                 'file_size_bytes' => $fileMetadata['file_size_bytes'],
             ])->save();
 
             $snapshot->forceFill([
                 'status' => MapSnapshot::STATUS_DOWNLOADED,
-                'raw_file_path' => $storedPath,
+                'raw_file_path' => $sourceFile['stored_path'],
                 'checksum' => $fileMetadata['checksum'],
                 'file_size_bytes' => $fileMetadata['file_size_bytes'],
                 'downloaded_at' => now(),
                 'error_message' => null,
             ])->save();
 
-            $lineCount = $this->loadStagingRows($world, $importRun, $resolvedSnapshotDate, $storedPath);
+            $lineCount = $this->loadStagingRows($world, $importRun, $resolvedSnapshotDate, $sourceFile['absolute_path']);
             $worldMapMetadata = $this->syncDetectedWorldMapMetadata($world, $importRun->id);
 
             $importRun->forceFill([
@@ -182,7 +184,7 @@ class TravianMapImportService
                 'import_run_id' => $importRun->id,
                 'snapshot_id' => $snapshot->id,
                 'line_count' => $lineCount,
-                'stored_path' => $storedPath,
+                'stored_path' => $sourceFile['stored_path'] ?? $sourceFile['absolute_path'],
                 'used_source' => $sourcePath !== null ? 'local-file' : 'remote-download',
                 'map_width' => $worldMapMetadata['map_width'],
                 'map_height' => $worldMapMetadata['map_height'],
@@ -203,6 +205,10 @@ class TravianMapImportService
             ])->save();
 
             throw $exception;
+        } finally {
+            if ($sourceFile !== null) {
+                $this->cleanupSourceFile($sourceFile);
+            }
         }
     }
 
@@ -368,15 +374,19 @@ class TravianMapImportService
             : CarbonImmutable::now($timezone)->toDateString();
     }
 
-    private function storeSourceFile(
+    private function prepareSourceFile(
         string $worldKey,
         string $mapSqlUrl,
         string $snapshotDate,
         int $importRunId,
         ?string $sourcePath,
-    ): string {
+    ): array {
         $disk = config('travtool.imports.disk', 'local');
-        $directory = trim((string) config('travtool.imports.directory', 'map-imports'), '/');
+        $retainRawFiles = (bool) config('travtool.imports.retain_raw_files', false);
+        $directory = trim((string) config(
+            $retainRawFiles ? 'travtool.imports.directory' : 'travtool.imports.temporary_directory',
+            $retainRawFiles ? 'map-imports' : 'map-imports-temp',
+        ), '/');
         $storedPath = sprintf('%s/%s/%s/run-%d-map.sql', $directory, $worldKey, $snapshotDate, $importRunId);
 
         Storage::disk($disk)->makeDirectory(dirname($storedPath));
@@ -386,7 +396,22 @@ class TravianMapImportService
                 throw new RuntimeException(sprintf('Source file not found: %s', $sourcePath));
             }
 
-            $stream = fopen($sourcePath, 'rb');
+            $absolutePath = realpath($sourcePath);
+
+            if ($absolutePath === false) {
+                throw new RuntimeException(sprintf('Unable to resolve source file path: %s', $sourcePath));
+            }
+
+            if (! $retainRawFiles) {
+                return [
+                    'absolute_path' => $absolutePath,
+                    'stored_path' => null,
+                    'cleanup' => false,
+                    'disk' => $disk,
+                ];
+            }
+
+            $stream = fopen($absolutePath, 'rb');
 
             if ($stream === false) {
                 throw new RuntimeException(sprintf('Unable to open source file: %s', $sourcePath));
@@ -398,7 +423,12 @@ class TravianMapImportService
                 fclose($stream);
             }
 
-            return $storedPath;
+            return [
+                'absolute_path' => Storage::disk($disk)->path($storedPath),
+                'stored_path' => $storedPath,
+                'cleanup' => false,
+                'disk' => $disk,
+            ];
         }
 
         $response = $this->http
@@ -414,17 +444,20 @@ class TravianMapImportService
 
         Storage::disk($disk)->put($storedPath, $response->body());
 
-        return $storedPath;
+        return [
+            'absolute_path' => Storage::disk($disk)->path($storedPath),
+            'stored_path' => $retainRawFiles ? $storedPath : null,
+            'cleanup' => ! $retainRawFiles,
+            'cleanup_path' => $storedPath,
+            'disk' => $disk,
+        ];
     }
 
     /**
      * @return array{checksum:string,file_size_bytes:int,absolute_path:string}
      */
-    private function sourceMetadata(string $storedPath): array
+    private function sourceMetadata(string $absolutePath): array
     {
-        $disk = config('travtool.imports.disk', 'local');
-        $absolutePath = Storage::disk($disk)->path($storedPath);
-
         return [
             'checksum' => hash_file('sha256', $absolutePath),
             'file_size_bytes' => filesize($absolutePath) ?: 0,
@@ -436,10 +469,8 @@ class TravianMapImportService
         World $world,
         MapImportRun $importRun,
         string $snapshotDate,
-        string $storedPath,
+        string $absolutePath,
     ): int {
-        $disk = config('travtool.imports.disk', 'local');
-        $absolutePath = Storage::disk($disk)->path($storedPath);
         $chunkSize = max(1, (int) config('travtool.imports.staging_chunk_size', 500));
 
         DB::table('staging_map_rows')
@@ -489,6 +520,24 @@ class TravianMapImportService
         }
 
         return $lineNumber;
+    }
+
+    /**
+     * @param array{absolute_path:string,stored_path:?string,cleanup:bool,disk:string,cleanup_path?:string} $sourceFile
+     */
+    private function cleanupSourceFile(array $sourceFile): void
+    {
+        if (! ($sourceFile['cleanup'] ?? false)) {
+            return;
+        }
+
+        $cleanupPath = $sourceFile['cleanup_path'] ?? null;
+
+        if ($cleanupPath === null) {
+            return;
+        }
+
+        Storage::disk($sourceFile['disk'])->delete($cleanupPath);
     }
 
     /**
