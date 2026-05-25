@@ -234,7 +234,7 @@ class InactiveFinderController extends Controller
     /**
      * @param string $selectedWorldKey
      * @return array{
-     *     worlds: array<int, array{key:string,name:string,base_url:string,has_imported_snapshot:bool,current_snapshot_date:?string,history_ready:bool}>,
+     *     worlds: array<int, array{key:string,name:string,base_url:string,category_key:string,has_imported_snapshot:bool,current_snapshot_date:?string,history_ready:bool}>,
      *     active_world_count:int,
      *     selected_world_key:string,
      *     selected_world_name:string,
@@ -274,6 +274,7 @@ class InactiveFinderController extends Controller
                     'key' => $key,
                     'name' => (string) ($availableWorld['name'] ?? $key),
                     'base_url' => (string) ($availableWorld['base_url'] ?? ''),
+                    'category_key' => (string) ($availableWorld['category_key'] ?? 'other'),
                     'has_imported_snapshot' => $currentSnapshot !== null,
                     'current_snapshot_date' => $currentSnapshot?->snapshot_date?->toDateString(),
                     'history_ready' => $currentSnapshot?->previous_snapshot_id !== null,

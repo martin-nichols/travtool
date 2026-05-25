@@ -96,11 +96,52 @@ class UserWorldPreferenceService
                     'name' => $world->name,
                     'base_url' => $world->base_url,
                     'is_active' => (bool) $world->is_active,
+                    'category_key' => self::worldCategoryKey(
+                        $world->game_type,
+                        $world->catalog_domain,
+                        $world->name,
+                        $world->base_url,
+                    ),
                 ],
             ]);
         }
 
         return collect(config('travtool.worlds', []))
-            ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true));
+            ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true))
+            ->map(static fn (array $world, string $key): array => [
+                ...$world,
+                'category_key' => self::worldCategoryKey(
+                    $world['game_type'] ?? ($key === 'rof' ? 'RoF' : null),
+                    $world['catalog_domain'] ?? null,
+                    $world['name'] ?? $key,
+                    $world['base_url'] ?? null,
+                ),
+            ]);
+    }
+
+    private static function worldCategoryKey(
+        mixed $gameType,
+        mixed $catalogDomain,
+        mixed $name,
+        mixed $baseUrl,
+    ): string {
+        $normalizedType = strtolower(trim((string) $gameType));
+        $normalizedDomain = strtolower(trim((string) $catalogDomain));
+        $normalizedName = strtolower(trim((string) $name));
+        $normalizedUrl = strtolower(trim((string) $baseUrl));
+
+        if ($normalizedType === 'rof') {
+            return 'rof';
+        }
+
+        if ($normalizedDomain === 'nordics' || str_contains($normalizedName, 'nordics') || str_contains($normalizedUrl, 'nordics.')) {
+            return 'nordics';
+        }
+
+        if (in_array($normalizedType, ['ttq', 'tournament'], true)) {
+            return 'tournament';
+        }
+
+        return 'other';
     }
 }

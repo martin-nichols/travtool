@@ -16,6 +16,7 @@ type WorldOption = {
     key: string;
     name: string;
     base_url: string;
+    category_key: 'rof' | 'nordics' | 'tournament' | 'other';
     has_imported_snapshot: boolean;
     current_snapshot_date: string | null;
 };
@@ -257,6 +258,17 @@ onBeforeUnmount(() => {
 });
 
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
+const groupedWorlds = computed(() => {
+    const categoryOrder: Array<WorldOption['category_key']> = ['rof', 'nordics', 'tournament', 'other'];
+
+    return categoryOrder
+        .map((categoryKey) => ({
+            key: categoryKey,
+            label: t(`common.world_categories.${categoryKey}`),
+            worlds: props.worlds.filter((world) => world.category_key === categoryKey),
+        }))
+        .filter((group) => group.worlds.length > 0);
+});
 const villagesById = computed(() => new Map(props.map.villages.map((village) => [village.id, village])));
 const resultTitle = computed(() => props.summary.selectedWorldName || t('map_builder.state.choose_world_title'));
 const baseViewBox = computed(() => props.map.view_box);
@@ -1061,9 +1073,16 @@ const closeMobileFullscreen = (): void => {
                                         ]"
                                     >
                                         <option value="" class="text-[#1f1a14]">{{ t('map_builder.filters.choose_world_placeholder') }}</option>
-                                        <option v-for="world in worlds" :key="world.key" :value="world.key" class="text-[#1f1a14]">
-                                            {{ world.name }}
-                                        </option>
+                                        <optgroup
+                                            v-for="group in groupedWorlds"
+                                            :key="group.key"
+                                            :label="group.label"
+                                            class="text-[#1f1a14]"
+                                        >
+                                            <option v-for="world in group.worlds" :key="world.key" :value="world.key" class="text-[#1f1a14]">
+                                                {{ world.name }}
+                                            </option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <button

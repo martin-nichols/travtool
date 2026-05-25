@@ -10,6 +10,12 @@ return [
         'go_to_login' => 'Ir al acceso',
         'open_prototype' => 'Abrir el prototipo',
         'language' => 'Idioma',
+        'world_categories' => [
+            'rof' => 'Reign of Fire',
+            'nordics' => 'Nordics',
+            'tournament' => 'Tournament',
+            'other' => 'Otros mundos',
+        ],
     ],
     'home' => [
         'meta' => [

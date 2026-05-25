@@ -10,6 +10,12 @@ return [
         'go_to_login' => 'Bejelentkezes',
         'open_prototype' => 'Prototipus megnyitasa',
         'language' => 'Nyelv',
+        'world_categories' => [
+            'rof' => 'Reign of Fire',
+            'nordics' => 'Nordics',
+            'tournament' => 'Tournament',
+            'other' => 'Egyeb vilagok',
+        ],
     ],
     'home' => [
         'meta' => [

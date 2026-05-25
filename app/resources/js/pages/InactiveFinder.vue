@@ -27,6 +27,7 @@ type WorldOption = {
     key: string;
     name: string;
     base_url: string;
+    category_key: 'rof' | 'nordics' | 'tournament' | 'other';
     has_imported_snapshot: boolean;
     current_snapshot_date: string | null;
     history_ready: boolean;
@@ -157,6 +158,17 @@ const normalizedCenter = (): { x: number | null; y: number | null } => {
 };
 
 const selectedWorld = computed(() => props.worlds.find((world) => world.key === form.world) ?? null);
+const groupedWorlds = computed(() => {
+    const categoryOrder: Array<WorldOption['category_key']> = ['rof', 'nordics', 'tournament', 'other'];
+
+    return categoryOrder
+        .map((categoryKey) => ({
+            key: categoryKey,
+            label: t(`common.world_categories.${categoryKey}`),
+            worlds: props.worlds.filter((world) => world.category_key === categoryKey),
+        }))
+        .filter((group) => group.worlds.length > 0);
+});
 const canUseDistanceSort = computed(() => {
     const { x, y } = normalizedCenter();
 
@@ -450,9 +462,16 @@ const suppressDraggedClick = (event: MouseEvent) => {
                                         ]"
                                     >
                                         <option value="" class="text-[#1f1a14]">{{ t('inactive_finder.filters.choose_world_placeholder') }}</option>
-                                        <option v-for="world in worlds" :key="world.key" :value="world.key" class="text-[#1f1a14]">
-                                            {{ world.name }}
-                                        </option>
+                                        <optgroup
+                                            v-for="group in groupedWorlds"
+                                            :key="group.key"
+                                            :label="group.label"
+                                            class="text-[#1f1a14]"
+                                        >
+                                            <option v-for="world in group.worlds" :key="world.key" :value="world.key" class="text-[#1f1a14]">
+                                                {{ world.name }}
+                                            </option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <button

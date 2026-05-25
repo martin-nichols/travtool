@@ -139,7 +139,7 @@ class MapBuilderController extends Controller
 
     /**
      * @return array{
-     *     worlds: array<int, array{key:string,name:string,base_url:string,has_imported_snapshot:bool,current_snapshot_date:?string}>,
+     *     worlds: array<int, array{key:string,name:string,base_url:string,category_key:string,has_imported_snapshot:bool,current_snapshot_date:?string}>,
      *     selected_world_key:string,
      *     selected_world_name:string,
      *     selected_world_base_url:string,
@@ -173,6 +173,7 @@ class MapBuilderController extends Controller
                     'key' => $key,
                     'name' => (string) ($availableWorld['name'] ?? $key),
                     'base_url' => (string) ($availableWorld['base_url'] ?? ''),
+                    'category_key' => (string) ($availableWorld['category_key'] ?? 'other'),
                     'has_imported_snapshot' => $currentSnapshot !== null,
                     'current_snapshot_date' => $currentSnapshot?->snapshot_date?->toDateString(),
                 ];
