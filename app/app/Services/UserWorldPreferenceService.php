@@ -82,41 +82,47 @@ class UserWorldPreferenceService
      */
     public function availableWorldMap(): Collection
     {
+        $configuredWorlds = collect(config('travtool.worlds', []))
+            ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true))
+            ->mapWithKeys(static fn (array $world, string $key): array => [
+                $key => [
+                    'name' => (string) ($world['name'] ?? $key),
+                    'base_url' => (string) ($world['base_url'] ?? ''),
+                    'is_active' => (bool) ($world['is_active'] ?? true),
+                    'category_key' => self::worldCategoryKey(
+                        $world['game_type'] ?? ($key === 'rof' ? 'RoF' : null),
+                        $world['catalog_domain'] ?? null,
+                        $world['name'] ?? $key,
+                        $world['base_url'] ?? null,
+                    ),
+                ],
+            ]);
+
         $storedWorlds = World::query()
             ->where('key', '!=', '')
             ->where('base_url', '!=', '')
             ->where('map_sql_url', '!=', '')
             ->orderByDesc('is_active')
             ->orderBy('name')
-            ->get(['key', 'name', 'base_url', 'is_active']);
+            ->get(['key', 'name', 'base_url', 'is_active', 'game_type', 'catalog_domain']);
 
-        if ($storedWorlds->isNotEmpty()) {
-            return $storedWorlds->mapWithKeys(static fn (World $world): array => [
-                $world->key => [
-                    'name' => $world->name,
-                    'base_url' => $world->base_url,
-                    'is_active' => (bool) $world->is_active,
-                    'category_key' => self::worldCategoryKey(
-                        $world->game_type,
-                        $world->catalog_domain,
-                        $world->name,
-                        $world->base_url,
-                    ),
-                ],
+        $mergedWorlds = $configuredWorlds;
+
+        foreach ($storedWorlds as $world) {
+            $mergedWorlds->put($world->key, [
+                'name' => $world->name,
+                'base_url' => $world->base_url,
+                'is_active' => (bool) $world->is_active,
+                'category_key' => self::worldCategoryKey(
+                    $world->game_type,
+                    $world->catalog_domain,
+                    $world->name,
+                    $world->base_url,
+                ),
             ]);
         }
 
-        return collect(config('travtool.worlds', []))
-            ->filter(static fn (mixed $world): bool => is_array($world) && (bool) ($world['is_active'] ?? true))
-            ->map(static fn (array $world, string $key): array => [
-                ...$world,
-                'category_key' => self::worldCategoryKey(
-                    $world['game_type'] ?? ($key === 'rof' ? 'RoF' : null),
-                    $world['catalog_domain'] ?? null,
-                    $world['name'] ?? $key,
-                    $world['base_url'] ?? null,
-                ),
-            ]);
+        return $mergedWorlds;
     }
 
     private static function worldCategoryKey(
