@@ -209,6 +209,8 @@ class TravianMapImportService
             if ($sourceFile !== null) {
                 $this->cleanupSourceFile($sourceFile);
             }
+
+            $this->cleanupStagingRows($importRun->id);
         }
     }
 
@@ -506,7 +508,6 @@ class TravianMapImportService
                 'world_id' => $world->id,
                 'snapshot_date' => $snapshotDate,
                 'line_number' => $lineNumber,
-                'raw_sql_line' => $trimmed,
             ]);
 
             if (count($rows) >= $chunkSize) {
@@ -538,6 +539,13 @@ class TravianMapImportService
         }
 
         Storage::disk($sourceFile['disk'])->delete($cleanupPath);
+    }
+
+    private function cleanupStagingRows(int $importRunId): void
+    {
+        DB::table('staging_map_rows')
+            ->where('import_run_id', $importRunId)
+            ->delete();
     }
 
     /**

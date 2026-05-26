@@ -230,3 +230,8 @@ Schedule::command('travian:sync-worlds')
     ->everySixHours()
     ->withoutOverlapping(30)
     ->name('travian-sync-worlds');
+
+Schedule::command('travian:prune-map-data --days=2 --staging-days=0 --force')
+    ->dailyAt('03:30')
+    ->withoutOverlapping(30)
+    ->name('travian-prune-map-data');
