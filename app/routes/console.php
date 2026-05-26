@@ -2,7 +2,9 @@
 
 use App\Services\Travian\TravianMapImportService;
 use App\Services\Travian\TravianWorldCatalogService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use Symfony\Component\Console\Command\Command;
@@ -126,6 +128,98 @@ Artisan::command('travian:sync-worlds {--calendar-source= : Local path to a save
 
     return Command::SUCCESS;
 })->purpose('Sync Travian worlds from the public calendar and metadata catalog');
+
+Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapshots for this many days} {--staging-days=1 : Keep staging rows for completed import runs for this many days} {--world= : Limit pruning to one world key} {--force : Actually delete data; without this, only report what would be deleted}', function (): int {
+    $retentionDays = max(1, (int) $this->option('days'));
+    $stagingRetentionDays = max(0, (int) $this->option('staging-days'));
+    $worldKey = $this->option('world');
+    $force = (bool) $this->option('force');
+    $snapshotCutoff = CarbonImmutable::today('UTC')->subDays($retentionDays - 1)->toDateString();
+    $stagingCutoff = CarbonImmutable::now('UTC')->subDays($stagingRetentionDays);
+
+    $worldIds = DB::table('worlds')
+        ->when($worldKey !== null, fn ($query) => $query->where('key', $worldKey))
+        ->pluck('id')
+        ->map(static fn (mixed $id): int => (int) $id)
+        ->all();
+
+    if ($worldIds === []) {
+        $this->error($worldKey !== null ? sprintf('Unknown world key [%s].', $worldKey) : 'No worlds found.');
+
+        return Command::FAILURE;
+    }
+
+    $currentSnapshotIds = DB::table('worlds')
+        ->whereIn('id', $worldIds)
+        ->whereNotNull('current_snapshot_id')
+        ->pluck('current_snapshot_id')
+        ->map(static fn (mixed $id): int => (int) $id)
+        ->all();
+
+    $snapshotIds = DB::table('map_snapshots')
+        ->whereIn('world_id', $worldIds)
+        ->where('snapshot_date', '<', $snapshotCutoff)
+        ->whereNotIn('id', $currentSnapshotIds ?: [0])
+        ->pluck('id')
+        ->map(static fn (mixed $id): int => (int) $id)
+        ->all();
+
+    $stagingImportRunIds = DB::table('map_import_runs')
+        ->whereIn('world_id', $worldIds)
+        ->whereIn('status', ['success', 'failed'])
+        ->where('created_at', '<', $stagingCutoff)
+        ->pluck('id')
+        ->map(static fn (mixed $id): int => (int) $id)
+        ->all();
+
+    $snapshotRows = [
+        'alliance_snapshots' => DB::table('alliance_snapshots')->whereIn('snapshot_id', $snapshotIds ?: [0])->count(),
+        'player_snapshots' => DB::table('player_snapshots')->whereIn('snapshot_id', $snapshotIds ?: [0])->count(),
+        'village_snapshots' => DB::table('village_snapshots')->whereIn('snapshot_id', $snapshotIds ?: [0])->count(),
+    ];
+    $stagingRows = DB::table('staging_map_rows')->whereIn('import_run_id', $stagingImportRunIds ?: [0])->count();
+
+    $this->line(sprintf(
+        '%s %d map snapshot(s) before %s and %d staging row(s) before %s.',
+        $force ? 'Deleting' : 'Would delete',
+        count($snapshotIds),
+        $snapshotCutoff,
+        $stagingRows,
+        $stagingCutoff->toDateTimeString(),
+    ));
+
+    foreach ($snapshotRows as $table => $count) {
+        $this->line(sprintf('%s: %d row(s)', $table, $count));
+    }
+
+    if (! $force) {
+        $this->warn('Dry run only. Re-run with --force to delete.');
+
+        return Command::SUCCESS;
+    }
+
+    DB::transaction(function () use ($snapshotIds, $stagingImportRunIds): void {
+        if ($snapshotIds !== []) {
+            DB::table('map_snapshots')
+                ->whereIn('previous_snapshot_id', $snapshotIds)
+                ->update(['previous_snapshot_id' => null]);
+
+            DB::table('map_snapshots')
+                ->whereIn('id', $snapshotIds)
+                ->delete();
+        }
+
+        if ($stagingImportRunIds !== []) {
+            DB::table('staging_map_rows')
+                ->whereIn('import_run_id', $stagingImportRunIds)
+                ->delete();
+        }
+    });
+
+    $this->info('Map data pruning completed.');
+
+    return Command::SUCCESS;
+})->purpose('Prune old Travian snapshot history and completed import staging rows');
 
 Schedule::command('travian:import-due-maps')
     ->everyMinute()
