@@ -339,10 +339,8 @@ function removeWorld(worldKey: string): void {
                 </div>
             </main>
 
-            <footer class="grid gap-3 border-t border-[#1f1a14]/10 pt-6 text-sm text-[#5f574f] md:grid-cols-3">
-                <p>{{ t('home.footer.line_1') }}</p>
-                <p>{{ t('home.footer.line_2') }}</p>
-                <p class="md:text-right">{{ t('home.footer.line_3') }}</p>
+            <footer class="border-t border-[#1f1a14]/10 pt-6 text-sm text-[#5f574f]">
+                <p>{{ t('home.footer.line_3') }}</p>
             </footer>
         </div>
     </div>
