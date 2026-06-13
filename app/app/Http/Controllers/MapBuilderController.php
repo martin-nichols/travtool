@@ -97,10 +97,12 @@ class MapBuilderController extends Controller
         return Inertia::render('MapBuilder', [
             'filters' => $filters,
             'worlds' => $worldContext['worlds'],
+            'savedMaps' => $this->savedMaps($request),
             'summary' => [
                 'selectedWorldKey' => $worldContext['selected_world_key'],
                 'selectedWorldName' => $worldContext['selected_world_name'],
                 'selectedWorldBaseUrl' => $worldContext['selected_world_base_url'],
+                'selectedWorldHasRegions' => $worldContext['selected_world_has_regions'],
                 'currentSnapshotDate' => $worldContext['current_snapshot_date'],
                 'hasImportedSnapshot' => $worldContext['has_imported_snapshot'],
                 'matchedVillageCount' => $mapData['matched_village_count'],
@@ -143,6 +145,7 @@ class MapBuilderController extends Controller
      *     selected_world_key:string,
      *     selected_world_name:string,
      *     selected_world_base_url:string,
+     *     selected_world_has_regions:bool,
      *     current_snapshot_id:?int,
      *     current_snapshot_date:?string,
      *     has_imported_snapshot:bool,
@@ -186,6 +189,7 @@ class MapBuilderController extends Controller
             'selected_world_key' => $selectedKey,
             'selected_world_name' => (string) ($selectedWorld['name'] ?? ''),
             'selected_world_base_url' => (string) ($selectedWorld['base_url'] ?? ''),
+            'selected_world_has_regions' => (bool) ($selectedModel?->has_regions ?? false),
             'current_snapshot_id' => $selectedModel?->current_snapshot_id,
             'current_snapshot_date' => $selectedModel?->currentSnapshot?->snapshot_date?->toDateString(),
             'has_imported_snapshot' => $selectedModel?->currentSnapshot !== null,
@@ -198,6 +202,7 @@ class MapBuilderController extends Controller
      *     selected_world_key:string,
      *     selected_world_name:string,
      *     selected_world_base_url:string,
+     *     selected_world_has_regions:bool,
      *     current_snapshot_id:?int,
      *     current_snapshot_date:?string,
      *     has_imported_snapshot:bool,
@@ -227,7 +232,7 @@ class MapBuilderController extends Controller
         $criteria = [
             'alliances' => $this->parseInputList($filters['alliance_tags']),
             'players' => $this->parseInputList($filters['player_names']),
-            'regions' => $this->parseInputList($filters['region_names']),
+            'regions' => $worldContext['selected_world_has_regions'] ? $this->parseInputList($filters['region_names']) : [],
         ];
 
         $hasCriteria = $criteria['alliances'] !== [] || $criteria['players'] !== [] || $criteria['regions'] !== [];
@@ -241,7 +246,12 @@ class MapBuilderController extends Controller
         }
 
         if (! $hasCriteria) {
-            return $this->emptyMapPayload('choose_criteria', $criteria, false);
+            $criteria = $this->automaticCriteria((int) $worldContext['world_id']);
+            $hasCriteria = $criteria['alliances'] !== [] || $criteria['players'] !== [];
+
+            if (! $hasCriteria) {
+                return $this->emptyMapPayload('choose_criteria', $criteria, false);
+            }
         }
 
         $rows = $this->matchingVillagesQuery((int) $worldContext['world_id'], $criteria)->get();
@@ -309,6 +319,67 @@ class MapBuilderController extends Controller
             ->orderBy('v.id');
 
         return $query;
+    }
+
+    /**
+     * @return array{alliances:list<string>,players:list<string>,regions:list<string>}
+     */
+    private function automaticCriteria(int $worldId): array
+    {
+        $alliances = DB::table('alliances')
+            ->where('world_id', $worldId)
+            ->where('is_present', true)
+            ->where('tag', '!=', '')
+            ->orderByDesc('current_population_total')
+            ->orderBy('tag')
+            ->limit(5)
+            ->pluck('tag')
+            ->map(static fn (mixed $tag): string => (string) $tag)
+            ->all();
+
+        $players = DB::table('players')
+            ->where('world_id', $worldId)
+            ->where('is_present', true)
+            ->where('name', '!=', '')
+            ->orderByDesc('current_population_total')
+            ->orderBy('name')
+            ->limit(5)
+            ->pluck('name')
+            ->map(static fn (mixed $name): string => (string) $name)
+            ->all();
+
+        return [
+            'alliances' => $alliances,
+            'players' => $players,
+            'regions' => [],
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function savedMaps(Request $request): array
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return [];
+        }
+
+        return $user->maps()
+            ->latest('updated_at')
+            ->limit(10)
+            ->get(['id', 'name', 'world_key', 'alliance_tags', 'player_names', 'region_names', 'updated_at'])
+            ->map(static fn ($map): array => [
+                'id' => $map->id,
+                'name' => $map->name,
+                'world_key' => $map->world_key,
+                'alliance_tags' => $map->alliance_tags ?? '',
+                'player_names' => $map->player_names ?? '',
+                'region_names' => $map->region_names ?? '',
+                'updated_at' => $map->updated_at?->toIso8601String(),
+            ])
+            ->all();
     }
 
     /**

@@ -35,4 +35,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserWorld::class);
     }
+
+    public function maps(): HasMany
+    {
+        return $this->hasMany(UserMap::class);
+    }
 }

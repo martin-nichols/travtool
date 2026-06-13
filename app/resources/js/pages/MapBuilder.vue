@@ -12,6 +12,16 @@ type FilterState = {
     region_names: string;
 };
 
+type SavedMap = {
+    id: number;
+    name: string;
+    world_key: string;
+    alliance_tags: string;
+    player_names: string;
+    region_names: string;
+    updated_at: string | null;
+};
+
 type WorldOption = {
     key: string;
     name: string;
@@ -87,6 +97,7 @@ type Summary = {
     selectedWorldKey: string;
     selectedWorldName: string;
     selectedWorldBaseUrl: string;
+    selectedWorldHasRegions: boolean;
     currentSnapshotDate: string | null;
     hasImportedSnapshot: boolean;
     matchedVillageCount: number;
@@ -98,6 +109,7 @@ type Summary = {
 const props = defineProps<{
     filters: FilterState;
     worlds: WorldOption[];
+    savedMaps: SavedMap[];
     summary: Summary;
     map: MapData;
 }>();
@@ -109,6 +121,7 @@ const authUser = computed(() => page.props.auth.user);
 const form = reactive<FilterState>({ ...props.filters });
 const worldSelectionError = ref(false);
 const shareCopied = ref(false);
+const saveName = ref('');
 const selectedVillage = ref<MapVillage | null>(null);
 const activeLegendKeys = ref<string[]>([]);
 const blinkPhase = ref(false);
@@ -271,6 +284,13 @@ const groupedWorlds = computed(() => {
 });
 const villagesById = computed(() => new Map(props.map.villages.map((village) => [village.id, village])));
 const resultTitle = computed(() => props.summary.selectedWorldName || t('map_builder.state.choose_world_title'));
+const isAutomaticMap = computed(
+    () =>
+        props.map.has_criteria &&
+        props.filters.alliance_tags.trim() === '' &&
+        props.filters.player_names.trim() === '' &&
+        props.filters.region_names.trim() === '',
+);
 const baseViewBox = computed(() => props.map.view_box);
 const interactiveViewBox = computed(() => {
     const box = baseViewBox.value;
@@ -415,7 +435,7 @@ const cleanedFilters = (): Record<string, string> => {
     if (form.world.trim()) payload.world = form.world.trim();
     if (form.alliance_tags.trim()) payload.alliance_tags = form.alliance_tags.trim();
     if (form.player_names.trim()) payload.player_names = form.player_names.trim();
-    if (form.region_names.trim()) payload.region_names = form.region_names.trim();
+    if (props.summary.selectedWorldHasRegions && form.region_names.trim()) payload.region_names = form.region_names.trim();
 
     return payload;
 };
@@ -484,10 +504,62 @@ const copyShareLink = async () => {
     }
 };
 
+const saveCurrentMap = (): void => {
+    if (!props.summary.selectedWorldKey || !props.map.has_criteria || !authUser.value) {
+        return;
+    }
+
+    router.post(
+        '/my-maps',
+        {
+            name: saveName.value.trim(),
+            world_key: props.summary.selectedWorldKey,
+            alliance_tags: props.map.criteria.alliances.join(', '),
+            player_names: props.map.criteria.players.join(', '),
+            region_names: props.summary.selectedWorldHasRegions ? props.map.criteria.regions.join(', ') : '',
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                saveName.value = '';
+            },
+        },
+    );
+};
+
+const loadSavedMap = (savedMap: SavedMap): void => {
+    form.world = savedMap.world_key;
+    form.alliance_tags = savedMap.alliance_tags;
+    form.player_names = savedMap.player_names;
+    form.region_names = savedMap.region_names;
+
+    router.get(
+        '/map-builder',
+        {
+            world: savedMap.world_key,
+            alliance_tags: savedMap.alliance_tags,
+            player_names: savedMap.player_names,
+            region_names: savedMap.region_names,
+        },
+        {
+            preserveScroll: true,
+            preserveState: false,
+        },
+    );
+};
+
+const deleteSavedMap = (savedMap: SavedMap): void => {
+    router.delete(`/my-maps/${savedMap.id}`, {
+        preserveScroll: true,
+    });
+};
+
 const criteriaChips = computed(() => [
     ...props.map.criteria.alliances.map((value) => ({ key: `alliance:${value}`, label: `${t('map_builder.criteria.alliance_prefix')}: ${value}` })),
     ...props.map.criteria.players.map((value) => ({ key: `player:${value}`, label: `${t('map_builder.criteria.player_prefix')}: ${value}` })),
-    ...props.map.criteria.regions.map((value) => ({ key: `region:${value}`, label: `${t('map_builder.criteria.region_prefix')}: ${value}` })),
+    ...(props.summary.selectedWorldHasRegions
+        ? props.map.criteria.regions.map((value) => ({ key: `region:${value}`, label: `${t('map_builder.criteria.region_prefix')}: ${value}` }))
+        : []),
 ]);
 const criteriaCount = computed(() => criteriaChips.value.length);
 
@@ -1119,7 +1191,40 @@ const closeMobileFullscreen = (): void => {
                             </div>
                         </div>
 
-                        <div class="grid gap-4 xl:grid-cols-3">
+                        <div v-if="authUser" class="grid gap-3 rounded-[24px] border border-white/10 bg-white/5 p-4">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#9fd1ef]">Cartes sauvegardées</p>
+                                <p class="text-xs text-[#b8cad5]">{{ props.savedMaps.length }} / 10</p>
+                            </div>
+
+                            <div v-if="props.savedMaps.length > 0" class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                                <div
+                                    v-for="savedMap in props.savedMaps"
+                                    :key="savedMap.id"
+                                    class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#243038] px-4 py-3"
+                                >
+                                    <button type="button" class="min-w-0 text-left" @click="loadSavedMap(savedMap)">
+                                        <span class="block truncate text-sm font-medium text-white">{{ savedMap.name }}</span>
+                                        <span class="mt-1 block text-xs text-[#9fb5c2]">{{ savedMap.world_key }}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-[#ffb36b] transition hover:bg-white/10"
+                                        @click="deleteSavedMap(savedMap)"
+                                    >
+                                        Retirer
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p v-else class="text-sm text-[#c6d3da]">Aucune carte sauvegardée pour le moment.</p>
+                        </div>
+
+                        <p v-if="isAutomaticMap" class="rounded-[20px] border border-[#7fc4f1]/20 bg-[#7fc4f1]/10 px-4 py-3 text-sm leading-7 text-[#d8edf8]">
+                            Carte automatique: les 5 plus grandes alliances et les 5 plus gros joueurs du monde sélectionné.
+                        </p>
+
+                        <div class="grid gap-4" :class="props.summary.selectedWorldHasRegions ? 'xl:grid-cols-3' : 'xl:grid-cols-2'">
                             <label class="grid min-w-0 gap-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
                                     {{ t('map_builder.filters.alliance_tags_label') }}
@@ -1144,7 +1249,7 @@ const closeMobileFullscreen = (): void => {
                                 />
                             </label>
 
-                            <label class="grid min-w-0 gap-3">
+                            <label v-if="props.summary.selectedWorldHasRegions" class="grid min-w-0 gap-3">
                                 <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#b8cad5]">
                                     {{ t('map_builder.filters.region_names_label') }}
                                 </span>
@@ -1218,6 +1323,27 @@ const closeMobileFullscreen = (): void => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    <div
+                        v-if="authUser && props.map.has_criteria"
+                        class="mt-5 grid gap-3 rounded-[22px] border border-[#1f1a14]/10 bg-[#f7f4ee] p-4 md:grid-cols-[minmax(0,1fr)_auto]"
+                    >
+                        <input
+                            v-model="saveName"
+                            type="text"
+                            maxlength="120"
+                            placeholder="Nom de la carte"
+                            class="min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                        />
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center rounded-2xl bg-[#3f6d8f] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#315875] disabled:cursor-not-allowed disabled:opacity-50"
+                            :disabled="props.savedMaps.length >= 10"
+                            @click="saveCurrentMap"
+                        >
+                            Enregistrer la carte
+                        </button>
                     </div>
 
                     <div v-if="criteriaChips.length > 0" class="mt-5 flex flex-wrap gap-2">
