@@ -36,7 +36,7 @@ return [
             'server_timezone' => 'UTC',
             'import_time' => '00:10',
             'speed' => 2,
-            'is_active' => true,
+            'is_active' => false,
         ],
         'ts2' => [
             'name' => 'TS2 Europe x1',

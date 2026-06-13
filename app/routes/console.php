@@ -221,6 +221,103 @@ Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapsh
     return Command::SUCCESS;
 })->purpose('Prune old Travian snapshot history and completed import staging rows');
 
+Artisan::command('travian:reset-world-data {--keep=* : World key to keep active; repeat for multiple worlds} {--preserve-kept-data : Only delete data for worlds outside the keep list} {--force : Actually update and delete data; without this, only report what would change}', function (): int {
+    $keepKeys = array_values(array_unique(array_filter(
+        array_map(static fn (mixed $key): string => trim((string) $key), (array) $this->option('keep')),
+        static fn (string $key): bool => $key !== '',
+    )));
+    $force = (bool) $this->option('force');
+    $preserveKeptData = (bool) $this->option('preserve-kept-data');
+
+    if ($keepKeys === []) {
+        $this->error('Provide at least one --keep world key.');
+
+        return Command::FAILURE;
+    }
+
+    $existingKeepKeys = DB::table('worlds')
+        ->whereIn('key', $keepKeys)
+        ->pluck('key')
+        ->all();
+    $missingKeepKeys = array_values(array_diff($keepKeys, $existingKeepKeys));
+
+    if ($missingKeepKeys !== []) {
+        $this->error(sprintf('Unknown kept world key(s): %s', implode(', ', $missingKeepKeys)));
+
+        return Command::FAILURE;
+    }
+
+    $worldsToWipe = DB::table('worlds')
+        ->when($preserveKeptData, fn ($query) => $query->whereNotIn('key', $keepKeys))
+        ->select('id', 'key', 'name')
+        ->orderBy('key')
+        ->get();
+    $worldIdsToWipe = $worldsToWipe
+        ->pluck('id')
+        ->map(static fn (mixed $id): int => (int) $id)
+        ->all();
+
+    $rowCounts = $worldIdsToWipe === []
+        ? []
+        : [
+            'staging_map_rows' => DB::table('staging_map_rows')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'village_snapshots' => DB::table('village_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'player_snapshots' => DB::table('player_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'alliance_snapshots' => DB::table('alliance_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'villages' => DB::table('villages')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'players' => DB::table('players')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'alliances' => DB::table('alliances')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'map_snapshots' => DB::table('map_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'map_import_runs' => DB::table('map_import_runs')->whereIn('world_id', $worldIdsToWipe)->count(),
+        ];
+
+    $this->line(sprintf('%s keep active world(s): %s', $force ? 'Will' : 'Would', implode(', ', $keepKeys)));
+    $this->line(sprintf('%s deactivate %d world(s).', $force ? 'Will' : 'Would', DB::table('worlds')->whereNotIn('key', $keepKeys)->count()));
+    $this->line(sprintf(
+        '%s wipe data for %d world(s)%s.',
+        $force ? 'Will' : 'Would',
+        count($worldIdsToWipe),
+        $preserveKeptData ? ' outside the keep list' : ', including kept worlds',
+    ));
+
+    foreach ($rowCounts as $table => $count) {
+        $this->line(sprintf('%s: %d row(s)', $table, $count));
+    }
+
+    if (! $force) {
+        $this->warn('Dry run only. Re-run with --force to apply.');
+
+        return Command::SUCCESS;
+    }
+
+    DB::transaction(function () use ($keepKeys, $worldIdsToWipe): void {
+        DB::table('worlds')->whereIn('key', $keepKeys)->update(['is_active' => true, 'updated_at' => now()]);
+        DB::table('worlds')->whereNotIn('key', $keepKeys)->update(['is_active' => false, 'updated_at' => now()]);
+
+        if ($worldIdsToWipe === []) {
+            return;
+        }
+
+        DB::table('worlds')
+            ->whereIn('id', $worldIdsToWipe)
+            ->update(['current_snapshot_id' => null, 'updated_at' => now()]);
+
+        DB::table('staging_map_rows')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('village_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('player_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('alliance_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('villages')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('players')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('alliances')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('map_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('map_import_runs')->whereIn('world_id', $worldIdsToWipe)->delete();
+    });
+
+    $this->info('World data reset completed.');
+
+    return Command::SUCCESS;
+})->purpose('Deactivate non-kept Travian worlds and wipe map data');
+
 Schedule::command('travian:import-due-maps')
     ->everyMinute()
     ->withoutOverlapping(30)
