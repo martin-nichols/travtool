@@ -565,13 +565,12 @@ const criteriaCount = computed(() => criteriaChips.value.length);
 
 const stateTitle = computed(() => t(`map_builder.state.${props.map.status}_title`));
 const stateDescription = computed(() => t(`map_builder.state.${props.map.status}_description`));
+const allianceLegendItems = computed(() => props.map.legend.filter((item) => item.type === 'alliance'));
+const playerLegendItems = computed(() => props.map.legend.filter((item) => item.type === 'player'));
+const regionLegendItems = computed(() => props.map.legend.filter((item) => item.type === 'region'));
 
 const legendNote = (item: MapLegendItem): string | null => {
-    if (item.type === 'player' && item.parent_label) {
-        return `${t('map_builder.legend.variant_of')} ${item.parent_label}`;
-    }
-
-    return null;
+    return item.type === 'player' ? item.parent_label : null;
 };
 
 const boundsLabel = computed(() => {
@@ -1443,39 +1442,99 @@ const closeMobileFullscreen = (): void => {
                                 {{ t('map_builder.legend.title') }}
                             </p>
 
-                            <div class="mt-4 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
-                                <div
-                                    v-for="item in props.map.legend"
-                                    :key="item.key"
-                                    class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
-                                    :class="legendItemClasses(item)"
-                                    role="button"
-                                    tabindex="0"
-                                    :aria-pressed="isLegendActive(item.key)"
-                                    @click="toggleLegendFocus(item)"
-                                    @keydown.enter.prevent="toggleLegendFocus(item)"
-                                    @keydown.space.prevent="toggleLegendFocus(item)"
-                                >
-                                    <div class="flex items-start gap-3">
-                                        <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
-                                        <div class="min-w-0 flex-1">
-                                            <div class="flex items-center justify-between gap-3">
-                                                <p class="truncate text-sm font-semibold text-[#1c1814]">
-                                                    {{ item.label }}
-                                                </p>
-                                                <span
-                                                    v-if="item.count > 0"
-                                                    class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]"
-                                                >
-                                                    {{ item.count }}
-                                                </span>
+                            <div class="mt-4 grid gap-5">
+                                <section v-if="allianceLegendItems.length > 0" class="grid gap-3">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">Alliances</p>
+                                    <div class="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                                        <div
+                                            v-for="item in allianceLegendItems"
+                                            :key="item.key"
+                                            class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                            :class="legendItemClasses(item)"
+                                            role="button"
+                                            tabindex="0"
+                                            :aria-pressed="isLegendActive(item.key)"
+                                            @click="toggleLegendFocus(item)"
+                                            @keydown.enter.prevent="toggleLegendFocus(item)"
+                                            @keydown.space.prevent="toggleLegendFocus(item)"
+                                        >
+                                            <div class="flex items-start gap-3">
+                                                <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <p class="truncate text-sm font-semibold text-[#1c1814]">{{ item.label }}</p>
+                                                        <span v-if="item.count > 0" class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]">
+                                                            {{ item.count }}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
-                                                {{ legendNote(item) }}
-                                            </p>
                                         </div>
                                     </div>
-                                </div>
+                                </section>
+
+                                <section v-if="playerLegendItems.length > 0" class="grid gap-3">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#3f6d8f]">Joueurs</p>
+                                    <div class="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                                        <div
+                                            v-for="item in playerLegendItems"
+                                            :key="item.key"
+                                            class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                            :class="legendItemClasses(item)"
+                                            role="button"
+                                            tabindex="0"
+                                            :aria-pressed="isLegendActive(item.key)"
+                                            @click="toggleLegendFocus(item)"
+                                            @keydown.enter.prevent="toggleLegendFocus(item)"
+                                            @keydown.space.prevent="toggleLegendFocus(item)"
+                                        >
+                                            <div class="flex items-start gap-3">
+                                                <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <p class="truncate text-sm font-semibold text-[#1c1814]">{{ item.label }}</p>
+                                                        <span v-if="item.count > 0" class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]">
+                                                            {{ item.count }}
+                                                        </span>
+                                                    </div>
+                                                    <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
+                                                        {{ legendNote(item) }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section v-if="regionLegendItems.length > 0" class="grid gap-3">
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#588157]">Régions</p>
+                                    <div class="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                                        <div
+                                            v-for="item in regionLegendItems"
+                                            :key="item.key"
+                                            class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                            :class="legendItemClasses(item)"
+                                            role="button"
+                                            tabindex="0"
+                                            :aria-pressed="isLegendActive(item.key)"
+                                            @click="toggleLegendFocus(item)"
+                                            @keydown.enter.prevent="toggleLegendFocus(item)"
+                                            @keydown.space.prevent="toggleLegendFocus(item)"
+                                        >
+                                            <div class="flex items-start gap-3">
+                                                <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <p class="truncate text-sm font-semibold text-[#1c1814]">{{ item.label }}</p>
+                                                        <span v-if="item.count > 0" class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]">
+                                                            {{ item.count }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
                         </div>
                     </div>
@@ -1587,39 +1646,93 @@ const closeMobileFullscreen = (): void => {
                             {{ t('map_builder.legend.title') }}
                         </p>
 
-                        <div class="mt-4 grid gap-3">
-                            <div
-                                v-for="item in props.map.legend"
-                                :key="`fullscreen-legend-${item.key}`"
-                                class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
-                                :class="legendItemClasses(item)"
-                                role="button"
-                                tabindex="0"
-                                :aria-pressed="isLegendActive(item.key)"
-                                @click="toggleLegendFocus(item)"
-                                @keydown.enter.prevent="toggleLegendFocus(item)"
-                                @keydown.space.prevent="toggleLegendFocus(item)"
-                            >
-                                <div class="flex items-start gap-3">
-                                    <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center justify-between gap-3">
-                                            <p class="truncate text-sm font-semibold text-[#1c1814]">
-                                                {{ item.label }}
-                                            </p>
-                                            <span
-                                                v-if="item.count > 0"
-                                                class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]"
-                                            >
-                                                {{ item.count }}
-                                            </span>
+                        <div class="mt-4 grid gap-5">
+                            <section v-if="allianceLegendItems.length > 0" class="grid gap-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">Alliances</p>
+                                <div
+                                    v-for="item in allianceLegendItems"
+                                    :key="`fullscreen-legend-${item.key}`"
+                                    class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                    :class="legendItemClasses(item)"
+                                    role="button"
+                                    tabindex="0"
+                                    :aria-pressed="isLegendActive(item.key)"
+                                    @click="toggleLegendFocus(item)"
+                                    @keydown.enter.prevent="toggleLegendFocus(item)"
+                                    @keydown.space.prevent="toggleLegendFocus(item)"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="truncate text-sm font-semibold text-[#1c1814]">{{ item.label }}</p>
+                                                <span v-if="item.count > 0" class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]">
+                                                    {{ item.count }}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
-                                            {{ legendNote(item) }}
-                                        </p>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
+
+                            <section v-if="playerLegendItems.length > 0" class="grid gap-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#3f6d8f]">Joueurs</p>
+                                <div
+                                    v-for="item in playerLegendItems"
+                                    :key="`fullscreen-legend-${item.key}`"
+                                    class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                    :class="legendItemClasses(item)"
+                                    role="button"
+                                    tabindex="0"
+                                    :aria-pressed="isLegendActive(item.key)"
+                                    @click="toggleLegendFocus(item)"
+                                    @keydown.enter.prevent="toggleLegendFocus(item)"
+                                    @keydown.space.prevent="toggleLegendFocus(item)"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="truncate text-sm font-semibold text-[#1c1814]">{{ item.label }}</p>
+                                                <span v-if="item.count > 0" class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]">
+                                                    {{ item.count }}
+                                                </span>
+                                            </div>
+                                            <p v-if="legendNote(item)" class="mt-1 text-xs leading-6 text-[#6b6259]">
+                                                {{ legendNote(item) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section v-if="regionLegendItems.length > 0" class="grid gap-3">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#588157]">Régions</p>
+                                <div
+                                    v-for="item in regionLegendItems"
+                                    :key="`fullscreen-legend-${item.key}`"
+                                    class="cursor-pointer rounded-[22px] border px-4 py-3 transition hover:border-[#8b4a27]/24 hover:bg-[#f1e8db]"
+                                    :class="legendItemClasses(item)"
+                                    role="button"
+                                    tabindex="0"
+                                    :aria-pressed="isLegendActive(item.key)"
+                                    @click="toggleLegendFocus(item)"
+                                    @keydown.enter.prevent="toggleLegendFocus(item)"
+                                    @keydown.space.prevent="toggleLegendFocus(item)"
+                                >
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-1 h-4 w-4 shrink-0 rounded-full border border-black/10" :style="{ backgroundColor: item.color }" />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <p class="truncate text-sm font-semibold text-[#1c1814]">{{ item.label }}</p>
+                                                <span v-if="item.count > 0" class="shrink-0 rounded-full bg-[#f3ede4] px-2.5 py-1 text-xs font-medium text-[#5b5047]">
+                                                    {{ item.count }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </section>

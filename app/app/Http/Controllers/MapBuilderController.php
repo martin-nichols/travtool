@@ -61,9 +61,22 @@ class MapBuilderController extends Controller
     ];
 
     /**
-     * @var list<int>
+     * @var list<string>
      */
-    private const PLAYER_VARIANTS = [18, -14, 32, -28, 8, -8, 42, -38];
+    private const PLAYER_PALETTE = [
+        '#e11d48',
+        '#2563eb',
+        '#16a34a',
+        '#9333ea',
+        '#ea580c',
+        '#0891b2',
+        '#ca8a04',
+        '#db2777',
+        '#4f46e5',
+        '#059669',
+        '#b91c1c',
+        '#0d9488',
+    ];
 
     /**
      * @var list<int>
@@ -424,7 +437,7 @@ class MapBuilderController extends Controller
             if ($matchedPlayer !== null) {
                 if ($allianceTag !== null) {
                     $allianceItem = &$this->ensureAllianceLegendItem($allianceLegend, $allianceTag);
-                    $playerItem = &$this->ensurePlayerLegendItem($playerLegend, $playerName, $allianceTag, $allianceItem['color']);
+                    $playerItem = &$this->ensurePlayerLegendItem($playerLegend, $playerName, $allianceTag);
 
                     $legendKey = $playerItem['key'];
                     $legendType = 'player';
@@ -572,21 +585,16 @@ class MapBuilderController extends Controller
      * @param array<string, array<string, mixed>> $playerLegend
      * @return array<string, mixed>
      */
-    private function &ensurePlayerLegendItem(array &$playerLegend, string $playerName, string $allianceTag, string $baseAllianceColor): array
+    private function &ensurePlayerLegendItem(array &$playerLegend, string $playerName, string $allianceTag): array
     {
         $key = 'player:'.$playerName;
 
         if (! isset($playerLegend[$key])) {
-            $variantIndex = count(array_filter(
-                $playerLegend,
-                static fn (array $item): bool => ($item['parent_key'] ?? null) === 'alliance:'.$allianceTag,
-            ));
-
             $playerLegend[$key] = [
                 'key' => $key,
                 'type' => 'player',
                 'label' => $playerName,
-                'color' => $this->buildPlayerVariantColor($baseAllianceColor, $variantIndex),
+                'color' => $this->pickSequentialPaletteColor(count($playerLegend), self::PLAYER_PALETTE),
                 'count' => 0,
                 'parent_key' => 'alliance:'.$allianceTag,
                 'parent_label' => $allianceTag,
@@ -724,18 +732,6 @@ class MapBuilderController extends Controller
         $delta = self::PALETTE_CYCLE_VARIANTS[($cycle - 1) % count(self::PALETTE_CYCLE_VARIANTS)];
 
         return $this->adjustHexColor($baseColor, $delta);
-    }
-
-    private function buildPlayerVariantColor(string $baseHex, int $variantIndex): string
-    {
-        $delta = self::PLAYER_VARIANTS[$variantIndex % count(self::PLAYER_VARIANTS)];
-
-        if ($variantIndex >= count(self::PLAYER_VARIANTS)) {
-            $cycleIndex = (intdiv($variantIndex, count(self::PLAYER_VARIANTS)) - 1) % count(self::PALETTE_CYCLE_VARIANTS);
-            $delta += self::PALETTE_CYCLE_VARIANTS[$cycleIndex];
-        }
-
-        return $this->adjustHexColor($baseHex, $delta);
     }
 
     private function adjustHexColor(string $hex, int $delta): string
