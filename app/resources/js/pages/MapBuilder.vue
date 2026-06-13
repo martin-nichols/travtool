@@ -551,6 +551,10 @@ const loadSavedMap = (savedMap: SavedMap): void => {
 };
 
 const deleteSavedMap = (savedMap: SavedMap): void => {
+    if (!window.confirm(`Retirer la carte "${savedMap.name}" ?`)) {
+        return;
+    }
+
     router.delete(`/my-maps/${savedMap.id}`, {
         preserveScroll: true,
     });
@@ -1332,16 +1336,21 @@ const closeMobileFullscreen = (): void => {
                             <div
                                 v-for="savedMap in props.savedMaps"
                                 :key="savedMap.id"
-                                class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#243038] px-4 py-3"
+                                class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#243038] px-4 py-3 text-left transition hover:border-[#7fc4f1]/30 hover:bg-[#2b3942]"
+                                role="button"
+                                tabindex="0"
+                                @click="loadSavedMap(savedMap)"
+                                @keydown.enter.prevent="loadSavedMap(savedMap)"
+                                @keydown.space.prevent="loadSavedMap(savedMap)"
                             >
-                                <button type="button" class="min-w-0 text-left" @click="loadSavedMap(savedMap)">
+                                <span class="min-w-0">
                                     <span class="block truncate text-sm font-medium text-white">{{ savedMap.name }}</span>
                                     <span class="mt-1 block text-xs text-[#9fb5c2]">{{ savedMap.world_key }}</span>
-                                </button>
+                                </span>
                                 <button
                                     type="button"
                                     class="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-[#ffb36b] transition hover:bg-white/10"
-                                    @click="deleteSavedMap(savedMap)"
+                                    @click.stop="deleteSavedMap(savedMap)"
                                 >
                                     Retirer
                                 </button>
