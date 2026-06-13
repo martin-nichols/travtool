@@ -122,6 +122,8 @@ const form = reactive<FilterState>({ ...props.filters });
 const worldSelectionError = ref(false);
 const shareCopied = ref(false);
 const saveName = ref('');
+const menuOpen = ref(false);
+const savedMapsOpen = ref(false);
 const selectedVillage = ref<MapVillage | null>(null);
 const activeLegendKeys = ref<string[]>([]);
 const blinkPhase = ref(false);
@@ -1041,18 +1043,65 @@ const closeMobileFullscreen = (): void => {
 
                 <div class="flex flex-col items-start gap-4 md:items-end">
                     <LanguageSwitcher />
-                    <div v-if="authUser" class="flex flex-wrap items-center gap-3 md:justify-end">
-                        <div class="rounded-full border border-[#1f1a14]/10 bg-white/65 px-4 py-2 text-sm font-medium text-[#3b3129]">
-                            {{ authUser.name }}
-                        </div>
-                        <Link
-                            as="button"
-                            method="post"
-                            href="/logout"
-                            class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#3f6d8f]"
+                    <div v-if="authUser" class="relative">
+                        <button
+                            type="button"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#1f1a14]/10 bg-white/75 text-[#1f1a14] shadow-sm transition hover:bg-white"
+                            aria-label="Ouvrir le menu"
+                            @click="menuOpen = !menuOpen"
                         >
-                            {{ t('common.logout') }}
-                        </Link>
+                            <span class="grid gap-1">
+                                <span class="block h-0.5 w-5 rounded-full bg-current" />
+                                <span class="block h-0.5 w-5 rounded-full bg-current" />
+                                <span class="block h-0.5 w-5 rounded-full bg-current" />
+                            </span>
+                        </button>
+
+                        <div
+                            v-if="menuOpen"
+                            class="absolute right-0 z-20 mt-3 w-[min(92vw,24rem)] rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 text-[#1f1a14] shadow-[0_24px_90px_rgba(44,32,20,0.18)]"
+                        >
+                            <div class="border-b border-[#1f1a14]/10 pb-4">
+                                <p class="text-sm font-semibold">{{ authUser.name }}</p>
+                                <p class="mt-1 text-xs text-[#6b6258]">{{ authUser.email }}</p>
+                            </div>
+
+                            <div class="grid gap-2 py-4">
+                                <Link href="/" class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]">
+                                    Accueil
+                                </Link>
+                                <Link
+                                    :href="props.summary.selectedWorldKey ? `/inactive-finder?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/inactive-finder'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Chercheur d'inactifs
+                                </Link>
+                                <Link
+                                    :href="props.summary.selectedWorldKey ? `/map-builder?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/map-builder'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Créateur de carte
+                                </Link>
+                                <a
+                                    v-if="props.summary.selectedWorldBaseUrl"
+                                    :href="props.summary.selectedWorldBaseUrl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Ouvrir le monde Travian
+                                </a>
+                            </div>
+
+                            <Link
+                                as="button"
+                                method="post"
+                                href="/logout"
+                                class="w-full rounded-xl bg-[#1f1a14] px-3 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#3f6d8f]"
+                            >
+                                {{ t('common.logout') }}
+                            </Link>
+                        </div>
                     </div>
                     <div v-else class="flex flex-wrap items-center gap-3 md:justify-end">
                         <Link
@@ -1190,35 +1239,6 @@ const closeMobileFullscreen = (): void => {
                             </div>
                         </div>
 
-                        <div v-if="authUser" class="grid gap-3 rounded-[24px] border border-white/10 bg-white/5 p-4">
-                            <div class="flex flex-wrap items-center justify-between gap-3">
-                                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#9fd1ef]">Cartes sauvegardées</p>
-                                <p class="text-xs text-[#b8cad5]">{{ props.savedMaps.length }} / 10</p>
-                            </div>
-
-                            <div v-if="props.savedMaps.length > 0" class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                                <div
-                                    v-for="savedMap in props.savedMaps"
-                                    :key="savedMap.id"
-                                    class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#243038] px-4 py-3"
-                                >
-                                    <button type="button" class="min-w-0 text-left" @click="loadSavedMap(savedMap)">
-                                        <span class="block truncate text-sm font-medium text-white">{{ savedMap.name }}</span>
-                                        <span class="mt-1 block text-xs text-[#9fb5c2]">{{ savedMap.world_key }}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-[#ffb36b] transition hover:bg-white/10"
-                                        @click="deleteSavedMap(savedMap)"
-                                    >
-                                        Retirer
-                                    </button>
-                                </div>
-                            </div>
-
-                            <p v-else class="text-sm text-[#c6d3da]">Aucune carte sauvegardée pour le moment.</p>
-                        </div>
-
                         <p v-if="isAutomaticMap" class="rounded-[20px] border border-[#7fc4f1]/20 bg-[#7fc4f1]/10 px-4 py-3 text-sm leading-7 text-[#d8edf8]">
                             Carte automatique: les 5 plus grandes alliances et les 5 plus gros joueurs du monde sélectionné.
                         </p>
@@ -1283,6 +1303,53 @@ const closeMobileFullscreen = (): void => {
                             </div>
                         </div>
                     </form>
+                </article>
+
+                <article
+                    v-if="authUser"
+                    class="overflow-hidden rounded-[32px] border border-[#1f1a14]/10 bg-[#1d262b] p-5 text-[#edf3f6] shadow-[0_24px_80px_rgba(27,39,48,0.18)] sm:p-6"
+                >
+                    <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-4 text-left"
+                        @click="savedMapsOpen = !savedMapsOpen"
+                    >
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#9fd1ef]">Cartes enregistrées</p>
+                            <p class="mt-2 text-sm text-[#b8cad5]">{{ props.savedMaps.length }} / 10 cartes</p>
+                        </div>
+                        <span
+                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg transition"
+                            :class="savedMapsOpen ? 'rotate-180' : ''"
+                            aria-hidden="true"
+                        >
+                            ↓
+                        </span>
+                    </button>
+
+                    <div v-if="savedMapsOpen" class="mt-5 border-t border-white/10 pt-5">
+                        <div v-if="props.savedMaps.length > 0" class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <div
+                                v-for="savedMap in props.savedMaps"
+                                :key="savedMap.id"
+                                class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#243038] px-4 py-3"
+                            >
+                                <button type="button" class="min-w-0 text-left" @click="loadSavedMap(savedMap)">
+                                    <span class="block truncate text-sm font-medium text-white">{{ savedMap.name }}</span>
+                                    <span class="mt-1 block text-xs text-[#9fb5c2]">{{ savedMap.world_key }}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-[#ffb36b] transition hover:bg-white/10"
+                                    @click="deleteSavedMap(savedMap)"
+                                >
+                                    Retirer
+                                </button>
+                            </div>
+                        </div>
+
+                        <p v-else class="text-sm text-[#c6d3da]">Aucune carte enregistrée pour le moment.</p>
+                    </div>
                 </article>
 
                 <article class="rounded-[32px] border border-[#1f1a14]/10 bg-white p-6 shadow-[0_20px_60px_rgba(56,43,27,0.08)] sm:p-8">
