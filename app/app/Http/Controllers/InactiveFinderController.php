@@ -125,7 +125,7 @@ class InactiveFinderController extends Controller
             'world' => (string) ($validated['world'] ?? ''),
             'q' => $this->filledString($validated['q'] ?? null),
             'tribe_id' => isset($validated['tribe_id']) ? (int) $validated['tribe_id'] : null,
-            'min_score' => isset($validated['min_score']) ? (int) $validated['min_score'] : 100,
+            'min_score' => isset($validated['min_score']) ? (int) $validated['min_score'] : 30,
             'min_population' => isset($validated['min_population']) ? (int) $validated['min_population'] : null,
             'max_population' => isset($validated['max_population']) ? (int) $validated['max_population'] : null,
             'x' => isset($validated['x']) ? (int) $validated['x'] : null,
@@ -352,6 +352,10 @@ class InactiveFinderController extends Controller
                 $join->on('ps.player_id', '=', 'p.id')
                     ->where('ps.snapshot_id', '=', $worldContext['current_snapshot_id']);
             })
+            ->leftJoin('player_population_histories as pph', function ($join) use ($worldContext): void {
+                $join->on('pph.player_id', '=', 'p.id')
+                    ->where('pph.snapshot_id', '=', $worldContext['current_snapshot_id']);
+            })
             ->where('v.world_id', $worldContext['world_id'])
             ->where('v.is_present', true)
             ->where('p.is_present', true)
@@ -366,8 +370,12 @@ class InactiveFinderController extends Controller
                 'p.name as player_name',
                 'p.current_village_count',
                 'p.current_population_total',
-                'ps.population_delta_1d',
-                'ps.village_count_delta_1d',
+                'pph.population_delta_1d',
+                'pph.population_delta_2d',
+                'pph.population_delta_3d',
+                'pph.village_count_delta_1d',
+                'pph.village_count_delta_2d',
+                'pph.village_count_delta_3d',
                 'a.tag as alliance_tag',
             ])
             ->selectRaw($this->scoreExpression().' as score');
@@ -494,8 +502,16 @@ class InactiveFinderController extends Controller
         }
 
         if ($filters['stable_only'] && $historyReady) {
-            $query->where('ps.population_delta_1d', 0)
-                ->where('ps.village_count_delta_1d', 0);
+            $query->where(function (Builder $subQuery): void {
+                $subQuery
+                    ->where('pph.population_delta_3d', 0)
+                    ->orWhere('pph.population_delta_2d', 0)
+                    ->orWhere(function (Builder $nestedQuery): void {
+                        $nestedQuery
+                            ->where('p.current_village_count', '>', 1)
+                            ->where('pph.population_delta_1d', 0);
+                    });
+            });
         }
 
         if ($filters['x'] !== null && $filters['y'] !== null && $filters['radius_max'] !== null) {
@@ -572,11 +588,31 @@ class InactiveFinderController extends Controller
     {
         return <<<'SQL'
 (
-    CASE WHEN p.current_village_count = 1 THEN 35 ELSE 0 END
-    + CASE WHEN v.alliance_id IS NULL THEN 20 ELSE 0 END
-    + CASE WHEN v.population <= 120 THEN 18 WHEN v.population <= 180 THEN 10 WHEN v.population <= 250 THEN 4 ELSE 0 END
-    + CASE WHEN ps.population_delta_1d = 0 THEN 12 ELSE 0 END
-    + CASE WHEN ps.village_count_delta_1d = 0 THEN 15 ELSE 0 END
+    CASE
+        WHEN pph.population_delta_3d = 0 AND p.current_village_count = 1 THEN 45
+        WHEN pph.population_delta_3d = 0 THEN 35
+        ELSE 0
+    END
+    + CASE
+        WHEN pph.population_delta_2d = 0 AND p.current_village_count = 1 THEN 25
+        WHEN pph.population_delta_2d = 0 THEN 20
+        ELSE 0
+    END
+    + CASE
+        WHEN pph.population_delta_1d = 0 AND p.current_village_count > 1 THEN 30
+        WHEN pph.population_delta_1d = 0 THEN 5
+        ELSE 0
+    END
+    + CASE
+        WHEN pph.village_count_delta_3d = 0 THEN 10
+        WHEN pph.village_count_delta_2d = 0 THEN 7
+        WHEN pph.village_count_delta_1d = 0 AND p.current_village_count > 1 THEN 5
+        ELSE 0
+    END
+    + CASE WHEN p.current_village_count = 1 THEN 8 ELSE 0 END
+    + CASE WHEN v.alliance_id IS NULL THEN 7 ELSE 0 END
+    + CASE WHEN p.current_population_total <= 120 THEN 10 WHEN p.current_population_total <= 250 THEN 6 WHEN p.current_population_total <= 500 THEN 3 ELSE 0 END
+    + CASE WHEN v.population <= 120 THEN 5 WHEN v.population <= 180 THEN 3 WHEN v.population <= 250 THEN 1 ELSE 0 END
 )
 SQL;
     }

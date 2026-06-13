@@ -129,13 +129,15 @@ Artisan::command('travian:sync-worlds {--calendar-source= : Local path to a save
     return Command::SUCCESS;
 })->purpose('Sync Travian worlds from the public calendar and metadata catalog');
 
-Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapshots for this many days} {--staging-days=1 : Keep staging rows for completed import runs for this many days} {--world= : Limit pruning to one world key} {--force : Actually delete data; without this, only report what would be deleted}', function (): int {
+Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapshots for this many days} {--staging-days=1 : Keep staging rows for completed import runs for this many days} {--history-days=30 : Keep compact player population history for this many days} {--world= : Limit pruning to one world key} {--force : Actually delete data; without this, only report what would be deleted}', function (): int {
     $retentionDays = max(1, (int) $this->option('days'));
     $stagingRetentionDays = max(0, (int) $this->option('staging-days'));
+    $historyRetentionDays = max(3, (int) $this->option('history-days'));
     $worldKey = $this->option('world');
     $force = (bool) $this->option('force');
     $snapshotCutoff = CarbonImmutable::today('UTC')->subDays($retentionDays - 1)->toDateString();
     $stagingCutoff = CarbonImmutable::now('UTC')->subDays($stagingRetentionDays);
+    $historyCutoff = CarbonImmutable::today('UTC')->subDays($historyRetentionDays - 1)->toDateString();
 
     $worldIds = DB::table('worlds')
         ->when($worldKey !== null, fn ($query) => $query->where('key', $worldKey))
@@ -178,14 +180,20 @@ Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapsh
         'village_snapshots' => DB::table('village_snapshots')->whereIn('snapshot_id', $snapshotIds ?: [0])->count(),
     ];
     $stagingRows = DB::table('staging_map_rows')->whereIn('import_run_id', $stagingImportRunIds ?: [0])->count();
+    $historyRows = DB::table('player_population_histories')
+        ->whereIn('world_id', $worldIds)
+        ->where('snapshot_date', '<', $historyCutoff)
+        ->count();
 
     $this->line(sprintf(
-        '%s %d map snapshot(s) before %s and %d staging row(s) before %s.',
+        '%s %d map snapshot(s) before %s, %d staging row(s) before %s, and %d compact player history row(s) before %s.',
         $force ? 'Deleting' : 'Would delete',
         count($snapshotIds),
         $snapshotCutoff,
         $stagingRows,
         $stagingCutoff->toDateTimeString(),
+        $historyRows,
+        $historyCutoff,
     ));
 
     foreach ($snapshotRows as $table => $count) {
@@ -198,7 +206,7 @@ Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapsh
         return Command::SUCCESS;
     }
 
-    DB::transaction(function () use ($snapshotIds, $stagingImportRunIds): void {
+    DB::transaction(function () use ($historyCutoff, $snapshotIds, $stagingImportRunIds, $worldIds): void {
         if ($snapshotIds !== []) {
             DB::table('map_snapshots')
                 ->whereIn('previous_snapshot_id', $snapshotIds)
@@ -214,6 +222,11 @@ Artisan::command('travian:prune-map-data {--days=14 : Keep successful map snapsh
                 ->whereIn('import_run_id', $stagingImportRunIds)
                 ->delete();
         }
+
+        DB::table('player_population_histories')
+            ->whereIn('world_id', $worldIds)
+            ->where('snapshot_date', '<', $historyCutoff)
+            ->delete();
     });
 
     $this->info('Map data pruning completed.');
@@ -263,6 +276,7 @@ Artisan::command('travian:reset-world-data {--keep=* : World key to keep active;
             'staging_map_rows' => DB::table('staging_map_rows')->whereIn('world_id', $worldIdsToWipe)->count(),
             'village_snapshots' => DB::table('village_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
             'player_snapshots' => DB::table('player_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
+            'player_population_histories' => DB::table('player_population_histories')->whereIn('world_id', $worldIdsToWipe)->count(),
             'alliance_snapshots' => DB::table('alliance_snapshots')->whereIn('world_id', $worldIdsToWipe)->count(),
             'villages' => DB::table('villages')->whereIn('world_id', $worldIdsToWipe)->count(),
             'players' => DB::table('players')->whereIn('world_id', $worldIdsToWipe)->count(),
@@ -305,6 +319,7 @@ Artisan::command('travian:reset-world-data {--keep=* : World key to keep active;
         DB::table('staging_map_rows')->whereIn('world_id', $worldIdsToWipe)->delete();
         DB::table('village_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
         DB::table('player_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
+        DB::table('player_population_histories')->whereIn('world_id', $worldIdsToWipe)->delete();
         DB::table('alliance_snapshots')->whereIn('world_id', $worldIdsToWipe)->delete();
         DB::table('villages')->whereIn('world_id', $worldIdsToWipe)->delete();
         DB::table('players')->whereIn('world_id', $worldIdsToWipe)->delete();
@@ -318,6 +333,102 @@ Artisan::command('travian:reset-world-data {--keep=* : World key to keep active;
     return Command::SUCCESS;
 })->purpose('Deactivate non-kept Travian worlds and wipe map data');
 
+Artisan::command('travian:backfill-player-history {--world= : Limit backfill to one world key}', function (): int {
+    $worldKey = $this->option('world');
+    $worlds = DB::table('worlds')
+        ->when($worldKey !== null, fn ($query) => $query->where('key', $worldKey))
+        ->select('id', 'key')
+        ->orderBy('key')
+        ->get();
+
+    if ($worlds->isEmpty()) {
+        $this->error($worldKey !== null ? sprintf('Unknown world key [%s].', $worldKey) : 'No worlds found.');
+
+        return Command::FAILURE;
+    }
+
+    foreach ($worlds as $world) {
+        $this->line(sprintf('Backfilling compact player history for [%s]...', $world->key));
+
+        DB::table('player_population_histories')
+            ->where('world_id', $world->id)
+            ->delete();
+
+        $snapshotDates = DB::table('player_snapshots')
+            ->where('world_id', $world->id)
+            ->distinct()
+            ->orderBy('snapshot_date')
+            ->pluck('snapshot_date')
+            ->map(static fn (mixed $date): string => (string) $date)
+            ->all();
+        $historyByDate = [];
+        $inserted = 0;
+
+        foreach ($snapshotDates as $snapshotDate) {
+            $comparisonDates = collect([1, 2, 3])
+                ->mapWithKeys(static fn (int $days): array => [
+                    $days => CarbonImmutable::parse($snapshotDate, 'UTC')->subDays($days)->toDateString(),
+                ]);
+            $rows = [];
+            $currentHistory = [];
+            $now = now();
+
+            DB::table('player_snapshots')
+                ->where('world_id', $world->id)
+                ->whereDate('snapshot_date', $snapshotDate)
+                ->orderBy('id')
+                ->chunkById(1000, function ($playerSnapshots) use (&$currentHistory, &$inserted, &$rows, $comparisonDates, $historyByDate, $now): void {
+                    foreach ($playerSnapshots as $playerSnapshot) {
+                        $populationTotal = (int) $playerSnapshot->population_total;
+                        $villageCount = (int) $playerSnapshot->village_count;
+                        $history1d = $historyByDate[$comparisonDates[1]][(int) $playerSnapshot->player_id] ?? null;
+                        $history2d = $historyByDate[$comparisonDates[2]][(int) $playerSnapshot->player_id] ?? null;
+                        $history3d = $historyByDate[$comparisonDates[3]][(int) $playerSnapshot->player_id] ?? null;
+
+                        $rows[] = [
+                            'world_id' => (int) $playerSnapshot->world_id,
+                            'snapshot_id' => (int) $playerSnapshot->snapshot_id,
+                            'player_id' => (int) $playerSnapshot->player_id,
+                            'snapshot_date' => (string) $playerSnapshot->snapshot_date,
+                            'external_player_id' => (int) $playerSnapshot->external_player_id,
+                            'village_count' => $villageCount,
+                            'population_total' => $populationTotal,
+                            'population_delta_1d' => $history1d !== null ? $populationTotal - $history1d['population_total'] : null,
+                            'population_delta_2d' => $history2d !== null ? $populationTotal - $history2d['population_total'] : null,
+                            'population_delta_3d' => $history3d !== null ? $populationTotal - $history3d['population_total'] : null,
+                            'village_count_delta_1d' => $history1d !== null ? $villageCount - $history1d['village_count'] : null,
+                            'village_count_delta_2d' => $history2d !== null ? $villageCount - $history2d['village_count'] : null,
+                            'village_count_delta_3d' => $history3d !== null ? $villageCount - $history3d['village_count'] : null,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                        $currentHistory[(int) $playerSnapshot->player_id] = [
+                            'population_total' => $populationTotal,
+                            'village_count' => $villageCount,
+                        ];
+
+                        if (count($rows) >= 1000) {
+                            DB::table('player_population_histories')->insert($rows);
+                            $inserted += count($rows);
+                            $rows = [];
+                        }
+                    }
+                });
+
+            if ($rows !== []) {
+                DB::table('player_population_histories')->insert($rows);
+                $inserted += count($rows);
+            }
+
+            $historyByDate[$snapshotDate] = $currentHistory;
+        }
+
+        $this->info(sprintf('Backfilled [%s] with %d row(s).', $world->key, $inserted));
+    }
+
+    return Command::SUCCESS;
+})->purpose('Backfill compact player population history from existing player snapshots');
+
 Schedule::command('travian:import-due-maps')
     ->everyMinute()
     ->withoutOverlapping(30)
@@ -328,7 +439,7 @@ Schedule::command('travian:sync-worlds')
     ->withoutOverlapping(30)
     ->name('travian-sync-worlds');
 
-Schedule::command('travian:prune-map-data --days=2 --staging-days=0 --force')
+Schedule::command('travian:prune-map-data --days=2 --staging-days=0 --history-days=30 --force')
     ->dailyAt('03:30')
     ->withoutOverlapping(30)
     ->name('travian-prune-map-data');

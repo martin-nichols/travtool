@@ -604,6 +604,7 @@ class TravianMapImportService
 
             $this->replaceAllianceSnapshots($world, $snapshot, $snapshotDate, $allianceStats, $allianceIds);
             $this->replacePlayerSnapshots($world, $snapshot, $snapshotDate, $playerStats, $playerIds, $allianceIds);
+            $this->replacePlayerPopulationHistories($world, $snapshot, $snapshotDate, $playerStats, $playerIds);
             $this->replaceVillageSnapshots($world, $snapshot, $snapshotDate, $importRun, $villageIds, $playerIds, $allianceIds);
 
             $snapshot->forceFill([
@@ -1000,6 +1001,78 @@ class TravianMapImportService
 
         foreach (array_chunk($rows, 500) as $chunk) {
             DB::table('player_snapshots')->insert($chunk);
+        }
+    }
+
+    /**
+     * @param Collection<int, object> $playerStats
+     * @param array<int,int> $playerIds
+     */
+    private function replacePlayerPopulationHistories(
+        World $world,
+        MapSnapshot $snapshot,
+        string $snapshotDate,
+        Collection $playerStats,
+        array $playerIds,
+    ): void {
+        DB::table('player_population_histories')
+            ->where('world_id', $world->id)
+            ->whereDate('snapshot_date', $snapshotDate)
+            ->delete();
+
+        if ($playerStats->isEmpty()) {
+            return;
+        }
+
+        $comparisonDates = collect([1, 2, 3])
+            ->mapWithKeys(static fn (int $days): array => [
+                $days => CarbonImmutable::parse($snapshotDate, 'UTC')->subDays($days)->toDateString(),
+            ]);
+        $playerIdValues = array_values($playerIds);
+        $previousHistories = DB::table('player_population_histories')
+            ->where('world_id', $world->id)
+            ->whereIn('player_id', $playerIdValues)
+            ->whereIn('snapshot_date', $comparisonDates->values()->all())
+            ->get()
+            ->keyBy(static fn (object $row): string => $row->player_id.'|'.$row->snapshot_date);
+
+        $historyFor = static function (int $playerId, int $days) use ($comparisonDates, $previousHistories): ?object {
+            return $previousHistories->get($playerId.'|'.$comparisonDates[$days]);
+        };
+
+        $now = now();
+        $rows = [];
+
+        foreach ($playerStats as $stat) {
+            $externalPlayerId = (int) $stat->external_player_id;
+            $playerId = $playerIds[$externalPlayerId];
+            $populationTotal = (int) $stat->population_total;
+            $villageCount = (int) $stat->village_count;
+            $history1d = $historyFor($playerId, 1);
+            $history2d = $historyFor($playerId, 2);
+            $history3d = $historyFor($playerId, 3);
+
+            $rows[] = [
+                'world_id' => $world->id,
+                'snapshot_id' => $snapshot->id,
+                'player_id' => $playerId,
+                'snapshot_date' => $snapshotDate,
+                'external_player_id' => $externalPlayerId,
+                'village_count' => $villageCount,
+                'population_total' => $populationTotal,
+                'population_delta_1d' => $history1d !== null ? $populationTotal - (int) $history1d->population_total : null,
+                'population_delta_2d' => $history2d !== null ? $populationTotal - (int) $history2d->population_total : null,
+                'population_delta_3d' => $history3d !== null ? $populationTotal - (int) $history3d->population_total : null,
+                'village_count_delta_1d' => $history1d !== null ? $villageCount - (int) $history1d->village_count : null,
+                'village_count_delta_2d' => $history2d !== null ? $villageCount - (int) $history2d->village_count : null,
+                'village_count_delta_3d' => $history3d !== null ? $villageCount - (int) $history3d->village_count : null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('player_population_histories')->insert($chunk);
         }
     }
 
