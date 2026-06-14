@@ -422,7 +422,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
     <div class="min-h-screen bg-[#f5f0e5] text-[#191511]">
         <div class="mx-auto max-w-7xl px-6 py-8 lg:px-10">
-            <header class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <header class="flex items-start justify-between gap-6">
                 <div>
                     <Link href="/" class="text-sm font-medium text-[#6a5d52] transition hover:text-[#8b4a27]">
                         {{ t('common.back_home') }}
@@ -432,7 +432,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
                     </h1>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex shrink-0 items-center gap-3">
                     <LanguageSwitcher />
                     <div v-if="authUser" class="relative">
                         <button
@@ -450,7 +450,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
                         <div
                             v-if="menuOpen"
-                            class="absolute right-0 z-20 mt-3 w-[min(92vw,24rem)] rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 text-[#1f1a14] shadow-[0_24px_90px_rgba(44,32,20,0.18)]"
+                            class="fixed left-4 right-4 top-20 z-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 text-[#1f1a14] shadow-[0_24px_90px_rgba(44,32,20,0.18)] md:absolute md:left-auto md:right-0 md:top-full md:mt-3 md:w-[min(92vw,24rem)]"
                         >
                             <div class="border-b border-[#1f1a14]/10 pb-4">
                                 <p class="text-sm font-semibold">{{ authUser.name }}</p>

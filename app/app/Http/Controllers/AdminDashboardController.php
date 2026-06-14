@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\World;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,6 +15,15 @@ class AdminDashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         abort_unless($request->user()?->hasAdminAccess(), 403);
+
+        $hasAdminColumns = Schema::hasColumn('users', 'is_admin')
+            && Schema::hasColumn('users', 'last_login_at');
+        $userColumns = ['id', 'name', 'email', 'last_world_key', 'created_at'];
+
+        if ($hasAdminColumns) {
+            $userColumns[] = 'is_admin';
+            $userColumns[] = 'last_login_at';
+        }
 
         $users = User::query()
             ->with([
@@ -25,9 +35,9 @@ class AdminDashboardController extends Controller
                     ->select(['id', 'user_id', 'world_key', 'last_used_at']),
             ])
             ->withCount(['playedAccounts', 'maps'])
-            ->orderByDesc('last_login_at')
+            ->when($hasAdminColumns, fn ($query) => $query->orderByDesc('last_login_at'))
             ->orderByDesc('created_at')
-            ->get(['id', 'name', 'email', 'is_admin', 'last_login_at', 'last_world_key', 'created_at'])
+            ->get($userColumns)
             ->map(static fn (User $user): array => [
                 'id' => $user->id,
                 'name' => $user->name,

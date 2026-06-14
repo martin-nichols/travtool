@@ -229,7 +229,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
 
                             <div
                                 v-if="menuOpen"
-                                class="absolute right-0 z-20 mt-3 w-[min(92vw,26rem)] rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 shadow-[0_24px_90px_rgba(44,32,20,0.18)]"
+                                class="fixed left-4 right-4 top-20 z-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 shadow-[0_24px_90px_rgba(44,32,20,0.18)] md:absolute md:left-auto md:right-0 md:top-full md:mt-3 md:w-[min(92vw,26rem)]"
                             >
                                 <div class="flex items-start justify-between gap-4 border-b border-[#1f1a14]/10 pb-4">
                                     <div>
