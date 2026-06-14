@@ -344,7 +344,7 @@ class MapBuilderController extends Controller
     private function automaticCriteria(int $worldId, string $worldKey, Request $request): array
     {
         $alliances = DB::table('alliances')
-            ->where('players.world_id', $worldId)
+            ->where('world_id', $worldId)
             ->where('is_present', true)
             ->where('tag', '!=', '')
             ->orderByDesc('current_population_total')
@@ -356,7 +356,7 @@ class MapBuilderController extends Controller
 
         $players = DB::table('players')
             ->leftJoin('alliances as a', 'a.id', '=', 'players.alliance_id')
-            ->where('world_id', $worldId)
+            ->where('players.world_id', $worldId)
             ->where('players.is_present', true)
             ->where('players.name', '!=', '')
             ->orderByDesc('players.current_population_total')
