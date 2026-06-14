@@ -1,6 +1,6 @@
 {
-  "_LanguageSwitcher-DIx1AKCA.js": {
-    "file": "assets/LanguageSwitcher-DIx1AKCA.js",
+  "_LanguageSwitcher-D3jC7jnm.js": {
+    "file": "assets/LanguageSwitcher-D3jC7jnm.js",
     "name": "LanguageSwitcher",
     "imports": [
       "resources/js/app.ts"
@@ -59,7 +59,7 @@
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-C1v1b1Ii.css",
+    "file": "assets/app-2h5Bg-Ps.css",
     "name": "app",
     "names": [
       "app.css"
@@ -68,11 +68,12 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-D8-Jvp7r.js",
+    "file": "assets/app-BGEjQqgP.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
     "dynamicImports": [
+      "resources/js/pages/Admin/Dashboard.vue",
       "resources/js/pages/Auth/Login.vue",
       "resources/js/pages/Auth/Register.vue",
       "resources/js/pages/Home.vue",
@@ -81,58 +82,67 @@
       "resources/js/pages/Welcome.vue"
     ]
   },
+  "resources/js/pages/Admin/Dashboard.vue": {
+    "file": "assets/Dashboard-Ddqzf3HH.js",
+    "name": "Dashboard",
+    "src": "resources/js/pages/Admin/Dashboard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.ts"
+    ]
+  },
   "resources/js/pages/Auth/Login.vue": {
-    "file": "assets/Login-DD4dYWEy.js",
+    "file": "assets/Login-C6J-SeUv.js",
     "name": "Login",
     "src": "resources/js/pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DIx1AKCA.js"
+      "_LanguageSwitcher-D3jC7jnm.js"
     ]
   },
   "resources/js/pages/Auth/Register.vue": {
-    "file": "assets/Register-BkgwOsg5.js",
+    "file": "assets/Register-CK4qq78C.js",
     "name": "Register",
     "src": "resources/js/pages/Auth/Register.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DIx1AKCA.js"
+      "_LanguageSwitcher-D3jC7jnm.js"
     ]
   },
   "resources/js/pages/Home.vue": {
-    "file": "assets/Home-C-ellELj.js",
+    "file": "assets/Home-9jVyRL4f.js",
     "name": "Home",
     "src": "resources/js/pages/Home.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DIx1AKCA.js"
+      "_LanguageSwitcher-D3jC7jnm.js"
     ]
   },
   "resources/js/pages/InactiveFinder.vue": {
-    "file": "assets/InactiveFinder-DARMzosr.js",
+    "file": "assets/InactiveFinder-DoMPdjMK.js",
     "name": "InactiveFinder",
     "src": "resources/js/pages/InactiveFinder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DIx1AKCA.js"
+      "_LanguageSwitcher-D3jC7jnm.js"
     ]
   },
   "resources/js/pages/MapBuilder.vue": {
-    "file": "assets/MapBuilder-DU4brbQr.js",
+    "file": "assets/MapBuilder-DZZXBOzH.js",
     "name": "MapBuilder",
     "src": "resources/js/pages/MapBuilder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-DIx1AKCA.js"
+      "_LanguageSwitcher-D3jC7jnm.js"
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-D3ZE6Wh2.js",
+    "file": "assets/Welcome-CYx4XupY.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,

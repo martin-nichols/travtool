@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InactiveFinderController;
 use App\Http\Controllers\MapBuilderController;
@@ -28,6 +29,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/admin', AdminDashboardController::class)->name('admin.dashboard');
     Route::post('/my-worlds', [UserWorldController::class, 'store'])->name('my-worlds.store');
     Route::patch('/my-worlds/selected', [UserWorldController::class, 'select'])->name('my-worlds.select');
     Route::delete('/my-worlds/{worldKey}', [UserWorldController::class, 'destroy'])->name('my-worlds.destroy');

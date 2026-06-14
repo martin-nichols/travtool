@@ -56,6 +56,8 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'email_verified_at' => $user->email_verified_at?->toIso8601String(),
                     'last_world_key' => $user->last_world_key,
+                    'is_admin' => $user->hasAdminAccess(),
+                    'last_login_at' => $user->last_login_at?->toIso8601String(),
                     'played_world_keys' => app(UserWorldPreferenceService::class)->playedWorldKeys($user),
                     'created_at' => $user->created_at?->toIso8601String(),
                     'updated_at' => $user->updated_at?->toIso8601String(),

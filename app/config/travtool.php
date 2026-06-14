@@ -18,6 +18,12 @@ return [
         'snapshot_chunk_size' => (int) env('TRAVTOOL_IMPORT_SNAPSHOT_CHUNK_SIZE', 500),
     ],
 
+    'admin_emails' => collect(explode(',', (string) env('TRAVTOOL_ADMIN_EMAILS', '')))
+        ->map(static fn (string $email): string => strtolower(trim($email)))
+        ->filter()
+        ->values()
+        ->all(),
+
     'catalog' => [
         'calendar_url' => env('TRAVTOOL_CATALOG_CALENDAR_URL', 'https://lobby.legends.travian.com/api/calendar'),
         'metadata_url' => env('TRAVTOOL_CATALOG_METADATA_URL', 'https://lobby.legends.travian.com/api/metadata'),
