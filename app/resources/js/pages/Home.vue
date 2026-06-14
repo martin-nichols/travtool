@@ -17,6 +17,15 @@ type WorldDashboard = {
     availableWorlds: WorldOption[];
     myWorldKeys: string[];
     selectedWorldKey: string | null;
+    playedAccounts: PlayedAccount[];
+};
+
+type PlayedAccount = {
+    id: number;
+    world_key: string;
+    player_name: string;
+    visibility: 'private' | 'group';
+    matched_player: boolean;
 };
 
 const { t } = useI18n();
@@ -28,6 +37,9 @@ const authUser = computed(() => page.props.auth.user);
 const dashboard = computed(() => page.props.worldDashboard);
 const menuOpen = ref(false);
 const worldToAdd = ref('');
+const playedAccountWorld = ref('');
+const playedAccountName = ref('');
+const playedAccountVisibility = ref<'private' | 'group'>('private');
 
 const activeWorlds = computed(() => dashboard.value.availableWorlds.filter((world) => world.is_active));
 const myWorlds = computed(() => {
@@ -97,6 +109,31 @@ function removeWorld(worldKey: string): void {
     router.delete(`/my-worlds/${encodeURIComponent(worldKey)}`, {
         preserveScroll: true,
     });
+}
+
+function addPlayedAccount(): void {
+    if (!playedAccountWorld.value || !playedAccountName.value.trim()) {
+        return;
+    }
+
+    router.post(
+        '/played-accounts',
+        {
+            world_key: playedAccountWorld.value,
+            player_name: playedAccountName.value.trim(),
+            visibility: playedAccountVisibility.value,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                playedAccountName.value = '';
+            },
+        },
+    );
+}
+
+function removePlayedAccount(account: PlayedAccount): void {
+    router.post(`/played-accounts/${account.id}/delete`, {}, { preserveScroll: true });
 }
 </script>
 
@@ -282,6 +319,76 @@ function removeWorld(worldKey: string): void {
                                     <div v-if="myWorlds.length === 0" class="rounded-[18px] border border-dashed border-[#1f1a14]/20 bg-white/55 px-4 py-5 text-sm text-[#5f574f]">
                                         Ouvre le menu en haut à droite pour ajouter ton premier monde.
                                     </div>
+                                </div>
+                            </section>
+
+                            <section class="mt-9">
+                                <div class="flex items-center justify-between gap-4">
+                                    <h2 class="text-lg font-semibold text-[#1f1a14]">Mes comptes joues</h2>
+                                    <span class="text-sm text-[#6b6258]">{{ dashboard.playedAccounts.length }} declare(s)</span>
+                                </div>
+
+                                <div class="mt-4 grid gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white/65 p-4">
+                                    <div class="grid gap-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto_auto]">
+                                        <select
+                                            v-model="playedAccountWorld"
+                                            class="min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                        >
+                                            <option value="">Monde</option>
+                                            <option v-for="world in activeWorlds" :key="world.key" :value="world.key">
+                                                {{ world.name }}
+                                            </option>
+                                        </select>
+                                        <input
+                                            v-model="playedAccountName"
+                                            type="text"
+                                            maxlength="255"
+                                            placeholder="Nom exact du joueur"
+                                            class="min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                        />
+                                        <select
+                                            v-model="playedAccountVisibility"
+                                            class="rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                        >
+                                            <option value="private">Prive</option>
+                                            <option value="group">Visible au groupe</option>
+                                        </select>
+                                        <button
+                                            type="button"
+                                            class="rounded-2xl bg-[#8b4a27] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#6d3418] disabled:cursor-not-allowed disabled:opacity-50"
+                                            :disabled="!playedAccountWorld || !playedAccountName.trim()"
+                                            @click="addPlayedAccount"
+                                        >
+                                            Ajouter
+                                        </button>
+                                    </div>
+
+                                    <div v-if="dashboard.playedAccounts.length > 0" class="grid gap-3">
+                                        <article
+                                            v-for="account in dashboard.playedAccounts"
+                                            :key="account.id"
+                                            class="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white px-4 py-3"
+                                        >
+                                            <div>
+                                                <p class="font-medium text-[#1f1a14]">{{ account.player_name }}</p>
+                                                <p class="mt-1 text-xs text-[#6b6258]">
+                                                    {{ account.world_key }} · {{ account.visibility === 'group' ? 'visible au groupe' : 'prive' }}
+                                                    <span v-if="!account.matched_player"> · non associe aux imports</span>
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                class="rounded-full px-3 py-2 text-xs font-medium text-[#8b4a27] transition hover:bg-[#f2eadc]"
+                                                @click="removePlayedAccount(account)"
+                                            >
+                                                Retirer
+                                            </button>
+                                        </article>
+                                    </div>
+
+                                    <p v-else class="text-sm text-[#5f574f]">
+                                        Ajoute le ou les comptes Travian que tu joues. Plusieurs utilisateurs peuvent indiquer le meme compte.
+                                    </p>
                                 </div>
                             </section>
                         </template>

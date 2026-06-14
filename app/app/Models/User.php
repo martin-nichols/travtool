@@ -40,4 +40,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserMap::class);
     }
+
+    public function playedAccounts(): HasMany
+    {
+        return $this->hasMany(UserPlayedAccount::class);
+    }
+
+    public function groupMemberships(): HasMany
+    {
+        return $this->hasMany(TravtoolGroupUser::class);
+    }
 }

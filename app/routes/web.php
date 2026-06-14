@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InactiveFinderController;
 use App\Http\Controllers\MapBuilderController;
 use App\Http\Controllers\UserMapController;
+use App\Http\Controllers\UserPlayedAccountController;
 use App\Http\Controllers\UserWorldController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +31,10 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/my-worlds/selected', [UserWorldController::class, 'select'])->name('my-worlds.select');
     Route::delete('/my-worlds/{worldKey}', [UserWorldController::class, 'destroy'])->name('my-worlds.destroy');
     Route::post('/my-maps', [UserMapController::class, 'store'])->name('my-maps.store');
+    Route::post('/my-maps/{userMap}/delete', [UserMapController::class, 'destroy'])->name('my-maps.destroy-post');
     Route::delete('/my-maps/{userMap}', [UserMapController::class, 'destroy'])->name('my-maps.destroy');
+    Route::post('/played-accounts', [UserPlayedAccountController::class, 'store'])->name('played-accounts.store');
+    Route::post('/played-accounts/{playedAccount}/delete', [UserPlayedAccountController::class, 'destroy'])->name('played-accounts.destroy-post');
 });
 
 Route::get('/locale/{locale}', function (Request $request, string $locale) {

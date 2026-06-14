@@ -34,6 +34,17 @@ class HomeController extends Controller
                     ->all(),
                 'myWorldKeys' => $playedWorldKeys,
                 'selectedWorldKey' => $user?->last_world_key,
+                'playedAccounts' => $user?->playedAccounts()
+                    ->latest('updated_at')
+                    ->get(['id', 'world_key', 'player_name', 'visibility', 'player_id'])
+                    ->map(static fn ($account): array => [
+                        'id' => $account->id,
+                        'world_key' => $account->world_key,
+                        'player_name' => $account->player_name,
+                        'visibility' => $account->visibility,
+                        'matched_player' => $account->player_id !== null,
+                    ])
+                    ->all() ?? [],
             ],
         ]);
     }
