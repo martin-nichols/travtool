@@ -51,6 +51,7 @@ class InactiveFinderController extends Controller
         return Inertia::render('InactiveFinder', [
             'filters' => $filters,
             'worlds' => $worldContext['worlds'],
+            'playedVillages' => $this->playedVillages($request, $worldContext),
             'tribes' => self::TRIBES,
             'sorts' => [
                 ['value' => 'score', 'label' => 'inactive_finder.sort.score'],
@@ -582,6 +583,64 @@ class InactiveFinderController extends Controller
                 ? $query->orderByDesc('score')->orderBy('distance')->orderBy('v.population')->orderBy('v.id')
                 : $query->orderByDesc('score')->orderBy('v.population')->orderBy('v.id'),
         };
+    }
+
+    /**
+     * @param array{
+     *     selected_world_key:string,
+     *     world_id:?int
+     * } $worldContext
+     * @return array<int, array{id:int,name:string,x:int,y:int,population:int}>
+     */
+    private function playedVillages(Request $request, array $worldContext): array
+    {
+        $user = $request->user();
+
+        if ($user === null || $worldContext['world_id'] === null || $worldContext['selected_world_key'] === '') {
+            return [];
+        }
+
+        $playedAccount = $user->playedAccounts()
+            ->where('world_key', $worldContext['selected_world_key'])
+            ->first(['player_id', 'player_name']);
+
+        if ($playedAccount === null) {
+            return [];
+        }
+
+        $query = DB::table('villages as v')
+            ->where('v.world_id', $worldContext['world_id'])
+            ->where('v.is_present', true)
+            ->orderByDesc('v.population')
+            ->orderBy('v.name')
+            ->limit(100)
+            ->select([
+                'v.id',
+                'v.name',
+                'v.x',
+                'v.y',
+                'v.population',
+            ]);
+
+        if ($playedAccount->player_id !== null) {
+            $query->where('v.player_id', $playedAccount->player_id);
+        } else {
+            $query
+                ->join('players as p', 'p.id', '=', 'v.player_id')
+                ->where('p.world_id', $worldContext['world_id'])
+                ->whereRaw('LOWER(p.name) = ?', [mb_strtolower($playedAccount->player_name)]);
+        }
+
+        return $query
+            ->get()
+            ->map(static fn (object $village): array => [
+                'id' => (int) $village->id,
+                'name' => (string) $village->name,
+                'x' => (int) $village->x,
+                'y' => (int) $village->y,
+                'population' => (int) $village->population,
+            ])
+            ->all();
     }
 
     private function scoreExpression(): string

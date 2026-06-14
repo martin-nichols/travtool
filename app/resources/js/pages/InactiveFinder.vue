@@ -43,6 +43,14 @@ type SortOption = {
     label: string;
 };
 
+type PlayedVillage = {
+    id: number;
+    name: string;
+    x: number;
+    y: number;
+    population: number;
+};
+
 type FinderResult = {
     village_name: string;
     player_name: string;
@@ -93,6 +101,7 @@ type Summary = {
 const props = defineProps<{
     filters: FilterState;
     worlds: WorldOption[];
+    playedVillages: PlayedVillage[];
     tribes: TribeOption[];
     sorts: SortOption[];
     summary: Summary;
@@ -105,6 +114,7 @@ const authUser = computed(() => page.props.auth.user);
 const resultsScroller = ref<HTMLElement | null>(null);
 const worldSelectionError = ref(false);
 const menuOpen = ref(false);
+const selectedPlayedVillage = ref('');
 
 const form = reactive<FilterState>({ ...props.filters });
 
@@ -119,9 +129,18 @@ watch(
 watch(
     () => form.world,
     (nextWorld) => {
+        selectedPlayedVillage.value = '';
+
         if (nextWorld) {
             worldSelectionError.value = false;
         }
+    },
+);
+
+watch(
+    () => props.playedVillages,
+    () => {
+        selectedPlayedVillage.value = '';
     },
 );
 
@@ -176,6 +195,17 @@ const canUseDistanceSort = computed(() => {
     return x !== null && y !== null;
 });
 const selectedResultWorldName = computed(() => props.summary.selectedWorldName || t('inactive_finder.results.choose_world_title'));
+
+const usePlayedVillageCenter = () => {
+    const village = props.playedVillages.find((candidate) => String(candidate.id) === selectedPlayedVillage.value);
+
+    if (!village) {
+        return;
+    }
+
+    form.x = village.x;
+    form.y = village.y;
+};
 
 const validateWorldSelection = (): boolean => {
     const isValid = Boolean(form.world);
@@ -597,7 +627,26 @@ const suppressDraggedClick = (event: MouseEvent) => {
                         </div>
 
                         <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
-                            <div class="grid gap-4 lg:col-span-6 lg:grid-cols-4">
+                            <div class="grid gap-4 lg:col-span-6 lg:grid-cols-6">
+                                <label class="grid min-w-0 gap-2 lg:col-span-2">
+                                    <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
+                                        Village de mon compte
+                                    </span>
+                                    <select
+                                        v-model="selectedPlayedVillage"
+                                        class="w-full min-w-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#f6ede0] outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                                        :disabled="props.playedVillages.length === 0"
+                                        @change="usePlayedVillageCenter"
+                                    >
+                                        <option value="" class="text-[#1f1a14]">
+                                            {{ props.playedVillages.length > 0 ? 'Choisir un village' : 'Aucun compte lie' }}
+                                        </option>
+                                        <option v-for="village in props.playedVillages" :key="village.id" :value="String(village.id)" class="text-[#1f1a14]">
+                                            {{ village.name }} ({{ village.x }}|{{ village.y }})
+                                        </option>
+                                    </select>
+                                </label>
+
                                 <label class="grid min-w-0 gap-2">
                                     <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#d8c8b7]">
                                         {{ t('inactive_finder.filters.center_x_label') }}
