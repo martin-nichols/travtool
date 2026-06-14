@@ -1063,7 +1063,7 @@ const closeMobileFullscreen = (): void => {
     <div class="min-h-screen bg-[#eef2e8] text-[#171411]">
         <div class="mx-auto max-w-7xl px-6 py-8 lg:px-10">
             <header class="flex items-start justify-between gap-6">
-                <div>
+                <div class="min-w-0">
                     <Link href="/" class="text-sm font-medium text-[#5d6457] transition hover:text-[#3f6d8f]">
                         {{ t('common.back_home') }}
                     </Link>
@@ -1073,10 +1073,15 @@ const closeMobileFullscreen = (): void => {
                     <p class="mt-4 max-w-3xl text-base leading-8 text-[#555249] sm:text-lg">
                         {{ t('map_builder.hero.description') }}
                     </p>
+                    <div class="mt-4 md:hidden">
+                        <LanguageSwitcher />
+                    </div>
                 </div>
 
                 <div class="flex shrink-0 items-center gap-3">
-                    <LanguageSwitcher />
+                    <div class="hidden md:block">
+                        <LanguageSwitcher />
+                    </div>
                     <div v-if="authUser" class="relative">
                         <button
                             type="button"
