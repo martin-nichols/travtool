@@ -39,11 +39,11 @@ class UserPlayedAccountController extends Controller
         $request->user()->playedAccounts()->updateOrCreate(
             [
                 'world_key' => $worldKey,
-                'player_name' => $playerName,
             ],
             [
                 'world_id' => $world?->id,
                 'player_id' => $player?->id,
+                'player_name' => $playerName,
                 'visibility' => (string) ($validated['visibility'] ?? 'private'),
             ],
         );

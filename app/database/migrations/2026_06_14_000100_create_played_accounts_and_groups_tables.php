@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('visibility', 32)->default('private');
             $table->timestamps();
 
-            $table->unique(['user_id', 'world_key', 'player_name'], 'user_played_accounts_user_world_player_unique');
+            $table->unique(['user_id', 'world_key'], 'user_played_accounts_user_world_unique');
             $table->index(['world_id', 'player_id'], 'user_played_accounts_world_player_idx');
         });
 

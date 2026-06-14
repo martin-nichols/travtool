@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useI18n } from '@/lib/i18n';
@@ -28,6 +28,13 @@ type PlayedAccount = {
     matched_player: boolean;
 };
 
+type PlayerSuggestion = {
+    id: number;
+    name: string;
+    population: number;
+    villages: number;
+};
+
 const { t } = useI18n();
 const page = usePage<{
     auth: { user: AuthUser | null };
@@ -37,9 +44,11 @@ const authUser = computed(() => page.props.auth.user);
 const dashboard = computed(() => page.props.worldDashboard);
 const menuOpen = ref(false);
 const worldToAdd = ref('');
-const playedAccountWorld = ref('');
 const playedAccountName = ref('');
 const playedAccountVisibility = ref<'private' | 'group'>('private');
+const playerSuggestions = ref<PlayerSuggestion[]>([]);
+const playerSearchLoading = ref(false);
+let playerSearchTimer: ReturnType<typeof window.setTimeout> | null = null;
 
 const activeWorlds = computed(() => dashboard.value.availableWorlds.filter((world) => world.is_active));
 const myWorlds = computed(() => {
@@ -52,6 +61,9 @@ const selectedWorld = computed(() => {
 
     return activeWorlds.value.find((world) => world.key === selectedKey) ?? myWorlds.value[0] ?? activeWorlds.value[0] ?? null;
 });
+const currentPlayedAccount = computed(
+    () => dashboard.value.playedAccounts.find((account) => account.world_key === selectedWorld.value?.key) ?? null,
+);
 const worldsAvailableToAdd = computed(() => {
     const existingKeys = new Set(myWorlds.value.map((world) => world.key));
 
@@ -112,14 +124,14 @@ function removeWorld(worldKey: string): void {
 }
 
 function addPlayedAccount(): void {
-    if (!playedAccountWorld.value || !playedAccountName.value.trim()) {
+    if (!selectedWorld.value || !playedAccountName.value.trim()) {
         return;
     }
 
     router.post(
         '/played-accounts',
         {
-            world_key: playedAccountWorld.value,
+            world_key: selectedWorld.value.key,
             player_name: playedAccountName.value.trim(),
             visibility: playedAccountVisibility.value,
         },
@@ -127,6 +139,7 @@ function addPlayedAccount(): void {
             preserveScroll: true,
             onSuccess: () => {
                 playedAccountName.value = '';
+                playerSuggestions.value = [];
             },
         },
     );
@@ -135,6 +148,45 @@ function addPlayedAccount(): void {
 function removePlayedAccount(account: PlayedAccount): void {
     router.post(`/played-accounts/${account.id}/delete`, {}, { preserveScroll: true });
 }
+
+function pickPlayerSuggestion(player: PlayerSuggestion): void {
+    playedAccountName.value = player.name;
+    playerSuggestions.value = [];
+}
+
+watch([playedAccountName, selectedWorld], ([name, world]) => {
+    if (playerSearchTimer !== null) {
+        window.clearTimeout(playerSearchTimer);
+    }
+
+    const query = name.trim();
+
+    if (!world || currentPlayedAccount.value || query.length < 2) {
+        playerSuggestions.value = [];
+        playerSearchLoading.value = false;
+        return;
+    }
+
+    playerSearchLoading.value = true;
+    playerSearchTimer = window.setTimeout(async () => {
+        const params = new URLSearchParams({
+            world_key: world.key,
+            q: query,
+        });
+
+        try {
+            const response = await fetch(`/players/search?${params.toString()}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            playerSuggestions.value = response.ok ? await response.json() : [];
+        } catch {
+            playerSuggestions.value = [];
+        } finally {
+            playerSearchLoading.value = false;
+        }
+    }, 220);
+});
 </script>
 
 <template>
@@ -324,71 +376,85 @@ function removePlayedAccount(account: PlayedAccount): void {
 
                             <section class="mt-9">
                                 <div class="flex items-center justify-between gap-4">
-                                    <h2 class="text-lg font-semibold text-[#1f1a14]">Mes comptes joues</h2>
-                                    <span class="text-sm text-[#6b6258]">{{ dashboard.playedAccounts.length }} declare(s)</span>
+                                    <h2 class="text-lg font-semibold text-[#1f1a14]">Mon compte</h2>
+                                    <span v-if="selectedWorld" class="text-sm text-[#6b6258]">{{ selectedWorld.name }}</span>
                                 </div>
 
                                 <div class="mt-4 grid gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white/65 p-4">
-                                    <div class="grid gap-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto_auto]">
-                                        <select
-                                            v-model="playedAccountWorld"
-                                            class="min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
-                                        >
-                                            <option value="">Monde</option>
-                                            <option v-for="world in activeWorlds" :key="world.key" :value="world.key">
-                                                {{ world.name }}
-                                            </option>
-                                        </select>
-                                        <input
-                                            v-model="playedAccountName"
-                                            type="text"
-                                            maxlength="255"
-                                            placeholder="Nom exact du joueur"
-                                            class="min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
-                                        />
-                                        <select
-                                            v-model="playedAccountVisibility"
-                                            class="rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
-                                        >
-                                            <option value="private">Prive</option>
-                                            <option value="group">Visible au groupe</option>
-                                        </select>
-                                        <button
-                                            type="button"
-                                            class="rounded-2xl bg-[#8b4a27] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#6d3418] disabled:cursor-not-allowed disabled:opacity-50"
-                                            :disabled="!playedAccountWorld || !playedAccountName.trim()"
-                                            @click="addPlayedAccount"
-                                        >
-                                            Ajouter
-                                        </button>
-                                    </div>
+                                    <template v-if="!selectedWorld">
+                                        <p class="text-sm text-[#5f574f]">Selectionne un monde avant d'ajouter ton compte.</p>
+                                    </template>
 
-                                    <div v-if="dashboard.playedAccounts.length > 0" class="grid gap-3">
-                                        <article
-                                            v-for="account in dashboard.playedAccounts"
-                                            :key="account.id"
-                                            class="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white px-4 py-3"
-                                        >
+                                    <template v-else-if="currentPlayedAccount">
+                                        <article class="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white px-4 py-3">
                                             <div>
-                                                <p class="font-medium text-[#1f1a14]">{{ account.player_name }}</p>
+                                                <p class="font-medium text-[#1f1a14]">{{ currentPlayedAccount.player_name }}</p>
                                                 <p class="mt-1 text-xs text-[#6b6258]">
-                                                    {{ account.world_key }} · {{ account.visibility === 'group' ? 'visible au groupe' : 'prive' }}
-                                                    <span v-if="!account.matched_player"> · non associe aux imports</span>
+                                                    {{ selectedWorld.name }} · {{ currentPlayedAccount.visibility === 'group' ? 'visible au groupe' : 'prive' }}
+                                                    <span v-if="!currentPlayedAccount.matched_player"> · non associe aux imports</span>
                                                 </p>
                                             </div>
                                             <button
                                                 type="button"
                                                 class="rounded-full px-3 py-2 text-xs font-medium text-[#8b4a27] transition hover:bg-[#f2eadc]"
-                                                @click="removePlayedAccount(account)"
+                                                @click="removePlayedAccount(currentPlayedAccount)"
                                             >
                                                 Retirer
                                             </button>
                                         </article>
-                                    </div>
+                                    </template>
 
-                                    <p v-else class="text-sm text-[#5f574f]">
-                                        Ajoute le ou les comptes Travian que tu joues. Plusieurs utilisateurs peuvent indiquer le meme compte.
-                                    </p>
+                                    <template v-else>
+                                        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                                            <div class="relative min-w-0">
+                                                <input
+                                                    v-model="playedAccountName"
+                                                    type="text"
+                                                    maxlength="255"
+                                                    placeholder="Nom exact du joueur"
+                                                    autocomplete="off"
+                                                    class="w-full min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                                />
+                                                <div
+                                                    v-if="playerSuggestions.length > 0"
+                                                    class="absolute left-0 right-0 z-10 mt-2 overflow-hidden rounded-2xl border border-[#1f1a14]/10 bg-white shadow-[0_18px_45px_rgba(44,32,20,0.14)]"
+                                                >
+                                                    <button
+                                                        v-for="player in playerSuggestions"
+                                                        :key="player.id"
+                                                        type="button"
+                                                        class="block w-full px-4 py-3 text-left text-sm transition hover:bg-[#f2eadc]"
+                                                        @click="pickPlayerSuggestion(player)"
+                                                    >
+                                                        <span class="block font-medium text-[#1f1a14]">{{ player.name }}</span>
+                                                        <span class="mt-1 block text-xs text-[#6b6258]">
+                                                            {{ player.population.toLocaleString('fr-CA') }} population · {{ player.villages }} village(s)
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <select
+                                                v-model="playedAccountVisibility"
+                                                class="rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                            >
+                                                <option value="private">Prive</option>
+                                                <option value="group">Visible au groupe</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                class="rounded-2xl bg-[#8b4a27] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#6d3418] disabled:cursor-not-allowed disabled:opacity-50"
+                                                :disabled="!playedAccountName.trim()"
+                                                @click="addPlayedAccount"
+                                            >
+                                                Ajouter
+                                            </button>
+                                        </div>
+
+                                        <p class="text-sm text-[#5f574f]">
+                                            <span v-if="playerSearchLoading">Recherche en cours...</span>
+                                            <span v-else>Le nom est recherche dans les joueurs importes de {{ selectedWorld.name }}.</span>
+                                        </p>
+                                    </template>
                                 </div>
                             </section>
                         </template>

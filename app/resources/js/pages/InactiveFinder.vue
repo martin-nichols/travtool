@@ -104,6 +104,7 @@ const page = usePage<{ auth: { user: AuthUser | null } }>();
 const authUser = computed(() => page.props.auth.user);
 const resultsScroller = ref<HTMLElement | null>(null);
 const worldSelectionError = ref(false);
+const menuOpen = ref(false);
 
 const form = reactive<FilterState>({ ...props.filters });
 
@@ -403,18 +404,65 @@ const suppressDraggedClick = (event: MouseEvent) => {
 
                 <div class="flex flex-col items-start gap-4 md:items-end">
                     <LanguageSwitcher />
-                    <div v-if="authUser" class="flex flex-wrap items-center gap-3 md:justify-end">
-                        <div class="rounded-full border border-[#1f1a14]/10 bg-white/65 px-4 py-2 text-sm font-medium text-[#3b3129]">
-                            {{ authUser.name }}
-                        </div>
-                        <Link
-                            as="button"
-                            method="post"
-                            href="/logout"
-                            class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                    <div v-if="authUser" class="relative">
+                        <button
+                            type="button"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#1f1a14]/10 bg-white/75 text-[#1f1a14] shadow-sm transition hover:bg-white"
+                            aria-label="Ouvrir le menu"
+                            @click="menuOpen = !menuOpen"
                         >
-                            {{ t('common.logout') }}
-                        </Link>
+                            <span class="grid gap-1">
+                                <span class="block h-0.5 w-5 rounded-full bg-current" />
+                                <span class="block h-0.5 w-5 rounded-full bg-current" />
+                                <span class="block h-0.5 w-5 rounded-full bg-current" />
+                            </span>
+                        </button>
+
+                        <div
+                            v-if="menuOpen"
+                            class="absolute right-0 z-20 mt-3 w-[min(92vw,24rem)] rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 text-[#1f1a14] shadow-[0_24px_90px_rgba(44,32,20,0.18)]"
+                        >
+                            <div class="border-b border-[#1f1a14]/10 pb-4">
+                                <p class="text-sm font-semibold">{{ authUser.name }}</p>
+                                <p class="mt-1 text-xs text-[#6b6258]">{{ authUser.email }}</p>
+                            </div>
+
+                            <div class="grid gap-2 py-4">
+                                <Link href="/" class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]">
+                                    Accueil
+                                </Link>
+                                <Link
+                                    :href="props.summary.selectedWorldKey ? `/inactive-finder?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/inactive-finder'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Chercheur d'inactifs
+                                </Link>
+                                <Link
+                                    :href="props.summary.selectedWorldKey ? `/map-builder?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/map-builder'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Créateur de carte
+                                </Link>
+                                <a
+                                    v-if="props.summary.selectedWorldBaseUrl"
+                                    :href="props.summary.selectedWorldBaseUrl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Ouvrir le monde Travian
+                                </a>
+                            </div>
+
+                            <Link
+                                as="button"
+                                method="post"
+                                href="/logout"
+                                class="w-full rounded-xl bg-[#1f1a14] px-3 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                            >
+                                {{ t('common.logout') }}
+                            </Link>
+                        </div>
                     </div>
                     <div v-else class="flex flex-wrap items-center gap-3 md:justify-end">
                         <Link

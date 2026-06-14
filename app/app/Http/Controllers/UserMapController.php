@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserMap;
 use App\Services\UserWorldPreferenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,11 +49,12 @@ class UserMapController extends Controller
         return back();
     }
 
-    public function destroy(Request $request, UserMap $userMap): RedirectResponse
+    public function destroy(Request $request, int $userMap): RedirectResponse
     {
-        abort_unless($userMap->user_id === $request->user()->id, 404);
-
-        $userMap->delete();
+        $request->user()
+            ->maps()
+            ->whereKey($userMap)
+            ->delete();
 
         return back();
     }
