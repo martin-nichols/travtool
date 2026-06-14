@@ -189,7 +189,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
 <template>
     <Head :title="t('home.meta.title')" />
 
-    <div class="min-h-screen overflow-hidden bg-[#f3ead9] text-[#171411]">
+    <div class="relative min-h-screen overflow-hidden bg-[#f3ead9] text-[#171411]">
         <div class="pointer-events-none absolute inset-0">
             <div class="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,rgba(255,153,70,0.22),transparent_58%)]" />
             <div class="absolute right-[-8rem] top-28 h-72 w-72 rounded-full bg-[#c8602b]/15 blur-3xl" />
@@ -229,7 +229,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
 
                             <div
                                 v-if="menuOpen"
-                                class="fixed left-4 right-4 top-20 z-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 shadow-[0_24px_90px_rgba(44,32,20,0.18)] md:absolute md:left-auto md:right-0 md:top-full md:mt-3 md:w-[min(92vw,26rem)]"
+                                class="absolute right-0 z-20 mt-3 max-h-[calc(100vh-6rem)] w-[calc(100vw-2rem)] max-w-[26rem] overflow-y-auto rounded-[18px] border border-[#1f1a14]/10 bg-[#fffdf8] p-4 shadow-[0_24px_90px_rgba(44,32,20,0.18)]"
                             >
                                 <div class="flex items-start justify-between gap-4 border-b border-[#1f1a14]/10 pb-4">
                                     <div>

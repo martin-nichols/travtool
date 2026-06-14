@@ -1,12 +1,5 @@
 @import 'tailwindcss';
 
-html,
-body,
-#app {
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
