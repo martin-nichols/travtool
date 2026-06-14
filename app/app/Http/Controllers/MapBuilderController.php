@@ -925,6 +925,14 @@ class MapBuilderController extends Controller
             return null;
         }
 
+        if (
+            $filters['alliance_tags'] === ''
+            && $filters['player_names'] === ''
+            && $filters['region_names'] === ''
+        ) {
+            return null;
+        }
+
         $query = array_filter([
             'world' => $selectedWorldKey,
             'alliance_tags' => implode(', ', $this->parseInputList($filters['alliance_tags'])),

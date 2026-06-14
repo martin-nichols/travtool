@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import { useI18n } from '@/lib/i18n';
@@ -156,6 +156,24 @@ const mapTransform = reactive({
 });
 let removeNativeGestureGuards: (() => void) | null = null;
 let blinkIntervalId: number | null = null;
+
+const hasFilterValues = (filters: FilterState): boolean =>
+    filters.alliance_tags.trim() !== '' || filters.player_names.trim() !== '' || filters.region_names.trim() !== '';
+
+onMounted(() => {
+    const query = new URLSearchParams(window.location.search);
+    const urlHasCriteria = ['alliance_tags', 'player_names', 'region_names'].some((key) => (query.get(key) ?? '').trim() !== '');
+
+    if (!urlHasCriteria && hasFilterValues(props.filters)) {
+        const payload = props.summary.selectedWorldKey ? { world: props.summary.selectedWorldKey } : {};
+
+        router.get('/map-builder', payload, {
+            preserveScroll: true,
+            preserveState: false,
+            replace: true,
+        });
+    }
+});
 
 watch(
     () => props.filters,
