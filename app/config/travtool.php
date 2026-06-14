@@ -3,9 +3,9 @@
 return [
     'locales' => [
         'en' => 'English',
-        'fr' => 'Francais',
+        'fr' => 'Français',
         'de' => 'Deutsch',
-        'es' => 'Espanol',
+        'es' => 'Español',
         'hu' => 'Magyar',
     ],
 

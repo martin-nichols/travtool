@@ -386,7 +386,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
 
                                 <div class="mt-4 grid gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white/65 p-4">
                                     <template v-if="!selectedWorld">
-                                        <p class="text-sm text-[#5f574f]">Selectionne un monde avant d'ajouter ton compte.</p>
+                                        <p class="text-sm text-[#5f574f]">Sélectionne un monde avant d'ajouter ton compte.</p>
                                     </template>
 
                                     <template v-else-if="currentPlayedAccount">
@@ -395,7 +395,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
                                                 <p class="font-medium text-[#1f1a14]">{{ currentPlayedAccount.player_name }}</p>
                                                 <p class="mt-1 text-xs text-[#6b6258]">
                                                     {{ selectedWorld.name }}
-                                                    <span v-if="!currentPlayedAccount.matched_player"> · non associe aux imports</span>
+                                                    <span v-if="!currentPlayedAccount.matched_player"> · non associé aux imports</span>
                                                 </p>
                                             </div>
                                             <button
@@ -449,7 +449,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
 
                                         <p class="text-sm text-[#5f574f]">
                                             <span v-if="playerSearchLoading">Recherche en cours...</span>
-                                            <span v-else>Le nom est recherche dans les joueurs importes de {{ selectedWorld.name }}.</span>
+                                            <span v-else>Le nom est recherché dans les joueurs importés de {{ selectedWorld.name }}.</span>
                                         </p>
                                     </template>
                                 </div>

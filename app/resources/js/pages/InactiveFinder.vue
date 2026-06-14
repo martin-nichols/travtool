@@ -651,7 +651,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
                                         @change="usePlayedVillageCenter"
                                     >
                                         <option value="" class="text-[#1f1a14]">
-                                            {{ props.playedVillages.length > 0 ? 'Choisir un village' : 'Aucun compte lie' }}
+                                            {{ props.playedVillages.length > 0 ? 'Choisir un village' : 'Aucun compte lié' }}
                                         </option>
                                         <option v-for="village in props.playedVillages" :key="village.id" :value="String(village.id)" class="text-[#1f1a14]">
                                             {{ village.name }} ({{ village.x }}|{{ village.y }})

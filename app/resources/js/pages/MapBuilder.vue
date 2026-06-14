@@ -1070,9 +1070,6 @@ const closeMobileFullscreen = (): void => {
                     <h1 class="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#1c1814]">
                         {{ t('map_builder.meta.title') }}
                     </h1>
-                    <p class="mt-4 max-w-3xl text-base leading-8 text-[#555249] sm:text-lg">
-                        {{ t('map_builder.hero.description') }}
-                    </p>
                     <div class="mt-4 md:hidden">
                         <LanguageSwitcher />
                     </div>

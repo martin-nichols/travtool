@@ -56,10 +56,10 @@ const formatDate = (value: string | null): string => {
 
 const statCards = computed(() => [
     { label: 'Comptes', value: props.stats.users },
-    { label: 'Comptes joues', value: props.stats.played_accounts },
-    { label: 'Cartes enregistrees', value: props.stats.saved_maps },
+    { label: 'Comptes joués', value: props.stats.played_accounts },
+    { label: 'Cartes enregistrées', value: props.stats.saved_maps },
     { label: 'Mondes actifs', value: props.stats.active_worlds },
-    { label: 'Mondes importes', value: props.stats.imported_worlds },
+    { label: 'Mondes importés', value: props.stats.imported_worlds },
 ]);
 </script>
 
@@ -87,7 +87,7 @@ const statCards = computed(() => [
                     href="/logout"
                     class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
                 >
-                    Deconnexion
+                    Déconnexion
                 </Link>
             </header>
 
@@ -112,11 +112,11 @@ const statCards = computed(() => [
                         <thead class="bg-[#fcf7ee] text-left text-xs font-semibold uppercase tracking-[0.16em] text-[#7f6d5d]">
                             <tr>
                                 <th class="px-5 py-3">Compte</th>
-                                <th class="px-5 py-3">Derniere connexion</th>
+                                <th class="px-5 py-3">Dernière connexion</th>
                                 <th class="px-5 py-3">Monde actif</th>
-                                <th class="px-5 py-3">Comptes joues</th>
+                                <th class="px-5 py-3">Comptes joués</th>
                                 <th class="px-5 py-3">Cartes</th>
-                                <th class="px-5 py-3">Creation</th>
+                                <th class="px-5 py-3">Création</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-[#1f1a14]/10">
@@ -138,7 +138,7 @@ const statCards = computed(() => [
                                     <div class="mt-2 grid gap-1 text-xs text-[#6b6258]">
                                         <div v-for="account in user.played_accounts" :key="account.id">
                                             {{ account.world_key }} · {{ account.player_name }}
-                                            <span v-if="!account.matched_player">(non associe)</span>
+                                            <span v-if="!account.matched_player">(non associé)</span>
                                         </div>
                                     </div>
                                 </td>
