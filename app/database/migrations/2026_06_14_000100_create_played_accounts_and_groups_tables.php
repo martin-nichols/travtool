@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('player_id')->nullable()->constrained('players')->nullOnDelete();
             $table->string('world_key', 100);
             $table->string('player_name', 255);
-            $table->string('visibility', 32)->default('private');
+            $table->string('visibility', 32)->default('group');
             $table->timestamps();
 
             $table->unique(['user_id', 'world_key'], 'user_played_accounts_user_world_unique');

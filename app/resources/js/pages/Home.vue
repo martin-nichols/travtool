@@ -24,7 +24,6 @@ type PlayedAccount = {
     id: number;
     world_key: string;
     player_name: string;
-    visibility: 'private' | 'group';
     matched_player: boolean;
 };
 
@@ -45,7 +44,6 @@ const dashboard = computed(() => page.props.worldDashboard);
 const menuOpen = ref(false);
 const worldToAdd = ref('');
 const playedAccountName = ref('');
-const playedAccountVisibility = ref<'private' | 'group'>('private');
 const playerSuggestions = ref<PlayerSuggestion[]>([]);
 const playerSearchLoading = ref(false);
 let playerSearchTimer: ReturnType<typeof window.setTimeout> | null = null;
@@ -133,7 +131,6 @@ function addPlayedAccount(): void {
         {
             world_key: selectedWorld.value.key,
             player_name: playedAccountName.value.trim(),
-            visibility: playedAccountVisibility.value,
         },
         {
             preserveScroll: true,
@@ -390,7 +387,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
                                             <div>
                                                 <p class="font-medium text-[#1f1a14]">{{ currentPlayedAccount.player_name }}</p>
                                                 <p class="mt-1 text-xs text-[#6b6258]">
-                                                    {{ selectedWorld.name }} · {{ currentPlayedAccount.visibility === 'group' ? 'visible au groupe' : 'prive' }}
+                                                    {{ selectedWorld.name }}
                                                     <span v-if="!currentPlayedAccount.matched_player"> · non associe aux imports</span>
                                                 </p>
                                             </div>
@@ -405,7 +402,7 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
                                     </template>
 
                                     <template v-else>
-                                        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                                        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
                                             <div class="relative min-w-0">
                                                 <input
                                                     v-model="playedAccountName"
@@ -433,13 +430,6 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
                                                     </button>
                                                 </div>
                                             </div>
-                                            <select
-                                                v-model="playedAccountVisibility"
-                                                class="rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
-                                            >
-                                                <option value="private">Prive</option>
-                                                <option value="group">Visible au groupe</option>
-                                            </select>
                                             <button
                                                 type="button"
                                                 class="rounded-2xl bg-[#8b4a27] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#6d3418] disabled:cursor-not-allowed disabled:opacity-50"

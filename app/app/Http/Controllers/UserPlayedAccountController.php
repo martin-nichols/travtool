@@ -20,7 +20,6 @@ class UserPlayedAccountController extends Controller
         $validated = $request->validate([
             'world_key' => ['required', 'string', 'max:100'],
             'player_name' => ['required', 'string', 'max:255'],
-            'visibility' => ['nullable', 'string', 'in:private,group'],
         ]);
 
         $worldKey = trim((string) $validated['world_key']);
@@ -44,7 +43,7 @@ class UserPlayedAccountController extends Controller
                 'world_id' => $world?->id,
                 'player_id' => $player?->id,
                 'player_name' => $playerName,
-                'visibility' => (string) ($validated['visibility'] ?? 'private'),
+                'visibility' => 'group',
             ],
         );
 
