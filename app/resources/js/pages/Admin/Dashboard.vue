@@ -19,23 +19,18 @@ type AdminPlayedAccount = {
     updated_at: string | null;
 };
 
-type AdminWorld = {
-    world_key: string;
-    last_used_at: string | null;
-};
-
 type AdminUser = {
     id: number;
     name: string;
     email: string;
     is_admin: boolean;
     last_login_at: string | null;
+    last_login_ip: string | null;
     last_world_key: string | null;
     created_at: string | null;
     played_accounts_count: number;
     maps_count: number;
     played_accounts: AdminPlayedAccount[];
-    worlds: AdminWorld[];
 };
 
 const props = defineProps<{
@@ -121,7 +116,6 @@ const statCards = computed(() => [
                                 <th class="px-5 py-3">Monde actif</th>
                                 <th class="px-5 py-3">Comptes joues</th>
                                 <th class="px-5 py-3">Cartes</th>
-                                <th class="px-5 py-3">Mondes</th>
                                 <th class="px-5 py-3">Creation</th>
                             </tr>
                         </thead>
@@ -134,7 +128,10 @@ const statCards = computed(() => [
                                     </div>
                                     <div class="mt-1 text-xs text-[#6b6258]">{{ user.email }}</div>
                                 </td>
-                                <td class="px-5 py-4 align-top whitespace-nowrap">{{ formatDate(user.last_login_at) }}</td>
+                                <td class="px-5 py-4 align-top whitespace-nowrap">
+                                    <div>{{ formatDate(user.last_login_at) }}</div>
+                                    <div class="mt-1 text-xs text-[#6b6258]">{{ user.last_login_ip ?? 'IP inconnue' }}</div>
+                                </td>
                                 <td class="px-5 py-4 align-top">{{ user.last_world_key ?? '-' }}</td>
                                 <td class="px-5 py-4 align-top">
                                     <div class="font-medium">{{ user.played_accounts_count }}</div>
@@ -146,13 +143,6 @@ const statCards = computed(() => [
                                     </div>
                                 </td>
                                 <td class="px-5 py-4 align-top">{{ user.maps_count }}</td>
-                                <td class="px-5 py-4 align-top">
-                                    <div class="grid gap-1 text-xs text-[#6b6258]">
-                                        <div v-for="world in user.worlds" :key="world.world_key">
-                                            {{ world.world_key }} · {{ formatDate(world.last_used_at) }}
-                                        </div>
-                                    </div>
-                                </td>
                                 <td class="px-5 py-4 align-top whitespace-nowrap">{{ formatDate(user.created_at) }}</td>
                             </tr>
                         </tbody>

@@ -18,6 +18,7 @@ class AdminDashboardController extends Controller
 
         $hasAdminColumns = Schema::hasColumn('users', 'is_admin')
             && Schema::hasColumn('users', 'last_login_at');
+        $hasLoginIpColumn = Schema::hasColumn('users', 'last_login_ip');
         $userColumns = ['id', 'name', 'email', 'last_world_key', 'created_at'];
 
         if ($hasAdminColumns) {
@@ -25,14 +26,15 @@ class AdminDashboardController extends Controller
             $userColumns[] = 'last_login_at';
         }
 
+        if ($hasLoginIpColumn) {
+            $userColumns[] = 'last_login_ip';
+        }
+
         $users = User::query()
             ->with([
                 'playedAccounts' => fn ($query) => $query
                     ->latest('updated_at')
                     ->select(['id', 'user_id', 'world_key', 'player_name', 'player_id', 'updated_at']),
-                'worldPreferences' => fn ($query) => $query
-                    ->latest('last_used_at')
-                    ->select(['id', 'user_id', 'world_key', 'last_used_at']),
             ])
             ->withCount(['playedAccounts', 'maps'])
             ->when($hasAdminColumns, fn ($query) => $query->orderByDesc('last_login_at'))
@@ -44,6 +46,7 @@ class AdminDashboardController extends Controller
                 'email' => $user->email,
                 'is_admin' => $user->hasAdminAccess(),
                 'last_login_at' => $user->last_login_at?->toIso8601String(),
+                'last_login_ip' => $user->last_login_ip,
                 'last_world_key' => $user->last_world_key,
                 'created_at' => $user->created_at?->toIso8601String(),
                 'played_accounts_count' => $user->played_accounts_count,
@@ -54,10 +57,6 @@ class AdminDashboardController extends Controller
                     'player_name' => $account->player_name,
                     'matched_player' => $account->player_id !== null,
                     'updated_at' => $account->updated_at?->toIso8601String(),
-                ])->values()->all(),
-                'worlds' => $user->worldPreferences->map(static fn ($world): array => [
-                    'world_key' => $world->world_key,
-                    'last_used_at' => $world->last_used_at?->toIso8601String(),
                 ])->values()->all(),
             ])
             ->all();

@@ -42,7 +42,10 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
-        $request->user()?->forceFill(['last_login_at' => now()])->save();
+        $request->user()?->forceFill([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ])->save();
 
         return redirect()->intended($worldPreferences->redirectPath($request->user()));
     }
