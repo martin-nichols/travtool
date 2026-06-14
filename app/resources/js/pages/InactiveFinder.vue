@@ -432,7 +432,7 @@ const suppressDraggedClick = (event: MouseEvent) => {
                     </h1>
                 </div>
 
-                <div class="flex flex-col items-start gap-4 md:items-end">
+                <div class="flex items-center gap-3">
                     <LanguageSwitcher />
                     <div v-if="authUser" class="relative">
                         <button
@@ -460,6 +460,13 @@ const suppressDraggedClick = (event: MouseEvent) => {
                             <div class="grid gap-2 py-4">
                                 <Link href="/" class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]">
                                     Accueil
+                                </Link>
+                                <Link
+                                    v-if="authUser.is_admin"
+                                    href="/admin"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Administration
                                 </Link>
                                 <Link
                                     :href="props.summary.selectedWorldKey ? `/inactive-finder?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/inactive-finder'"
