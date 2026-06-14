@@ -344,7 +344,7 @@ class MapBuilderController extends Controller
     private function automaticCriteria(int $worldId, string $worldKey, Request $request): array
     {
         $alliances = DB::table('alliances')
-            ->where('world_id', $worldId)
+            ->where('players.world_id', $worldId)
             ->where('is_present', true)
             ->where('tag', '!=', '')
             ->orderByDesc('current_population_total')
@@ -355,15 +355,27 @@ class MapBuilderController extends Controller
             ->all();
 
         $players = DB::table('players')
+            ->leftJoin('alliances as a', 'a.id', '=', 'players.alliance_id')
             ->where('world_id', $worldId)
-            ->where('is_present', true)
-            ->where('name', '!=', '')
-            ->orderByDesc('current_population_total')
-            ->orderBy('name')
+            ->where('players.is_present', true)
+            ->where('players.name', '!=', '')
+            ->orderByDesc('players.current_population_total')
+            ->orderBy('players.name')
             ->limit(5)
-            ->pluck('name')
-            ->map(static fn (mixed $name): string => (string) $name)
-            ->all();
+            ->get([
+                'players.name as player_name',
+                'a.tag as alliance_tag',
+            ]);
+
+        $topPlayers = [];
+
+        foreach ($players as $player) {
+            $topPlayers = $this->appendUniqueCriteriaValue($topPlayers, (string) $player->player_name);
+
+            if ($player->alliance_tag !== null && $player->alliance_tag !== '') {
+                $alliances = $this->appendUniqueCriteriaValue($alliances, (string) $player->alliance_tag);
+            }
+        }
 
         $playedAccount = $request->user()?->playedAccounts()
             ->where('world_key', $worldKey)
@@ -388,7 +400,7 @@ class MapBuilderController extends Controller
             $playedPlayer = $playerQuery->first();
 
             if ($playedPlayer !== null) {
-                $players = $this->appendUniqueCriteriaValue($players, (string) $playedPlayer->player_name);
+                $topPlayers = $this->appendUniqueCriteriaValue($topPlayers, (string) $playedPlayer->player_name);
 
                 if ($playedPlayer->alliance_tag !== null && $playedPlayer->alliance_tag !== '') {
                     $alliances = $this->appendUniqueCriteriaValue($alliances, (string) $playedPlayer->alliance_tag);
@@ -398,7 +410,7 @@ class MapBuilderController extends Controller
 
         return [
             'alliances' => $alliances,
-            'players' => $players,
+            'players' => $topPlayers,
             'regions' => [],
         ];
     }
