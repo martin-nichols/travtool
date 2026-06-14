@@ -1256,7 +1256,7 @@ const closeMobileFullscreen = (): void => {
                         </div>
 
                         <p v-if="isAutomaticMap" class="rounded-[20px] border border-[#7fc4f1]/20 bg-[#7fc4f1]/10 px-4 py-3 text-sm leading-7 text-[#d8edf8]">
-                            Carte automatique: les 5 plus grandes alliances et les 5 plus gros joueurs du monde sélectionné.
+                            Carte automatique: les 5 plus grandes alliances, les 5 plus gros joueurs, ton compte et son alliance.
                         </p>
 
                         <div class="grid gap-4" :class="props.summary.selectedWorldHasRegions ? 'xl:grid-cols-3' : 'xl:grid-cols-2'">

@@ -105,7 +105,7 @@ class MapBuilderController extends Controller
             $this->worldPreferences->rememberWorld($request->user(), $worldContext['selected_world_key']);
         }
 
-        $mapData = $this->buildMapData($worldContext, $filters);
+        $mapData = $this->buildMapData($request, $worldContext, $filters);
 
         return Inertia::render('MapBuilder', [
             'filters' => $filters,
@@ -240,7 +240,7 @@ class MapBuilderController extends Controller
      *     world_size:int
      * }
      */
-    private function buildMapData(array $worldContext, array $filters): array
+    private function buildMapData(Request $request, array $worldContext, array $filters): array
     {
         $criteria = [
             'alliances' => $this->parseInputList($filters['alliance_tags']),
@@ -259,7 +259,11 @@ class MapBuilderController extends Controller
         }
 
         if (! $hasCriteria) {
-            $criteria = $this->automaticCriteria((int) $worldContext['world_id']);
+            $criteria = $this->automaticCriteria(
+                (int) $worldContext['world_id'],
+                $worldContext['selected_world_key'],
+                $request,
+            );
             $hasCriteria = $criteria['alliances'] !== [] || $criteria['players'] !== [];
 
             if (! $hasCriteria) {
@@ -337,7 +341,7 @@ class MapBuilderController extends Controller
     /**
      * @return array{alliances:list<string>,players:list<string>,regions:list<string>}
      */
-    private function automaticCriteria(int $worldId): array
+    private function automaticCriteria(int $worldId, string $worldKey, Request $request): array
     {
         $alliances = DB::table('alliances')
             ->where('world_id', $worldId)
@@ -361,11 +365,63 @@ class MapBuilderController extends Controller
             ->map(static fn (mixed $name): string => (string) $name)
             ->all();
 
+        $playedAccount = $request->user()?->playedAccounts()
+            ->where('world_key', $worldKey)
+            ->first(['player_id', 'player_name']);
+
+        if ($playedAccount !== null) {
+            $playerQuery = DB::table('players as p')
+                ->leftJoin('alliances as a', 'a.id', '=', 'p.alliance_id')
+                ->where('p.world_id', $worldId)
+                ->where('p.is_present', true)
+                ->select([
+                    'p.name as player_name',
+                    'a.tag as alliance_tag',
+                ]);
+
+            if ($playedAccount->player_id !== null) {
+                $playerQuery->where('p.id', $playedAccount->player_id);
+            } else {
+                $playerQuery->whereRaw('LOWER(p.name) = ?', [mb_strtolower($playedAccount->player_name)]);
+            }
+
+            $playedPlayer = $playerQuery->first();
+
+            if ($playedPlayer !== null) {
+                $players = $this->appendUniqueCriteriaValue($players, (string) $playedPlayer->player_name);
+
+                if ($playedPlayer->alliance_tag !== null && $playedPlayer->alliance_tag !== '') {
+                    $alliances = $this->appendUniqueCriteriaValue($alliances, (string) $playedPlayer->alliance_tag);
+                }
+            }
+        }
+
         return [
             'alliances' => $alliances,
             'players' => $players,
             'regions' => [],
         ];
+    }
+
+    /**
+     * @param list<string> $values
+     * @return list<string>
+     */
+    private function appendUniqueCriteriaValue(array $values, string $value): array
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return $values;
+        }
+
+        $lookup = $this->normalizedLookup($values);
+
+        if (! array_key_exists(mb_strtolower($value), $lookup)) {
+            $values[] = $value;
+        }
+
+        return $values;
     }
 
     /**
