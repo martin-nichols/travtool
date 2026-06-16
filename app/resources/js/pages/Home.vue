@@ -294,11 +294,11 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
                         </div>
                     </template>
                     <template v-else>
-                        <nav class="hidden items-center gap-3 md:flex">
+                        <nav class="flex items-center gap-3">
                             <Link href="/login" class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#3b3129] transition hover:bg-white/60">
                                 {{ t('common.login') }}
                             </Link>
-                            <Link href="/register" class="rounded-full bg-[#1f1a14] px-4 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]">
+                            <Link href="/register" class="hidden rounded-full bg-[#1f1a14] px-4 py-2 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27] md:inline-flex">
                                 {{ t('common.create_account') }}
                             </Link>
                         </nav>
