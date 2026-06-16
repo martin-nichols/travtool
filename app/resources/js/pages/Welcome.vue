@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -8,8 +8,17 @@ import { Head } from '@inertiajs/vue3';
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </Head>
     <div
-        class="flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]"
+        class="relative flex min-h-screen flex-col items-center bg-[#FDFDFC] p-6 text-[#1b1b18] lg:justify-center lg:p-8 dark:bg-[#0a0a0a]"
     >
+        <div class="absolute top-6 right-6 z-10 lg:top-8 lg:right-8">
+            <Link
+                href="/login"
+                class="inline-flex items-center justify-center rounded-full border border-[#1b1b18]/15 bg-white px-4 py-2 text-sm font-medium text-[#1b1b18] shadow-sm transition hover:border-[#1b1b18]/30 hover:bg-[#f7f4ee] dark:border-white/15 dark:bg-[#161615] dark:text-[#EDEDEC] dark:hover:border-white/30 dark:hover:bg-[#22211f]"
+            >
+                Connexion
+            </Link>
+        </div>
+
         <div
             class="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0"
         >
