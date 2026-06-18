@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\UserWorldPreferenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +20,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * @throws ValidationException
      */
-    public function store(Request $request, UserWorldPreferenceService $worldPreferences): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -47,7 +46,7 @@ class AuthenticatedSessionController extends Controller
             'last_login_ip' => $request->ip(),
         ])->save();
 
-        return redirect()->intended($worldPreferences->redirectPath($request->user()));
+        return redirect()->route('home');
     }
 
     public function destroy(Request $request): RedirectResponse

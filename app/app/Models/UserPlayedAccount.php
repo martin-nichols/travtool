@@ -23,4 +23,9 @@ class UserPlayedAccount extends Model
     {
         return $this->belongsTo(Player::class);
     }
+
+    public function playedAccountGroup(): BelongsTo
+    {
+        return $this->belongsTo(TravtoolGroup::class, 'played_account_group_id');
+    }
 }

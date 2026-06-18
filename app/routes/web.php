@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/my-maps/{userMap}', [UserMapController::class, 'destroy'])->name('my-maps.destroy');
     Route::get('/players/search', PlayerSearchController::class)->name('players.search');
     Route::post('/played-accounts', [UserPlayedAccountController::class, 'store'])->name('played-accounts.store');
+    Route::post('/played-accounts/join', [UserPlayedAccountController::class, 'join'])->name('played-accounts.join');
     Route::post('/played-accounts/{playedAccount}/delete', [UserPlayedAccountController::class, 'destroy'])->name('played-accounts.destroy-post');
 });
 

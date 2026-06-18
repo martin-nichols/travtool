@@ -25,6 +25,7 @@ type PlayedAccount = {
     world_key: string;
     player_name: string;
     matched_player: boolean;
+    invite_code: string | null;
 };
 
 type PlayerSuggestion = {
@@ -38,12 +39,15 @@ const { t } = useI18n();
 const page = usePage<{
     auth: { user: AuthUser | null };
     worldDashboard: WorldDashboard;
+    errors?: Record<string, string>;
 }>();
 const authUser = computed(() => page.props.auth.user);
 const dashboard = computed(() => page.props.worldDashboard);
+const joinPlayedAccountError = computed(() => page.props.errors?.invite_code ?? null);
 const menuOpen = ref(false);
 const worldToAdd = ref('');
 const playedAccountName = ref('');
+const playedAccountInviteCode = ref('');
 const playerSuggestions = ref<PlayerSuggestion[]>([]);
 const playerSearchLoading = ref(false);
 let playerSearchTimer: ReturnType<typeof window.setTimeout> | null = null;
@@ -144,6 +148,23 @@ function addPlayedAccount(): void {
 
 function removePlayedAccount(account: PlayedAccount): void {
     router.post(`/played-accounts/${account.id}/delete`, {}, { preserveScroll: true });
+}
+
+function joinPlayedAccount(): void {
+    if (!playedAccountInviteCode.value.trim()) {
+        return;
+    }
+
+    router.post(
+        '/played-accounts/join',
+        { invite_code: playedAccountInviteCode.value.trim() },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                playedAccountInviteCode.value = '';
+            },
+        },
+    );
 }
 
 function pickPlayerSuggestion(player: PlayerSuggestion): void {
@@ -390,25 +411,57 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
                                     </template>
 
                                     <template v-else-if="currentPlayedAccount">
-                                        <article class="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white px-4 py-3">
-                                            <div>
-                                                <p class="font-medium text-[#1f1a14]">{{ currentPlayedAccount.player_name }}</p>
-                                                <p class="mt-1 text-xs text-[#6b6258]">
-                                                    {{ selectedWorld.name }}
-                                                    <span v-if="!currentPlayedAccount.matched_player"> · non associé aux imports</span>
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                class="rounded-full px-3 py-2 text-xs font-medium text-[#8b4a27] transition hover:bg-[#f2eadc]"
-                                                @click="removePlayedAccount(currentPlayedAccount)"
+                                        <div class="grid gap-3">
+                                            <article class="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[#1f1a14]/10 bg-white px-4 py-3">
+                                                <div>
+                                                    <p class="font-medium text-[#1f1a14]">{{ currentPlayedAccount.player_name }}</p>
+                                                    <p class="mt-1 text-xs text-[#6b6258]">
+                                                        {{ selectedWorld.name }}
+                                                        <span v-if="!currentPlayedAccount.matched_player"> · non associé aux imports</span>
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    class="rounded-full px-3 py-2 text-xs font-medium text-[#8b4a27] transition hover:bg-[#f2eadc]"
+                                                    @click="removePlayedAccount(currentPlayedAccount)"
+                                                >
+                                                    Retirer
+                                                </button>
+                                            </article>
+
+                                            <div
+                                                v-if="currentPlayedAccount.invite_code"
+                                                class="rounded-[18px] border border-[#1f1a14]/10 bg-[#fffaf2] px-4 py-3"
                                             >
-                                                Retirer
-                                            </button>
-                                        </article>
+                                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">Code dual</p>
+                                                <p class="mt-2 break-all font-mono text-sm text-[#1f1a14]">{{ currentPlayedAccount.invite_code }}</p>
+                                            </div>
+                                        </div>
                                     </template>
 
                                     <template v-else>
+                                        <div class="grid gap-3 rounded-[16px] border border-[#1f1a14]/10 bg-white/70 p-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+                                            <input
+                                                v-model="playedAccountInviteCode"
+                                                type="text"
+                                                maxlength="64"
+                                                placeholder="Code dual"
+                                                autocomplete="off"
+                                                class="w-full min-w-0 rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm text-[#1f1a14] outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                class="rounded-2xl border border-[#1f1a14]/10 bg-white px-4 py-3 text-sm font-medium text-[#1f1a14] transition hover:bg-[#f2eadc] disabled:cursor-not-allowed disabled:opacity-50"
+                                                :disabled="!playedAccountInviteCode.trim()"
+                                                @click="joinPlayedAccount"
+                                            >
+                                                Rejoindre
+                                            </button>
+                                            <p v-if="joinPlayedAccountError" class="text-sm text-[#8b4a27] lg:col-span-2">
+                                                {{ joinPlayedAccountError }}
+                                            </p>
+                                        </div>
+
                                         <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
                                             <div class="relative min-w-0">
                                                 <input
