@@ -67,6 +67,9 @@ class HandleInertiaRequests extends Middleware
                 'current' => app()->getLocale(),
                 'available' => $locales,
             ],
+            'flash' => [
+                'status' => $request->session()->get('status'),
+            ],
             'translations' => Lang::get('ui'),
         ];
     }

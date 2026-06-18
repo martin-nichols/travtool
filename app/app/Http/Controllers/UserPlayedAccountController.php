@@ -108,15 +108,29 @@ class UserPlayedAccountController extends Controller
             ]);
         }
 
-        $player = $group->player_id !== null
-            ? Player::query()->whereKey($group->player_id)->first()
-            : null;
-        $playerName = $player?->name ?? $group->player_name ?? $group->name;
         $user = $request->user();
         $existingPlayedAccount = $user->playedAccounts()
             ->where('world_key', $group->world_key)
             ->first(['id', 'played_account_group_id']);
         $oldGroupId = $existingPlayedAccount?->played_account_group_id;
+
+        if ($oldGroupId === $group->id) {
+            $existingMembership = TravtoolGroupUser::query()
+                ->where('travtool_group_id', $group->id)
+                ->where('user_id', $user->id)
+                ->first(['role']);
+
+            if ($existingMembership?->role === 'owner') {
+                return back()->with('status', 'dual-owner');
+            }
+
+            return back()->with('status', 'dual-member');
+        }
+
+        $player = $group->player_id !== null
+            ? Player::query()->whereKey($group->player_id)->first()
+            : null;
+        $playerName = $player?->name ?? $group->player_name ?? $group->name;
 
         $playedAccount = $user->playedAccounts()->updateOrCreate(
             [
@@ -139,7 +153,7 @@ class UserPlayedAccountController extends Controller
 
         $this->worldPreferences->rememberWorld($user, $group->world_key);
 
-        return back();
+        return back()->with('status', 'dual-joined');
     }
 
     private function playedAccountGroup(?World $world, string $worldKey, ?Player $player, string $playerName, int $userId): TravtoolGroup
@@ -182,6 +196,19 @@ class UserPlayedAccountController extends Controller
 
     private function syncGroupMembership(TravtoolGroup $group, int $userId, string $role): void
     {
+        $membership = TravtoolGroupUser::query()
+            ->where('travtool_group_id', $group->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($membership !== null && $membership->role === 'owner') {
+            $membership->forceFill([
+                'joined_at' => $membership->joined_at ?? now(),
+            ])->save();
+
+            return;
+        }
+
         TravtoolGroupUser::query()->updateOrCreate(
             [
                 'travtool_group_id' => $group->id,

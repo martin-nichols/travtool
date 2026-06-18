@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import type { User as AuthUser } from '@/types';
 
-const page = usePage<{ auth: { user: AuthUser | null } }>();
+const page = usePage<{
+    auth: { user: AuthUser | null };
+    flash?: { status?: string | null };
+}>();
+const flashStatus = () => page.props.flash?.status ?? null;
+const ownerModalOpen = ref(page.props.flash?.status === 'dual-owner');
 
 const passwordForm = useForm({
     current_password: '',
@@ -14,6 +20,13 @@ const passwordForm = useForm({
 const dualForm = useForm({
     invite_code: '',
 });
+
+watch(
+    () => page.props.flash?.status,
+    (status) => {
+        ownerModalOpen.value = status === 'dual-owner';
+    },
+);
 
 const updatePassword = (): void => {
     passwordForm.put('/account/password', {
@@ -173,12 +186,37 @@ const joinDual = (): void => {
                             </div>
                         </form>
 
-                        <p v-if="dualForm.recentlySuccessful" class="mt-4 rounded-[16px] bg-[#456f5b]/12 px-4 py-3 text-sm font-medium text-[#456f5b]">
+                        <p v-if="flashStatus() === 'dual-joined'" class="mt-4 rounded-[16px] bg-[#456f5b]/12 px-4 py-3 text-sm font-medium text-[#456f5b]">
                             Compte dual rejoint. Le monde lié est maintenant dans tes mondes.
                         </p>
                     </section>
                 </div>
             </main>
+        </div>
+
+        <div
+            v-if="ownerModalOpen"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-[#0d1318]/70 px-6 py-10 backdrop-blur-sm"
+            @click.self="ownerModalOpen = false"
+        >
+            <div class="w-full max-w-md rounded-[28px] border border-[#1f1a14]/10 bg-white p-6 shadow-[0_24px_80px_rgba(15,19,24,0.25)] sm:p-7">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">Dual</p>
+                <h3 class="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[#1c1814]">
+                    Tu es déjà le propriétaire du compte.
+                </h3>
+                <p class="mt-4 text-sm leading-7 text-[#5b5047]">
+                    Ce code dual appartient déjà au compte de jeu lié à ton compte Travtool.
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <button
+                        type="button"
+                        class="rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                        @click="ownerModalOpen = false"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </template>

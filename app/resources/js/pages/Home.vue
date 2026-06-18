@@ -40,10 +40,12 @@ const page = usePage<{
     auth: { user: AuthUser | null };
     worldDashboard: WorldDashboard;
     errors?: Record<string, string>;
+    flash?: { status?: string | null };
 }>();
 const authUser = computed(() => page.props.auth.user);
 const dashboard = computed(() => page.props.worldDashboard);
 const joinPlayedAccountError = computed(() => page.props.errors?.invite_code ?? null);
+const ownerModalOpen = ref(page.props.flash?.status === 'dual-owner');
 const menuOpen = ref(false);
 const worldToAdd = ref('');
 const playedAccountName = ref('');
@@ -205,6 +207,13 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
         }
     }, 220);
 });
+
+watch(
+    () => page.props.flash?.status,
+    (status) => {
+        ownerModalOpen.value = status === 'dual-owner';
+    },
+);
 </script>
 
 <template>
@@ -571,6 +580,31 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
             <footer class="border-t border-[#1f1a14]/10 pt-6 text-sm text-[#5f574f]">
                 <p>{{ t('home.footer.line_3') }}</p>
             </footer>
+        </div>
+
+        <div
+            v-if="ownerModalOpen"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-[#0d1318]/70 px-6 py-10 backdrop-blur-sm"
+            @click.self="ownerModalOpen = false"
+        >
+            <div class="w-full max-w-md rounded-[28px] border border-[#1f1a14]/10 bg-white p-6 shadow-[0_24px_80px_rgba(15,19,24,0.25)] sm:p-7">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">Dual</p>
+                <h3 class="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[#1c1814]">
+                    Tu es déjà le propriétaire du compte.
+                </h3>
+                <p class="mt-4 text-sm leading-7 text-[#5b5047]">
+                    Ce code dual appartient déjà au compte de jeu lié à ton compte Travtool.
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <button
+                        type="button"
+                        class="rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                        @click="ownerModalOpen = false"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </template>
