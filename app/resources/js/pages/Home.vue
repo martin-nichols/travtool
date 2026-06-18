@@ -292,6 +292,12 @@ watch([playedAccountName, selectedWorld], ([name, world]) => {
 
                                 <div class="grid gap-2 border-t border-[#1f1a14]/10 pt-4">
                                     <Link
+                                        href="/account"
+                                        class="rounded-xl px-3 py-2 text-sm font-medium text-[#1f1a14] transition hover:bg-[#f2eadc]"
+                                    >
+                                        Compte
+                                    </Link>
+                                    <Link
                                         v-if="authUser.is_admin"
                                         href="/admin"
                                         class="rounded-xl px-3 py-2 text-sm font-medium text-[#1f1a14] transition hover:bg-[#f2eadc]"

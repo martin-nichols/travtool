@@ -1106,6 +1106,9 @@ const closeMobileFullscreen = (): void => {
                                 <Link href="/" class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]">
                                     Accueil
                                 </Link>
+                                <Link href="/account" class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]">
+                                    Compte
+                                </Link>
                                 <Link
                                     v-if="authUser.is_admin"
                                     href="/admin"
