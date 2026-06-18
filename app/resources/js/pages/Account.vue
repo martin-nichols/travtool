@@ -1,8 +1,27 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import type { User as AuthUser } from '@/types';
+
+type OwnedPlayedAccount = {
+    id: number;
+    world_key: string;
+    name: string;
+    invite_code: string | null;
+    duals: AccountDual[];
+};
+
+type AccountDual = {
+    membership_id: number;
+    name: string;
+    email: string | null;
+    joined_at: string | null;
+};
+
+const props = defineProps<{
+    ownedPlayedAccounts: OwnedPlayedAccount[];
+}>();
 
 const page = usePage<{
     auth: { user: AuthUser | null };
@@ -10,6 +29,7 @@ const page = usePage<{
 }>();
 const flashStatus = () => page.props.flash?.status ?? null;
 const ownerModalOpen = ref(page.props.flash?.status === 'dual-owner');
+const pendingDualRemoval = ref<AccountDual | null>(null);
 
 const passwordForm = useForm({
     current_password: '',
@@ -45,6 +65,27 @@ const joinDual = (): void => {
         preserveScroll: true,
         onSuccess: () => {
             dualForm.reset();
+        },
+    });
+};
+
+const requestDualRemoval = (dual: AccountDual): void => {
+    pendingDualRemoval.value = dual;
+};
+
+const cancelDualRemoval = (): void => {
+    pendingDualRemoval.value = null;
+};
+
+const confirmDualRemoval = (): void => {
+    if (!pendingDualRemoval.value) {
+        return;
+    }
+
+    router.delete(`/account/duals/${pendingDualRemoval.value.membership_id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            pendingDualRemoval.value = null;
         },
     });
 };
@@ -189,6 +230,60 @@ const joinDual = (): void => {
                         <p v-if="flashStatus() === 'dual-joined'" class="mt-4 rounded-[16px] bg-[#456f5b]/12 px-4 py-3 text-sm font-medium text-[#456f5b]">
                             Compte dual rejoint. Le monde lié est maintenant dans tes mondes.
                         </p>
+                        <p v-if="flashStatus() === 'dual-revoked'" class="mt-4 rounded-[16px] bg-[#456f5b]/12 px-4 py-3 text-sm font-medium text-[#456f5b]">
+                            Accès dual retiré.
+                        </p>
+
+                        <div class="mt-8 border-t border-[#1f1a14]/10 pt-6">
+                            <h3 class="text-lg font-semibold text-[#1f1a14]">Mes invitations duals</h3>
+
+                            <div v-if="props.ownedPlayedAccounts.length > 0" class="mt-4 grid gap-4">
+                                <article
+                                    v-for="account in props.ownedPlayedAccounts"
+                                    :key="account.id"
+                                    class="rounded-[18px] border border-[#1f1a14]/10 bg-white px-4 py-4"
+                                >
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <p class="font-medium text-[#1f1a14]">{{ account.name }}</p>
+                                            <p class="mt-1 text-xs text-[#6b6258]">{{ account.world_key }}</p>
+                                        </div>
+                                        <div v-if="account.invite_code" class="min-w-0 rounded-[14px] bg-[#fffaf2] px-3 py-2">
+                                            <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8b4a27]">Code dual</p>
+                                            <p class="mt-1 break-all font-mono text-xs text-[#1f1a14]">{{ account.invite_code }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 grid gap-2">
+                                        <div
+                                            v-for="dual in account.duals"
+                                            :key="dual.membership_id"
+                                            class="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[#1f1a14]/10 bg-[#faf6ee] px-3 py-3"
+                                        >
+                                            <div class="min-w-0">
+                                                <p class="truncate text-sm font-medium text-[#1f1a14]">{{ dual.name }}</p>
+                                                <p v-if="dual.email" class="mt-1 truncate text-xs text-[#6b6258]">{{ dual.email }}</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                class="rounded-full px-3 py-2 text-xs font-medium text-[#8b4a27] transition hover:bg-[#f2eadc]"
+                                                @click="requestDualRemoval(dual)"
+                                            >
+                                                Retirer l'accès
+                                            </button>
+                                        </div>
+
+                                        <p v-if="account.duals.length === 0" class="rounded-[14px] border border-dashed border-[#1f1a14]/15 px-3 py-3 text-sm text-[#6b6258]">
+                                            Aucun dual n'a encore rejoint ce compte.
+                                        </p>
+                                    </div>
+                                </article>
+                            </div>
+
+                            <p v-else class="mt-4 rounded-[16px] border border-dashed border-[#1f1a14]/15 px-4 py-4 text-sm text-[#6b6258]">
+                                Tu n'es propriétaire d'aucun compte joué pour le moment.
+                            </p>
+                        </div>
                     </section>
                 </div>
             </main>
@@ -214,6 +309,38 @@ const joinDual = (): void => {
                         @click="ownerModalOpen = false"
                     >
                         OK
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
+            v-if="pendingDualRemoval"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-[#0d1318]/70 px-6 py-10 backdrop-blur-sm"
+            @click.self="cancelDualRemoval"
+        >
+            <div class="w-full max-w-md rounded-[28px] border border-[#1f1a14]/10 bg-white p-6 shadow-[0_24px_80px_rgba(15,19,24,0.25)] sm:p-7">
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b4a27]">Retirer un dual</p>
+                <h3 class="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[#1c1814]">
+                    Retirer l'accès de {{ pendingDualRemoval.name }}?
+                </h3>
+                <p class="mt-4 text-sm leading-7 text-[#5b5047]">
+                    Ce compte Travtool ne sera plus lié à ton compte de jeu et perdra les accès associés.
+                </p>
+                <div class="mt-6 flex flex-wrap justify-end gap-3">
+                    <button
+                        type="button"
+                        class="rounded-full border border-[#1f1a14]/10 px-4 py-2 text-sm font-medium text-[#1f1a14] transition hover:bg-[#f7f4ee]"
+                        @click="cancelDualRemoval"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-full bg-[#8b4a27] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#6d3418]"
+                        @click="confirmDualRemoval"
+                    >
+                        Retirer
                     </button>
                 </div>
             </div>

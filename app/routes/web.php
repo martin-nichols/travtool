@@ -32,6 +32,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::middleware('auth')->group(function (): void {
     Route::get('/account', [AccountController::class, 'show'])->name('account.show');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+    Route::delete('/account/duals/{membership}', [AccountController::class, 'revokeDual'])->name('account.duals.revoke');
     Route::get('/admin', AdminDashboardController::class)->name('admin.dashboard');
     Route::post('/my-worlds', [UserWorldController::class, 'store'])->name('my-worlds.store');
     Route::patch('/my-worlds/selected', [UserWorldController::class, 'select'])->name('my-worlds.select');
