@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserMap;
 use App\Services\UserWorldPreferenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserMapController extends Controller
 {
@@ -28,11 +30,15 @@ class UserMapController extends Controller
         abort_unless($this->worldPreferences->isActiveWorldKey((string) $validated['world_key']), 422);
 
         $user = $request->user();
-        $savedMapCount = $user->maps()->count();
+        $worldKey = trim((string) $validated['world_key']);
+        $playedAccountGroupId = $this->playedAccountGroupId($request, $worldKey);
+        $savedMapCount = $playedAccountGroupId !== null
+            ? UserMap::query()->where('played_account_group_id', $playedAccountGroupId)->count()
+            : $user->maps()->whereNull('played_account_group_id')->count();
 
         if ($savedMapCount >= self::MAX_MAPS_PER_USER) {
             return back()->withErrors([
-                'saved_map' => sprintf('Maximum %d cartes sauvegardees par compte.', self::MAX_MAPS_PER_USER),
+                'saved_map' => sprintf('Maximum %d cartes sauvegardées par compte.', self::MAX_MAPS_PER_USER),
             ]);
         }
 
@@ -40,7 +46,8 @@ class UserMapController extends Controller
 
         $user->maps()->create([
             'name' => $name !== '' ? $name : 'Carte '.($savedMapCount + 1),
-            'world_key' => trim((string) $validated['world_key']),
+            'played_account_group_id' => $playedAccountGroupId,
+            'world_key' => $worldKey,
             'alliance_tags' => $this->filledText($validated['alliance_tags'] ?? null),
             'player_names' => $this->filledText($validated['player_names'] ?? null),
             'region_names' => $this->filledText($validated['region_names'] ?? null),
@@ -51,12 +58,44 @@ class UserMapController extends Controller
 
     public function destroy(Request $request, int $userMap): RedirectResponse
     {
-        $request->user()
-            ->maps()
+        $map = UserMap::query()
             ->whereKey($userMap)
-            ->delete();
+            ->first(['id', 'user_id', 'played_account_group_id']);
+
+        if ($map === null) {
+            return back();
+        }
+
+        $canDelete = $map->user_id === $request->user()->id
+            || (
+                $map->played_account_group_id !== null
+                && $this->playedAccountGroupIds($request)->contains($map->played_account_group_id)
+            );
+
+        abort_unless($canDelete, 403);
+
+        $map->delete();
 
         return back();
+    }
+
+    private function playedAccountGroupId(Request $request, string $worldKey): ?int
+    {
+        $groupId = $request->user()
+            ->playedAccounts()
+            ->where('world_key', $worldKey)
+            ->value('played_account_group_id');
+
+        return $groupId !== null ? (int) $groupId : null;
+    }
+
+    private function playedAccountGroupIds(Request $request)
+    {
+        return DB::table('travtool_group_users')
+            ->join('travtool_groups', 'travtool_groups.id', '=', 'travtool_group_users.travtool_group_id')
+            ->where('user_id', $request->user()->id)
+            ->where('travtool_groups.type', 'played_account')
+            ->pluck('travtool_group_users.travtool_group_id');
     }
 
     private function filledText(mixed $value): ?string

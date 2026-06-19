@@ -447,7 +447,21 @@ class MapBuilderController extends Controller
             return [];
         }
 
-        return $user->maps()
+        $groupIds = DB::table('travtool_group_users')
+            ->join('travtool_groups', 'travtool_groups.id', '=', 'travtool_group_users.travtool_group_id')
+            ->where('user_id', $user->id)
+            ->where('travtool_groups.type', 'played_account')
+            ->pluck('travtool_group_users.travtool_group_id')
+            ->all();
+
+        return DB::table('user_maps')
+            ->where(function (Builder $query) use ($groupIds, $user): void {
+                $query->where('user_id', $user->id);
+
+                if ($groupIds !== []) {
+                    $query->orWhereIn('played_account_group_id', $groupIds);
+                }
+            })
             ->latest('updated_at')
             ->limit(10)
             ->get(['id', 'name', 'world_key', 'alliance_tags', 'player_names', 'region_names', 'updated_at'])

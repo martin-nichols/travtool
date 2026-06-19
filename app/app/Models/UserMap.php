@@ -13,4 +13,9 @@ class UserMap extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function playedAccountGroup(): BelongsTo
+    {
+        return $this->belongsTo(TravtoolGroup::class, 'played_account_group_id');
+    }
 }
