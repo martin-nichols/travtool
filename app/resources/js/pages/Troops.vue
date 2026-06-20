@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import type { User as AuthUser } from '@/types';
-
-type AccountOption = {
-    world_key: string;
-    world_name: string;
-    player_name: string;
-    is_owner: boolean;
-};
 
 type TroopColumn = {
     key: string;
@@ -34,9 +27,13 @@ type TroopRate = {
 };
 
 const props = defineProps<{
-    accounts: AccountOption[];
     selectedWorldKey: string;
-    selectedAccount: AccountOption | null;
+    selectedAccount: {
+        world_key: string;
+        world_name: string;
+        player_name: string;
+        is_owner: boolean;
+    } | null;
     troopColumns: TroopColumn[];
     villages: VillageRow[];
     totals: Totals;
@@ -53,6 +50,7 @@ const page = usePage<{
 
 const authUser = computed(() => page.props.auth.user);
 const menuOpen = ref(false);
+const importPanelOpen = ref(false);
 
 const form = useForm({
     world_key: props.selectedWorldKey,
@@ -71,20 +69,15 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
     minute: '2-digit',
 });
 
-const selectedWorld = computed({
-    get: () => props.selectedWorldKey,
-    set: (worldKey: string) => {
-        form.world_key = worldKey;
-        router.get('/troops', { world: worldKey }, { preserveState: false });
-    },
-});
-
 const hasTroops = computed(() => props.villages.length > 0 && props.troopColumns.length > 0);
 const status = computed(() => page.props.flash.status ?? null);
 const troopTextError = computed(() => page.props.errors.troops_text ?? null);
 const worldError = computed(() => page.props.errors.world_key ?? null);
 const lastImportedLabel = computed(() => (props.lastImportedAt ? dateFormatter.format(new Date(props.lastImportedAt)) : null));
 const troopRateLabel = computed(() => (props.troopRate.ratio === null ? 'N/D' : `${rateFormatter.format(props.troopRate.ratio)}:1`));
+const playedAccountLabel = computed(() =>
+    props.selectedAccount ? `${props.selectedAccount.player_name} sur ${props.selectedAccount.world_name}` : 'Aucun compte joué lié',
+);
 
 const quantity = (row: VillageRow | Totals, troopKey: string): number => row.troops[troopKey] ?? 0;
 
@@ -114,6 +107,9 @@ function submitTroops(): void {
                     </h1>
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-[#62584d]">
                         Colle le contenu de la page Troupes Travian pour mettre à jour les effectifs visibles par les duals du même compte.
+                    </p>
+                    <p class="mt-3 text-sm font-semibold text-[#1f1a14]">
+                        {{ playedAccountLabel }}
                     </p>
                     <div class="mt-4 md:hidden">
                         <LanguageSwitcher />
@@ -196,35 +192,6 @@ function submitTroops(): void {
 
             <main class="grid min-w-0 gap-6 py-8">
                 <section class="min-w-0 rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-4 shadow-sm sm:p-5">
-                    <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-                        <div>
-                            <label for="troop-world" class="text-sm font-semibold text-[#1f1a14]">Compte joué</label>
-                            <select
-                                id="troop-world"
-                                v-model="selectedWorld"
-                                class="mt-2 w-full rounded-xl border border-[#1f1a14]/10 bg-white px-3 py-3 text-sm text-[#1f1a14] outline-none transition focus:border-[#8b4a27]/50"
-                            >
-                                <option value="">Choisir un compte</option>
-                                <option v-for="account in props.accounts" :key="account.world_key" :value="account.world_key">
-                                    {{ account.world_name }} - {{ account.player_name }}
-                                </option>
-                            </select>
-                            <p v-if="props.selectedAccount" class="mt-2 text-sm text-[#6b6258]">
-                                {{ props.selectedAccount.player_name }} sur {{ props.selectedAccount.world_name }}
-                            </p>
-                            <p v-else class="mt-2 text-sm text-[#8b4a27]">
-                                Aucun compte joué n'est lié à ton compte Travtool.
-                            </p>
-                        </div>
-
-                        <div v-if="lastImportedLabel" class="rounded-xl border border-[#1f1a14]/10 bg-[#fffaf1] px-4 py-3 text-sm text-[#5f574f]">
-                            Dernière mise à jour<br>
-                            <span class="font-semibold text-[#1f1a14]">{{ lastImportedLabel }}</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="min-w-0 rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-4 shadow-sm sm:p-5">
                     <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 class="text-xl font-semibold text-[#1f1a14]">Charger les troupes</h2>
@@ -234,27 +201,39 @@ function submitTroops(): void {
                         </div>
                         <button
                             type="button"
-                            class="w-full rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                            :disabled="!props.troopStorageReady || !props.selectedWorldKey || !form.troops_text.trim() || form.processing"
-                            @click="submitTroops"
+                            class="w-full rounded-full border border-[#1f1a14]/10 bg-white px-5 py-3 text-sm font-medium text-[#1f1a14] transition hover:bg-[#f2eadc] sm:w-auto"
+                            @click="importPanelOpen = !importPanelOpen"
                         >
-                            Charger les troupes
+                            {{ importPanelOpen ? 'Masquer le chargeur' : 'Afficher le chargeur' }}
                         </button>
                     </div>
 
-                    <textarea
-                        v-model="form.troops_text"
-                        class="mt-4 min-h-64 w-full resize-y rounded-xl border border-[#1f1a14]/10 bg-white px-4 py-3 font-mono text-sm text-[#1f1a14] outline-none transition focus:border-[#8b4a27]/50"
-                        placeholder="Colle ici le contenu complet de la page Troupes Travian..."
-                    />
+                    <div v-if="importPanelOpen" class="mt-4">
+                        <textarea
+                            v-model="form.troops_text"
+                            class="min-h-64 w-full resize-y rounded-xl border border-[#1f1a14]/10 bg-white px-4 py-3 font-mono text-sm text-[#1f1a14] outline-none transition focus:border-[#8b4a27]/50"
+                            placeholder="Colle ici le contenu complet de la page Troupes Travian..."
+                        />
 
-                    <div class="mt-3 grid gap-2 text-sm">
-                        <p v-if="!props.troopStorageReady" class="text-[#8b4a27]">
-                            La table des troupes n'existe pas encore. Exécute la migration sur le serveur.
-                        </p>
-                        <p v-if="status" class="text-[#2f6b3f]">{{ status }}</p>
-                        <p v-if="troopTextError" class="text-[#8b4a27]">{{ troopTextError }}</p>
-                        <p v-if="worldError" class="text-[#8b4a27]">{{ worldError }}</p>
+                        <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                            <div class="grid gap-2 text-sm">
+                                <p v-if="!props.troopStorageReady" class="text-[#8b4a27]">
+                                    La table des troupes n'existe pas encore. Exécute la migration sur le serveur.
+                                </p>
+                                <p v-if="status" class="text-[#2f6b3f]">{{ status }}</p>
+                                <p v-if="troopTextError" class="text-[#8b4a27]">{{ troopTextError }}</p>
+                                <p v-if="worldError" class="text-[#8b4a27]">{{ worldError }}</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="w-full rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                :disabled="!props.troopStorageReady || !props.selectedWorldKey || !form.troops_text.trim() || form.processing"
+                                @click="submitTroops"
+                            >
+                                Charger les troupes
+                            </button>
+                        </div>
                     </div>
                 </section>
 
@@ -265,6 +244,10 @@ function submitTroops(): void {
                             <p class="mt-1 text-sm text-[#6b6258]">
                                 Visible par tous les joueurs liés au même compte.
                             </p>
+                            <div v-if="lastImportedLabel" class="mt-3 inline-block rounded-xl border border-[#1f1a14]/10 bg-[#fffaf1] px-4 py-3 text-sm text-[#5f574f]">
+                                Dernière mise à jour<br>
+                                <span class="font-semibold text-[#1f1a14]">{{ lastImportedLabel }}</span>
+                            </div>
                         </div>
                         <div v-if="hasTroops" class="flex flex-wrap items-center gap-2">
                             <div class="rounded-full bg-[#fffaf1] px-4 py-2 text-sm font-semibold text-[#1f1a14]">
