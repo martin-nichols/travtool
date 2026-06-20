@@ -81,14 +81,22 @@ const statCards = computed(() => [
                     </p>
                 </div>
 
-                <Link
-                    as="button"
-                    method="post"
-                    href="/logout"
-                    class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
-                >
-                    Déconnexion
-                </Link>
+                <div class="flex flex-wrap items-center gap-3">
+                    <Link
+                        href="/troops"
+                        class="inline-flex items-center justify-center rounded-full border border-[#1f1a14]/10 bg-white/70 px-5 py-3 text-sm font-medium text-[#1f1a14] transition hover:bg-white"
+                    >
+                        Troupes
+                    </Link>
+                    <Link
+                        as="button"
+                        method="post"
+                        href="/logout"
+                        class="inline-flex items-center justify-center rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27]"
+                    >
+                        Déconnexion
+                    </Link>
+                </div>
             </header>
 
             <section class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

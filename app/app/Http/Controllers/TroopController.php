@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -33,7 +34,8 @@ class TroopController extends Controller
             $this->worldPreferences->rememberWorld($request->user(), $selectedWorldKey);
         }
 
-        $troops = $selectedAccount !== null
+        $troopStorageReady = Schema::hasTable('played_account_troops');
+        $troops = $selectedAccount !== null && $troopStorageReady
             ? PlayedAccountTroop::query()
                 ->where('played_account_group_id', $selectedAccount['played_account_group_id'])
                 ->orderBy('village_name')
@@ -58,12 +60,19 @@ class TroopController extends Controller
             'troopColumns' => $this->troopColumns($troops),
             'villages' => $this->villageRows($troops),
             'totals' => $this->totalRow($troops),
-            'lastImportedAt' => $troops->max('imported_at')?->toIso8601String(),
+            'lastImportedAt' => $this->lastImportedAt($troops),
+            'troopStorageReady' => $troopStorageReady,
         ]);
     }
 
     public function import(Request $request): RedirectResponse
     {
+        if (! Schema::hasTable('played_account_troops')) {
+            return back()->withErrors([
+                'troops_text' => 'La table des troupes n’existe pas encore. Exécute php artisan migrate --force sur le serveur.',
+            ]);
+        }
+
         $validated = Validator::make($request->all(), [
             'world_key' => ['required', 'string', 'max:100'],
             'troops_text' => ['required', 'string', 'max:200000'],
@@ -226,6 +235,16 @@ class TroopController extends Controller
     }
 
     /**
+     * @param Collection<int, PlayedAccountTroop> $troops
+     */
+    private function lastImportedAt(Collection $troops): ?string
+    {
+        $latest = $troops->sortByDesc('imported_at')->first()?->imported_at;
+
+        return $latest?->toIso8601String();
+    }
+
+    /**
      * @return array{
      *     columns:array<int, array{key:string,name:string}>,
      *     rows:array<int, array{village_name:string,quantities:array<int,int>}>
@@ -332,10 +351,12 @@ class TroopController extends Controller
      */
     private function troopAliases(): array
     {
-        $catalogAliases = TravianTroop::query()
-            ->pluck('troop_key', 'name')
-            ->mapWithKeys(fn (string $troopKey, string $name): array => [$this->slug($name) => $troopKey])
-            ->all();
+        $catalogAliases = Schema::hasTable('travian_troops')
+            ? TravianTroop::query()
+                ->pluck('troop_key', 'name')
+                ->mapWithKeys(fn (string $troopKey, string $name): array => [$this->slug($name) => $troopKey])
+                ->all()
+            : [];
 
         return array_merge($catalogAliases, [
             'mercenaire' => 'mercenary',

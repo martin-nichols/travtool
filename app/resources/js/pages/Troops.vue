@@ -35,6 +35,7 @@ const props = defineProps<{
     villages: VillageRow[];
     totals: Totals;
     lastImportedAt: string | null;
+    troopStorageReady: boolean;
 }>();
 
 const page = usePage<{
@@ -223,7 +224,7 @@ function submitTroops(): void {
                         <button
                             type="button"
                             class="rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27] disabled:cursor-not-allowed disabled:opacity-50"
-                            :disabled="!props.selectedWorldKey || !form.troops_text.trim() || form.processing"
+                            :disabled="!props.troopStorageReady || !props.selectedWorldKey || !form.troops_text.trim() || form.processing"
                             @click="submitTroops"
                         >
                             Charger les troupes
@@ -237,6 +238,9 @@ function submitTroops(): void {
                     />
 
                     <div class="mt-3 grid gap-2 text-sm">
+                        <p v-if="!props.troopStorageReady" class="text-[#8b4a27]">
+                            La table des troupes n'existe pas encore. Exécute la migration sur le serveur.
+                        </p>
                         <p v-if="status" class="text-[#2f6b3f]">{{ status }}</p>
                         <p v-if="troopTextError" class="text-[#8b4a27]">{{ troopTextError }}</p>
                         <p v-if="worldError" class="text-[#8b4a27]">{{ worldError }}</p>
