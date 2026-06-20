@@ -1128,6 +1128,12 @@ const closeMobileFullscreen = (): void => {
                                 >
                                     Créateur de carte
                                 </Link>
+                                <Link
+                                    :href="props.summary.selectedWorldKey ? `/troops?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/troops'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Troupes
+                                </Link>
                                 <a
                                     v-if="props.summary.selectedWorldBaseUrl"
                                     :href="props.summary.selectedWorldBaseUrl"

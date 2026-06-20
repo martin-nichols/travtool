@@ -325,6 +325,12 @@ watch(
                                     >
                                         Créateur de carte
                                     </Link>
+                                    <Link
+                                        :href="toolHref('/troops')"
+                                        class="rounded-xl px-3 py-2 text-sm font-medium text-[#1f1a14] transition hover:bg-[#f2eadc]"
+                                    >
+                                        Troupes
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -370,6 +376,12 @@ watch(
                                     class="rounded-full border border-[#1f1a14]/10 bg-white/70 px-5 py-3 text-sm font-medium text-[#1f1a14] transition hover:bg-white"
                                 >
                                     Ouvrir la carte
+                                </Link>
+                                <Link
+                                    :href="toolHref('/troops')"
+                                    class="rounded-full border border-[#1f1a14]/10 bg-white/70 px-5 py-3 text-sm font-medium text-[#1f1a14] transition hover:bg-white"
+                                >
+                                    Voir les troupes
                                 </Link>
                             </div>
 

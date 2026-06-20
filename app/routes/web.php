@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InactiveFinderController;
 use App\Http\Controllers\MapBuilderController;
 use App\Http\Controllers\PlayerSearchController;
+use App\Http\Controllers\TroopController;
 use App\Http\Controllers\UserMapController;
 use App\Http\Controllers\UserPlayedAccountController;
 use App\Http\Controllers\UserWorldController;
@@ -34,6 +35,8 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
     Route::delete('/account/duals/{membership}', [AccountController::class, 'revokeDual'])->name('account.duals.revoke');
     Route::get('/admin', AdminDashboardController::class)->name('admin.dashboard');
+    Route::get('/troops', [TroopController::class, 'index'])->name('troops.index');
+    Route::post('/troops/import', [TroopController::class, 'import'])->name('troops.import');
     Route::post('/my-worlds', [UserWorldController::class, 'store'])->name('my-worlds.store');
     Route::patch('/my-worlds/selected', [UserWorldController::class, 'select'])->name('my-worlds.select');
     Route::delete('/my-worlds/{worldKey}', [UserWorldController::class, 'destroy'])->name('my-worlds.destroy');
