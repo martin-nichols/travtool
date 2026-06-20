@@ -494,6 +494,12 @@ const suppressDraggedClick = (event: MouseEvent) => {
                                 >
                                     Troupes
                                 </Link>
+                                <Link
+                                    :href="props.summary.selectedWorldKey ? `/travel-calculator?world=${encodeURIComponent(props.summary.selectedWorldKey)}` : '/travel-calculator'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Calculateur de trajets
+                                </Link>
                                 <a
                                     v-if="props.summary.selectedWorldBaseUrl"
                                     :href="props.summary.selectedWorldBaseUrl"

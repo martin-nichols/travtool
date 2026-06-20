@@ -89,6 +89,12 @@ const statCards = computed(() => [
                         Troupes
                     </Link>
                     <Link
+                        href="/travel-calculator"
+                        class="inline-flex items-center justify-center rounded-full border border-[#1f1a14]/10 bg-white/70 px-5 py-3 text-sm font-medium text-[#1f1a14] transition hover:bg-white"
+                    >
+                        Trajets
+                    </Link>
+                    <Link
                         as="button"
                         method="post"
                         href="/logout"

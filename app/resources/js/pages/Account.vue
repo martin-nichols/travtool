@@ -118,6 +118,12 @@ const confirmDualRemoval = (): void => {
                     >
                         Troupes
                     </Link>
+                    <Link
+                        href="/travel-calculator"
+                        class="rounded-full border border-[#1f1a14]/10 bg-white/70 px-4 py-2 text-sm font-medium text-[#1f1a14] transition hover:bg-white"
+                    >
+                        Trajets
+                    </Link>
                 </div>
             </header>
 

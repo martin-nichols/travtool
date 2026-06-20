@@ -1,6 +1,6 @@
 {
-  "_LanguageSwitcher-C4KiMRoB.js": {
-    "file": "assets/LanguageSwitcher-C4KiMRoB.js",
+  "_LanguageSwitcher-fu6puylH.js": {
+    "file": "assets/LanguageSwitcher-fu6puylH.js",
     "name": "LanguageSwitcher",
     "imports": [
       "resources/js/app.ts"
@@ -59,7 +59,7 @@
     "src": "_instrument-sans-600-normal-DMks36a2.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-D0QSBFj7.css",
+    "file": "assets/app-NlTeLA2D.css",
     "name": "app",
     "names": [
       "app.css"
@@ -68,7 +68,7 @@
     "isEntry": true
   },
   "resources/js/app.ts": {
-    "file": "assets/app-B4M2kKJL.js",
+    "file": "assets/app-CDsxIXpO.js",
     "name": "app",
     "src": "resources/js/app.ts",
     "isEntry": true,
@@ -80,22 +80,23 @@
       "resources/js/pages/Home.vue",
       "resources/js/pages/InactiveFinder.vue",
       "resources/js/pages/MapBuilder.vue",
+      "resources/js/pages/TravelCalculator.vue",
       "resources/js/pages/Troops.vue",
       "resources/js/pages/Welcome.vue"
     ]
   },
   "resources/js/pages/Account.vue": {
-    "file": "assets/Account-L_bP316M.js",
+    "file": "assets/Account-BSPILWsp.js",
     "name": "Account",
     "src": "resources/js/pages/Account.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/Admin/Dashboard.vue": {
-    "file": "assets/Dashboard-Dfht1RVf.js",
+    "file": "assets/Dashboard-Z0lqpPmM.js",
     "name": "Dashboard",
     "src": "resources/js/pages/Admin/Dashboard.vue",
     "isDynamicEntry": true,
@@ -104,67 +105,77 @@
     ]
   },
   "resources/js/pages/Auth/Login.vue": {
-    "file": "assets/Login-CLzMyDdi.js",
+    "file": "assets/Login-BAVKvLS3.js",
     "name": "Login",
     "src": "resources/js/pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/Auth/Register.vue": {
-    "file": "assets/Register-Cru4JtVZ.js",
+    "file": "assets/Register-B1kjCzn4.js",
     "name": "Register",
     "src": "resources/js/pages/Auth/Register.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/Home.vue": {
-    "file": "assets/Home-dzj9EDlp.js",
+    "file": "assets/Home-BvUmCteH.js",
     "name": "Home",
     "src": "resources/js/pages/Home.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/InactiveFinder.vue": {
-    "file": "assets/InactiveFinder-q1yMcbVQ.js",
+    "file": "assets/InactiveFinder-B31YwxHZ.js",
     "name": "InactiveFinder",
     "src": "resources/js/pages/InactiveFinder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/MapBuilder.vue": {
-    "file": "assets/MapBuilder-gVNBvee4.js",
+    "file": "assets/MapBuilder-C3ubJXCT.js",
     "name": "MapBuilder",
     "src": "resources/js/pages/MapBuilder.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
+    ]
+  },
+  "resources/js/pages/TravelCalculator.vue": {
+    "file": "assets/TravelCalculator-BOZDycqB.js",
+    "name": "TravelCalculator",
+    "src": "resources/js/pages/TravelCalculator.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.ts",
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/Troops.vue": {
-    "file": "assets/Troops-BWhZT-YO.js",
+    "file": "assets/Troops-B0iHtUT1.js",
     "name": "Troops",
     "src": "resources/js/pages/Troops.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.ts",
-      "_LanguageSwitcher-C4KiMRoB.js"
+      "_LanguageSwitcher-fu6puylH.js"
     ]
   },
   "resources/js/pages/Welcome.vue": {
-    "file": "assets/Welcome-DZFRJ9ys.js",
+    "file": "assets/Welcome-DImemkqg.js",
     "name": "Welcome",
     "src": "resources/js/pages/Welcome.vue",
     "isDynamicEntry": true,

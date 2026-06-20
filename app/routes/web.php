@@ -9,6 +9,7 @@ use App\Http\Controllers\InactiveFinderController;
 use App\Http\Controllers\MapBuilderController;
 use App\Http\Controllers\PlayerSearchController;
 use App\Http\Controllers\TroopController;
+use App\Http\Controllers\TravelCalculatorController;
 use App\Http\Controllers\UserMapController;
 use App\Http\Controllers\UserPlayedAccountController;
 use App\Http\Controllers\UserWorldController;
@@ -37,6 +38,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/admin', AdminDashboardController::class)->name('admin.dashboard');
     Route::get('/troops', [TroopController::class, 'index'])->name('troops.index');
     Route::post('/troops/import', [TroopController::class, 'import'])->name('troops.import');
+    Route::get('/travel-calculator', [TravelCalculatorController::class, 'index'])->name('travel-calculator');
     Route::post('/my-worlds', [UserWorldController::class, 'store'])->name('my-worlds.store');
     Route::patch('/my-worlds/selected', [UserWorldController::class, 'select'])->name('my-worlds.select');
     Route::delete('/my-worlds/{worldKey}', [UserWorldController::class, 'destroy'])->name('my-worlds.destroy');
@@ -44,6 +46,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/my-maps/{userMap}/delete', [UserMapController::class, 'destroy'])->name('my-maps.destroy-post');
     Route::delete('/my-maps/{userMap}', [UserMapController::class, 'destroy'])->name('my-maps.destroy');
     Route::get('/players/search', PlayerSearchController::class)->name('players.search');
+    Route::get('/villages/search', [TravelCalculatorController::class, 'searchVillages'])->name('villages.search');
     Route::post('/played-accounts', [UserPlayedAccountController::class, 'store'])->name('played-accounts.store');
     Route::post('/played-accounts/join', [UserPlayedAccountController::class, 'join'])->name('played-accounts.join');
     Route::post('/played-accounts/{playedAccount}/delete', [UserPlayedAccountController::class, 'destroy'])->name('played-accounts.destroy-post');

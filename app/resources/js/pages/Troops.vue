@@ -175,6 +175,12 @@ function submitTroops(): void {
                                 >
                                     Troupes
                                 </Link>
+                                <Link
+                                    :href="props.selectedWorldKey ? `/travel-calculator?world=${encodeURIComponent(props.selectedWorldKey)}` : '/travel-calculator'"
+                                    class="rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[#f2eadc]"
+                                >
+                                    Calculateur de trajets
+                                </Link>
                             </div>
 
                             <Link
