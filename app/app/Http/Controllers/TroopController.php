@@ -60,6 +60,7 @@ class TroopController extends Controller
             'troopColumns' => $this->troopColumns($troops),
             'villages' => $this->villageRows($troops),
             'totals' => $this->totalRow($troops),
+            'troopRate' => $this->troopRate($troops, $selectedAccount),
             'lastImportedAt' => $this->lastImportedAt($troops),
             'troopStorageReady' => $troopStorageReady,
         ]);
@@ -145,7 +146,7 @@ class TroopController extends Controller
             ->playedAccounts()
             ->whereNotNull('played_account_group_id')
             ->latest('updated_at')
-            ->get(['world_key', 'player_name', 'played_account_group_id']);
+            ->get(['world_key', 'player_name', 'player_id', 'played_account_group_id']);
 
         $roles = DB::table('travtool_group_users')
             ->where('user_id', $request->user()->id)
@@ -159,6 +160,7 @@ class TroopController extends Controller
                 'world_key' => $account->world_key,
                 'world_name' => (string) ($world['name'] ?? $account->world_key),
                 'player_name' => $account->player_name,
+                'player_id' => $account->player_id,
                 'played_account_group_id' => (int) $account->played_account_group_id,
                 'role' => $roles->get($account->played_account_group_id),
             ];
@@ -242,6 +244,71 @@ class TroopController extends Controller
         $latest = $troops->sortByDesc('imported_at')->first()?->imported_at;
 
         return $latest?->toIso8601String();
+    }
+
+    /**
+     * @param Collection<int, PlayedAccountTroop> $troops
+     * @param array{world_key:string,player_name:string,player_id:?int}|null $selectedAccount
+     * @return array{population:?int,crop_consumption:int,ratio:?float}
+     */
+    private function troopRate(Collection $troops, ?array $selectedAccount): array
+    {
+        $cropConsumption = $this->totalCropConsumption($troops);
+        $population = $this->playedAccountPopulation($selectedAccount);
+
+        return [
+            'population' => $population,
+            'crop_consumption' => $cropConsumption,
+            'ratio' => $population !== null && $population > 0
+                ? round($cropConsumption / $population, 1)
+                : null,
+        ];
+    }
+
+    /**
+     * @param Collection<int, PlayedAccountTroop> $troops
+     */
+    private function totalCropConsumption(Collection $troops): int
+    {
+        if ($troops->isEmpty()) {
+            return 0;
+        }
+
+        $cropCosts = Schema::hasTable('travian_troops')
+            ? TravianTroop::query()
+                ->select('troop_key', DB::raw('MAX(crop_consumption) as crop_consumption'))
+                ->groupBy('troop_key')
+                ->pluck('crop_consumption', 'troop_key')
+            : collect();
+
+        $cropCosts->put('hero', 6);
+
+        return $troops->sum(static fn (PlayedAccountTroop $troop): int => $troop->quantity * (int) ($cropCosts->get($troop->troop_key) ?? 0));
+    }
+
+    /**
+     * @param array{world_key:string,player_name:string,player_id:?int}|null $selectedAccount
+     */
+    private function playedAccountPopulation(?array $selectedAccount): ?int
+    {
+        if ($selectedAccount === null || ! Schema::hasTable('players') || ! Schema::hasTable('worlds')) {
+            return null;
+        }
+
+        $query = DB::table('players as p')
+            ->join('worlds as w', 'w.id', '=', 'p.world_id')
+            ->where('w.key', $selectedAccount['world_key'])
+            ->where('p.is_present', true);
+
+        if ($selectedAccount['player_id'] !== null) {
+            $query->where('p.id', $selectedAccount['player_id']);
+        } else {
+            $query->whereRaw('LOWER(p.name) = ?', [mb_strtolower($selectedAccount['player_name'])]);
+        }
+
+        $population = $query->value('p.current_population_total');
+
+        return $population !== null ? (int) $population : null;
     }
 
     /**

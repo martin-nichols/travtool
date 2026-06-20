@@ -27,6 +27,12 @@ type Totals = {
     troops: Record<string, number>;
 };
 
+type TroopRate = {
+    population: number | null;
+    crop_consumption: number;
+    ratio: number | null;
+};
+
 const props = defineProps<{
     accounts: AccountOption[];
     selectedWorldKey: string;
@@ -34,6 +40,7 @@ const props = defineProps<{
     troopColumns: TroopColumn[];
     villages: VillageRow[];
     totals: Totals;
+    troopRate: TroopRate;
     lastImportedAt: string | null;
     troopStorageReady: boolean;
 }>();
@@ -53,6 +60,9 @@ const form = useForm({
 });
 
 const numberFormatter = new Intl.NumberFormat();
+const rateFormatter = new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 1,
+});
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
     month: 'short',
@@ -74,6 +84,7 @@ const status = computed(() => page.props.flash.status ?? null);
 const troopTextError = computed(() => page.props.errors.troops_text ?? null);
 const worldError = computed(() => page.props.errors.world_key ?? null);
 const lastImportedLabel = computed(() => (props.lastImportedAt ? dateFormatter.format(new Date(props.lastImportedAt)) : null));
+const troopRateLabel = computed(() => (props.troopRate.ratio === null ? 'N/D' : `${rateFormatter.format(props.troopRate.ratio)}:1`));
 
 const quantity = (row: VillageRow | Totals, troopKey: string): number => row.troops[troopKey] ?? 0;
 
@@ -92,8 +103,8 @@ function submitTroops(): void {
     <Head title="Troupes" />
 
     <div class="min-h-screen overflow-x-hidden bg-[#f4efe4] text-[#171411]">
-        <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-10">
-            <header class="flex items-start justify-between gap-4">
+        <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+            <header class="flex min-w-0 items-start justify-between gap-4">
                 <div class="min-w-0">
                     <Link href="/" class="text-sm font-medium text-[#6a5d52] transition hover:text-[#8b4a27]">
                         Retour à l'accueil
@@ -183,8 +194,8 @@ function submitTroops(): void {
                 </div>
             </header>
 
-            <main class="grid gap-6 py-8">
-                <section class="rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-5 shadow-sm">
+            <main class="grid min-w-0 gap-6 py-8">
+                <section class="min-w-0 rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-4 shadow-sm sm:p-5">
                     <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
                         <div>
                             <label for="troop-world" class="text-sm font-semibold text-[#1f1a14]">Compte joué</label>
@@ -213,8 +224,8 @@ function submitTroops(): void {
                     </div>
                 </section>
 
-                <section class="rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-5 shadow-sm">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
+                <section class="min-w-0 rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-4 shadow-sm sm:p-5">
+                    <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
                         <div>
                             <h2 class="text-xl font-semibold text-[#1f1a14]">Charger les troupes</h2>
                             <p class="mt-1 text-sm text-[#6b6258]">
@@ -223,7 +234,7 @@ function submitTroops(): void {
                         </div>
                         <button
                             type="button"
-                            class="rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27] disabled:cursor-not-allowed disabled:opacity-50"
+                            class="w-full rounded-full bg-[#1f1a14] px-5 py-3 text-sm font-medium text-[#f7efe1] transition hover:bg-[#8b4a27] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             :disabled="!props.troopStorageReady || !props.selectedWorldKey || !form.troops_text.trim() || form.processing"
                             @click="submitTroops"
                         >
@@ -247,21 +258,70 @@ function submitTroops(): void {
                     </div>
                 </section>
 
-                <section class="rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-5 shadow-sm">
-                    <div class="flex flex-wrap items-end justify-between gap-3">
+                <section class="min-w-0 rounded-[18px] border border-[#1f1a14]/10 bg-white/75 p-4 shadow-sm sm:p-5">
+                    <div class="flex min-w-0 flex-wrap items-end justify-between gap-3">
                         <div>
                             <h2 class="text-xl font-semibold text-[#1f1a14]">Total des troupes par village</h2>
                             <p class="mt-1 text-sm text-[#6b6258]">
                                 Visible par tous les joueurs liés au même compte.
                             </p>
                         </div>
-                        <div v-if="hasTroops" class="rounded-full bg-[#f2eadc] px-4 py-2 text-sm font-semibold text-[#1f1a14]">
-                            Total {{ numberFormatter.format(props.totals.total) }}
+                        <div v-if="hasTroops" class="flex flex-wrap items-center gap-2">
+                            <div class="rounded-full bg-[#fffaf1] px-4 py-2 text-sm font-semibold text-[#1f1a14]">
+                                Taux de troupes {{ troopRateLabel }}
+                            </div>
+                            <div class="rounded-full bg-[#f2eadc] px-4 py-2 text-sm font-semibold text-[#1f1a14]">
+                                Total {{ numberFormatter.format(props.totals.total) }}
+                            </div>
                         </div>
                     </div>
 
-                    <div v-if="hasTroops" class="mt-5 overflow-x-auto">
-                        <table class="min-w-full border-separate border-spacing-0 text-left text-sm">
+                    <div v-if="hasTroops" class="mt-5 grid gap-3 md:hidden">
+                        <article
+                            v-for="village in props.villages"
+                            :key="village.village_name"
+                            class="min-w-0 rounded-xl border border-[#1f1a14]/10 bg-white px-4 py-3"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="min-w-0 break-words font-semibold text-[#1f1a14]">
+                                    {{ village.village_name }}
+                                </h3>
+                                <span class="shrink-0 rounded-full bg-[#f2eadc] px-3 py-1 text-xs font-semibold text-[#1f1a14]">
+                                    {{ numberFormatter.format(village.total) }}
+                                </span>
+                            </div>
+
+                            <div class="mt-3 grid grid-cols-2 gap-2">
+                                <template v-for="column in props.troopColumns" :key="column.key">
+                                    <div
+                                        v-if="quantity(village, column.key) > 0"
+                                        class="min-w-0 rounded-lg bg-[#f8f1e6] px-3 py-2"
+                                    >
+                                        <p class="truncate text-xs text-[#6b6258]">{{ column.name }}</p>
+                                        <p class="mt-1 font-semibold tabular-nums text-[#1f1a14]">
+                                            {{ numberFormatter.format(quantity(village, column.key)) }}
+                                        </p>
+                                    </div>
+                                </template>
+                            </div>
+                        </article>
+
+                        <article class="min-w-0 rounded-xl border border-[#1f1a14]/10 bg-[#f8f1e6] px-4 py-3">
+                            <div class="grid gap-2 font-semibold text-[#1f1a14]">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span>Taux de troupes</span>
+                                    <span class="tabular-nums">{{ troopRateLabel }}</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <span>Somme</span>
+                                    <span class="tabular-nums">{{ numberFormatter.format(props.totals.total) }}</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div v-if="hasTroops" class="mt-5 hidden max-w-full overflow-x-auto md:block">
+                        <table class="min-w-max border-separate border-spacing-0 text-left text-sm">
                             <thead>
                                 <tr class="text-xs uppercase tracking-[0.18em] text-[#7a4b2b]">
                                     <th class="sticky left-0 z-10 rounded-l-xl bg-[#f8f1e6] px-4 py-3">Village</th>
