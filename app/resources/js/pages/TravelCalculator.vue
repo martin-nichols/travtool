@@ -310,7 +310,7 @@ function tribeLabel(tribe: string): string {
                             <div class="relative">
                                 <label class="text-sm font-semibold text-[#1f1a14]">Village de départ</label>
                                 <input v-model="startName" class="mt-2 w-full rounded-xl border border-[#1f1a14]/10 bg-white px-3 py-3 text-sm outline-none" placeholder="Nom du village">
-                                <div v-if="startResults.length > 0" class="absolute z-10 mt-2 w-full overflow-hidden rounded-xl border border-[#1f1a14]/10 bg-white shadow-lg">
+                                <div v-if="startResults.length > 0" class="absolute z-10 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-[#1f1a14]/10 bg-white shadow-lg">
                                     <button v-for="village in startResults" :key="village.id" type="button" class="block w-full px-3 py-2 text-left text-sm hover:bg-[#f2eadc]" @click="applyVillage(village, 'start')">
                                         {{ village.name }} ({{ village.x }}|{{ village.y }}) <span class="text-[#6b6258]">{{ village.player_name }}</span>
                                     </button>
@@ -319,7 +319,7 @@ function tribeLabel(tribe: string): string {
                             <div class="relative">
                                 <label class="text-sm font-semibold text-[#1f1a14]">Village d'arrivée</label>
                                 <input v-model="targetName" class="mt-2 w-full rounded-xl border border-[#1f1a14]/10 bg-white px-3 py-3 text-sm outline-none" placeholder="Nom du village">
-                                <div v-if="targetResults.length > 0" class="absolute z-10 mt-2 w-full overflow-hidden rounded-xl border border-[#1f1a14]/10 bg-white shadow-lg">
+                                <div v-if="targetResults.length > 0" class="absolute z-10 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-[#1f1a14]/10 bg-white shadow-lg">
                                     <button v-for="village in targetResults" :key="village.id" type="button" class="block w-full px-3 py-2 text-left text-sm hover:bg-[#f2eadc]" @click="applyVillage(village, 'target')">
                                         {{ village.name }} ({{ village.x }}|{{ village.y }}) <span class="text-[#6b6258]">{{ village.player_name }}</span>
                                     </button>

@@ -88,7 +88,6 @@ class TravelCalculatorController extends Controller
             ->orderByRaw('CASE WHEN LOWER(v.name) LIKE ? THEN 0 ELSE 1 END', [mb_strtolower($query).'%'])
             ->orderByDesc('v.population')
             ->orderBy('v.name')
-            ->limit(12)
             ->get(['v.id', 'v.name', 'v.x', 'v.y', 'v.population', 'p.name as player_name'])
             ->map(static fn (object $village): array => [
                 'id' => (int) $village->id,
