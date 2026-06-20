@@ -276,51 +276,7 @@ function submitTroops(): void {
                         </div>
                     </div>
 
-                    <div v-if="hasTroops" class="mt-5 grid gap-3 md:hidden">
-                        <article
-                            v-for="village in props.villages"
-                            :key="village.village_name"
-                            class="min-w-0 rounded-xl border border-[#1f1a14]/10 bg-white px-4 py-3"
-                        >
-                            <div class="flex items-start justify-between gap-3">
-                                <h3 class="min-w-0 break-words font-semibold text-[#1f1a14]">
-                                    {{ village.village_name }}
-                                </h3>
-                                <span class="shrink-0 rounded-full bg-[#f2eadc] px-3 py-1 text-xs font-semibold text-[#1f1a14]">
-                                    {{ numberFormatter.format(village.total) }}
-                                </span>
-                            </div>
-
-                            <div class="mt-3 grid grid-cols-2 gap-2">
-                                <template v-for="column in props.troopColumns" :key="column.key">
-                                    <div
-                                        v-if="quantity(village, column.key) > 0"
-                                        class="min-w-0 rounded-lg bg-[#f8f1e6] px-3 py-2"
-                                    >
-                                        <p class="truncate text-xs text-[#6b6258]">{{ column.name }}</p>
-                                        <p class="mt-1 font-semibold tabular-nums text-[#1f1a14]">
-                                            {{ numberFormatter.format(quantity(village, column.key)) }}
-                                        </p>
-                                    </div>
-                                </template>
-                            </div>
-                        </article>
-
-                        <article class="min-w-0 rounded-xl border border-[#1f1a14]/10 bg-[#f8f1e6] px-4 py-3">
-                            <div class="grid gap-2 font-semibold text-[#1f1a14]">
-                                <div class="flex items-center justify-between gap-3">
-                                    <span>Taux de troupes</span>
-                                    <span class="tabular-nums">{{ troopRateLabel }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-3">
-                                    <span>Somme</span>
-                                    <span class="tabular-nums">{{ numberFormatter.format(props.totals.total) }}</span>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-
-                    <div v-if="hasTroops" class="mt-5 hidden max-w-full overflow-x-auto md:block">
+                    <div v-if="hasTroops" class="mt-5 max-w-full overflow-x-auto overscroll-x-contain rounded-xl">
                         <table class="min-w-max border-separate border-spacing-0 text-left text-sm">
                             <thead>
                                 <tr class="text-xs uppercase tracking-[0.18em] text-[#7a4b2b]">
